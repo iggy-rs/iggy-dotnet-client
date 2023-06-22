@@ -9,7 +9,6 @@ public interface IMessageStream
     Task<bool> CreateTopicAsync(int streamId, TopicRequest topic);
     Task<IEnumerable<TopicsResponse>> GetTopicsAsync(int streamId);
     Task<TopicsResponse?> GetTopicByIdAsync(int streamId, int topicId);
-    //TODO Change function arguments to a discrete type
     Task<bool> SendMessagesAsync(MessageSendRequest request);
     Task<IEnumerable<MessageResponse>> GetMessagesAsync(MessageFetchRequest request);
 }
