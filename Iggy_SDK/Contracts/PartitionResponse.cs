@@ -1,6 +1,6 @@
 namespace Iggy_SDK.Contracts;
 
-public sealed class PartitionResponse
+public sealed class PartitionContract
 {
 	public required int Id { get; init; }
 

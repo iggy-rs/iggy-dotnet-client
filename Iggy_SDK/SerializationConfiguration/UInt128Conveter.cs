@@ -1,9 +1,8 @@
-using System.Numerics;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Iggy_SDK.JsonConfiguration;
+namespace Iggy_SDK.SerializationConfiguration;
 
 public sealed class UInt128Conveter : JsonConverter<UInt128>
 {

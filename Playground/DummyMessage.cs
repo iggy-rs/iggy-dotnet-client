@@ -4,6 +4,6 @@ namespace ConsoleApp;
 
 public sealed class DummyMessage : IMessage
 {
-	public int Id { get; set; }
-	public string Payload { get; set; }
+	public required int Id { get; set; }
+	public required string Payload { get; set; }
 }

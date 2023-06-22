@@ -2,7 +2,7 @@ using Iggy_SDK.Enums;
 
 namespace Iggy_SDK.Contracts;
 
-public sealed class MessageRequest
+public sealed class MessageFetchRequest
 {
 	public required int StreamId { get; init; }	
 	public required int TopicId { get; init; }

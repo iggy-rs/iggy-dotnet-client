@@ -9,8 +9,8 @@ internal static class Extensions
        Debug.Assert(!string.IsNullOrEmpty(input));
        if (CountUppercaseLetters(input) == 0)
 	       return input;
-       var len = input.Length + CountUppercaseLetters(input) - 1;
        
+       var len = input.Length + CountUppercaseLetters(input) - 1;
        return string.Create(len, input, (span, value) =>
        {
 	      value.AsSpan().CopyTo(span);
