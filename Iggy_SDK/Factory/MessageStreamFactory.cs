@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using Iggy_SDK.Configuration;
+using Iggy_SDK.Enums;
 using Iggy_SDK.MessageStream;
-using Iggy_SDK.Protocols;
 
 namespace Iggy_SDK.Factory;
 

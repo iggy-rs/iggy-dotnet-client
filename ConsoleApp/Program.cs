@@ -1,6 +1,7 @@
 ﻿using ConsoleApp;
+using Iggy_SDK.Contracts;
+using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
-using Iggy_SDK.Protocols;
 
 var bus = MessageStreamFactory.CreateMessageStream(options =>
 {
@@ -10,10 +11,22 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
 
 //VGVzdA==
 //TWVzc2FnZQ==
-var result = await bus.SendMessagesAsync(1,1,"partition_id",1, new []
+// var result = await bus.SendMessagesAsync(1,1,Keykind.PartitionId,1, new []
+// {
+//     new DummyMessage { Id = 0, Payload = "VGVzdA==" },
+//     new DummyMessage { Id = 0, Payload = "TWVzc2FnZQ==" }
+// });
+
+var result = await bus.GetMessagesAsync(new MessageRequest
 {
-    new DummyMessage { Id = 0, Payload = "VGVzdA==" },
-    new DummyMessage { Id = 0, Payload = "TWVzc2FnZQ==" }
+    StreamId = 1,
+    TopicId = 1,
+    ConsumerId = 1,
+    PartitionId = 1,
+    PollingStrategy = MessagePolling.Offset,
+    Value = 0,
+    Count = 10,
+    AutoCommit = false
 });
 
 Console.WriteLine();

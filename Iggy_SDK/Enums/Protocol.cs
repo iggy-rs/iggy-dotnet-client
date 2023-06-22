@@ -1,4 +1,4 @@
-namespace Iggy_SDK.Protocols;
+namespace Iggy_SDK.Enums;
 
 public enum Protocol
 {

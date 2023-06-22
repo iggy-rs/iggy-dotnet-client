@@ -1,4 +1,4 @@
-using Iggy_SDK.Protocols;
+using Iggy_SDK.Enums;
 
 namespace Iggy_SDK.Configuration;
 
