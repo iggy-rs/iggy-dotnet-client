@@ -1,7 +1,4 @@
-﻿using System.Text;
-using System.Text.Json;
-using ConsoleApp;
-using Iggy_SDK.Contracts;
+﻿using Iggy_SDK.Contracts;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
 
@@ -73,7 +70,7 @@ var orderConfirmed = new OrderConfirmed()
      PollingStrategy = MessagePolling.Offset,
      Value = 0,
      Count = 20,
-     AutoCommit = false
+     AutoCommit = true
 });
 
 Console.WriteLine();
