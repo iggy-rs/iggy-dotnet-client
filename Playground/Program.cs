@@ -1,4 +1,6 @@
-﻿using ConsoleApp;
+﻿using System.Text;
+using System.Text.Json;
+using ConsoleApp;
 using Iggy_SDK.Contracts;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
@@ -11,6 +13,7 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
 
 // VGVzdA==
 // TWVzc2FnZQ==
+ /*
  var send = await bus.SendMessagesAsync(new MessageSendRequest
  {
 	 StreamId = 1,
@@ -23,6 +26,43 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
 		new DummyMessage { Payload = "TWVzc2FnZQ==", Id = 0}
 	 }
  });
+*/
+/*var rng = new Random();
+var orderCreated = new OrderCreated
+{
+	Id = (ulong)rng.Next(),
+	CurrencyPair = "BTC/USDT",
+	Price = (double)rng.Next(),
+	Quantity = (double)rng.Next(),
+	Side = "Buy",
+	Timestamp = (ulong)rng.Next()
+};
+var orderRejected = new OrderRejected()
+{
+	Id = (ulong)rng.Next(),
+	Timestamp = (ulong)rng.Next(),
+	Reason = "Order rejected"
+};
+var orderConfirmed = new OrderConfirmed()
+{
+	Id = (ulong)rng.Next(),
+	Price = (double)rng.Next(),
+	Timestamp = (ulong)rng.Next()
+};
+
+ var sendObjects = await bus.SendMessagesAsync(new MessageSendRequest
+ {
+	 StreamId = 1,
+	 TopicId = 1,
+	 KeyKind = Keykind.PartitionId,
+	 KeyValue = 1,
+	 Messages = new List<DummyMessage>
+	 {
+		new DummyMessage { Payload = Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(orderCreated))), Id = 1},
+		new DummyMessage { Payload = Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(orderRejected))), Id = 1},
+		new DummyMessage { Payload = Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(orderConfirmed))), Id = 1}
+	 }
+ });*/
 
  var result = await bus.GetMessagesAsync(new MessageFetchRequest
  {
@@ -32,7 +72,7 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
      PartitionId = 1,
      PollingStrategy = MessagePolling.Offset,
      Value = 0,
-     Count = 10,
+     Count = 20,
      AutoCommit = false
 });
 
