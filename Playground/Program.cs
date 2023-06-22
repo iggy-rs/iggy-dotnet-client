@@ -7,6 +7,34 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
     options.BaseAdress = "http://localhost:3000";
     options.Protocol = Protocol.Http;
 });
+var topics = await bus.GetTopicsAsync(1);
+
+var topicOne = await bus.GetTopicByIdAsync(1, 1);
+
+var stream = await bus.GetStreamByIdAsync(1);
+var streams = await bus.GetStreamsAsync();
+
+var topic = await bus.CreateTopicAsync(1, new TopicRequest
+{
+	Name = "Test Topic From C#",
+	PartitionsCount = 3,
+	TopicId = 1,
+});
+Console.WriteLine();
+// var offset = await bus.UpdateOffsetAsync(1, 1, new OffsetContract
+// {
+// 	Offset = 0,
+// 	ConsumerId = 1,
+// 	PartitionId = 1,
+// });
+// var offset = await bus.GetOffsetAsync(new OffsetRequest
+// {
+// 	StreamId = 1,
+// 	TopicId = 1,
+// 	ConsumerId = 1,
+// 	PartitionId = 1
+// });
+
 
 // VGVzdA==
 // TWVzc2FnZQ==
