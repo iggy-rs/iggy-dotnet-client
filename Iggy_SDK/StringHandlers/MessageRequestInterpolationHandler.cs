@@ -4,7 +4,7 @@ using Iggy_SDK.Enums;
 namespace Iggy_SDK.StringHandlers;
 
 [InterpolatedStringHandler]
-public ref struct MessageRequestInterpolationHandler
+internal ref struct MessageRequestInterpolationHandler
 {
 	private DefaultInterpolatedStringHandler _innerHandler;
 	public MessageRequestInterpolationHandler(int literalLength, int formattedCount)
@@ -16,7 +16,7 @@ public ref struct MessageRequestInterpolationHandler
 	{
 		_innerHandler.AppendLiteral(message);	
 	}
-	public void AppendFormatted<T>(T t)
+	internal void AppendFormatted<T>(T t)
 	{
 		switch (t)
 		{

@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace Iggy_SDK.SerializationConfiguration;
 
-public sealed class UInt128Conveter : JsonConverter<UInt128>
+internal sealed class UInt128Conveter : JsonConverter<UInt128>
 {
 	public override UInt128 Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 	{

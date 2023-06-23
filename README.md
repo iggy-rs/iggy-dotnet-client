@@ -2,9 +2,7 @@
 
 
 ### TODO 
-- Implement rest of the functionality (Delete, Update)
-- Per feature inteface isolation (Send, Poll, Delete, Update)
+- Implement TCP transfering protocol
 - Add support for `ASP.NET Core` Dependency Injection
-- Add tests
 
 

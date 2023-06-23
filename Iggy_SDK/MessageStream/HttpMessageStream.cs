@@ -11,14 +11,14 @@ namespace Iggy_SDK.MessageStream;
 
 public class HttpMessageStream : IMessageStream
 {
+    //TODO - replace the HttpClient with IHttpClientFactory, when implementing support for ASP.NET Core DI
     private readonly HttpClient _httpClient;
     private readonly JsonSerializerOptions _toSnakeCaseOptions;
-    internal HttpMessageStream(string baseAdress)
+    
+    internal HttpMessageStream(HttpClient httpClient)
     {
-        _httpClient = new();
+        _httpClient = httpClient;
         _toSnakeCaseOptions = new();
-        
-        _httpClient.BaseAddress = new Uri(baseAdress);
         
         _toSnakeCaseOptions.PropertyNamingPolicy = new ToSnakeCaseNamingPolicy();
         _toSnakeCaseOptions.WriteIndented = true;
@@ -126,7 +126,6 @@ public class HttpMessageStream : IMessageStream
         var data = new StringContent(json, Encoding.UTF8, "application/json");
         
         var response = await _httpClient.PutAsync($"/streams/{streamId}/topics/{topicId}/messages/offsets", data);
-        var xd = await response.Content.ReadAsStringAsync();
         return response.StatusCode == HttpStatusCode.NoContent; 
     }
 
