@@ -33,7 +33,6 @@ public sealed class MessageStreamUnitTests
 		client.BaseAddress = new Uri(URL);
 		_sut = new HttpMessageStream(client);
 	}
-
 	
 	[Fact]
 	public async Task CreateStreamAsync_Returns201Created_WhenSuccessfullyCreated()

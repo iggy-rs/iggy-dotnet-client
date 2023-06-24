@@ -103,6 +103,7 @@ public class HttpMessageStream : IMessageStream
         var data = new StringContent(json, Encoding.UTF8, "application/json");
         
         var response = await _httpClient.PostAsync($"/streams/{request.StreamId}/topics/{request.TopicId}/messages", data);
+        var xd = await response.Content.ReadAsStringAsync();
         return response.StatusCode == HttpStatusCode.Created;
     }
 
