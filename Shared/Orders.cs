@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using Iggy_SDK.SerializationConfiguration;
 
 namespace Shared;
 public class OrderCreated : ISerializableMessage
@@ -16,12 +17,12 @@ public class OrderCreated : ISerializableMessage
 	public double Price { get; init; }
 	public double Quantity { get; init; }
 	public string Side { get; init; }
-	public int Timestamp { get; init; }
+	public ulong Timestamp { get; init; }
 	
 	public string ToJson()
 	{
 		var envelope = new Envelope();
-		var env = envelope.New<OrderCreated>("OrderCreated", this);
+		var env = envelope.New<OrderCreated>("order_created", this);
 		return Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(env, _jsonSerializerOptions)));
 	}
 
@@ -47,18 +48,17 @@ public class OrderConfirmed : ISerializableMessage
 	}
 	public int Id { get; init; }
 	public double Price { get; init; }
-	public int Timestamp { get; init; }
+	public ulong Timestamp { get; init; }
 	public string ToJson()
 	{
 		var envelope = new Envelope();
-		var env = envelope.New<OrderConfirmed>("OrderConfirmed", this);
+		var env = envelope.New<OrderConfirmed>("order_confirmed", this);
 		return Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(env, _jsonSerializerOptions)));
 	}
 	private string ToJsonPrint()
 	{
 		return JsonSerializer.Serialize(this, _jsonSerializerOptions);
 	}
-	
 	public override string ToString()
 	{
 		return $"OrderConfirmed {ToJsonPrint()}";
@@ -75,21 +75,20 @@ public class OrderRejected : ISerializableMessage
 		_jsonSerializerOptions.WriteIndented = true;
 	}
 	public int Id { get; init; }
-	public int Timestamp	{ get; init; }
+	public ulong Timestamp	{ get; init; }
 	public string Reason { get; init; }
 	public string ToJson()
 	{
 		var envelope = new Envelope();
-		var env = envelope.New<OrderRejected>("OrderRejected", this);
+		var env = envelope.New<OrderRejected>("order_rejected", this);
 		return Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(env, _jsonSerializerOptions)));
 	}
 
 	private string ToJsonPrint()
 	{
 		return JsonSerializer.Serialize(this, _jsonSerializerOptions);
-		
 	}
-
+	
 	public override string ToString()
 	{
 		return $"OrderRejected {ToJsonPrint()}";

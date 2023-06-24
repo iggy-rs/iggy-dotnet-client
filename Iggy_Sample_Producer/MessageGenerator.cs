@@ -1,3 +1,4 @@
+using System.CodeDom.Compiler;
 using Shared;
 
 namespace Iggy_Sample_Producer;
@@ -10,11 +11,12 @@ public static class MessageGenerator
 
 	public static ISerializableMessage GenerateMessage()
 	{
-		return Random.Shared.Next(1, 3) switch
+		return Random.Shared.Next(1, 4) switch
 		{
-			1 => GenerateOrderCreatedMessage(),
+			1 => GenerateOrderRejectedMessage(),
 			2 => GenerateOrderConfirmedMessage(),
-			_ => GenerateOrderRejectedMessage()
+			3 => GenerateOrderCreatedMessage(),
+			_ => GenerateOrderCreatedMessage(),
 		};
 	}
 	private static ISerializableMessage GenerateOrderCreatedMessage()
@@ -35,7 +37,7 @@ public static class MessageGenerator
 				1 => "Buy",
 				_ => "Sell"
 			},
-			Timestamp = Random.Shared.Next(420,69420)
+			Timestamp = (ulong)Random.Shared.Next(420,69420)
 		};
 		
 	}	
@@ -45,7 +47,7 @@ public static class MessageGenerator
 		{
 			Id = OrderConfirmedId++,
 			Price = Random.Shared.Next(69,420),
-			Timestamp = Random.Shared.Next(420,69420)
+			Timestamp = (ulong)Random.Shared.Next(420,69420)
 		};
 	}	
 	
@@ -54,7 +56,7 @@ public static class MessageGenerator
 		return new OrderRejected()
 		{
 			Id = OrderRejectedId++,
-			Timestamp = Random.Shared.Next(420,69420),
+			Timestamp = (ulong)Random.Shared.Next(421,69420),
 			Reason = Random.Shared.Next(1,3) switch
 			{
 				1 => "Cancelled by user",

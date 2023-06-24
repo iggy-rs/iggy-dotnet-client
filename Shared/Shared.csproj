@@ -6,4 +6,8 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Iggy_SDK\Iggy_SDK.csproj" />
+    </ItemGroup>
+
 </Project>

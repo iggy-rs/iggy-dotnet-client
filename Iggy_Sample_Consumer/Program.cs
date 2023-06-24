@@ -3,8 +3,12 @@ using System.Text.Json;
 using Iggy_SDK.Contracts;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
+using Iggy_SDK.SerializationConfiguration;
 using Shared;
 
+var jsonOptions = new JsonSerializerOptions();
+jsonOptions.PropertyNamingPolicy = new ToSnakeCaseNamingPolicy();
+jsonOptions.WriteIndented = true;
 var protocol = Protocol.Http;
 var bus = MessageStreamFactory.CreateMessageStream(options =>
 {
@@ -64,21 +68,21 @@ async Task HandleMessage(MessageResponse messageResponse)
 
     switch (message.MessageType)
     {
-        case nameof(OrderCreated):
+        case "order_created":
         {
-            var orderCreated = JsonSerializer.Deserialize<OrderCreated>(message.Payload);
+            var orderCreated = JsonSerializer.Deserialize<OrderCreated>(message.Payload, jsonOptions);
             Console.WriteLine(orderCreated);
             break;
         }
-        case nameof(OrderConfirmed):
+        case "order_confirmed":
         {
-            var orderConfirmed = JsonSerializer.Deserialize<OrderConfirmed>(message.Payload);
+            var orderConfirmed = JsonSerializer.Deserialize<OrderConfirmed>(message.Payload, jsonOptions);
             Console.WriteLine(orderConfirmed);
             break;
         }
-        case nameof(OrderRejected):
+        case "order_rejected":
         {
-            var orderRejected = JsonSerializer.Deserialize<OrderRejected>(message.Payload);
+            var orderRejected = JsonSerializer.Deserialize<OrderRejected>(message.Payload, jsonOptions);
             Console.WriteLine(orderRejected);
             break;
         }
