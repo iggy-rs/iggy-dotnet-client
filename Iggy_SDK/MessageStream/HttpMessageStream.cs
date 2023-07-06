@@ -12,7 +12,6 @@ namespace Iggy_SDK.MessageStream;
 public class HttpMessageStream : IMessageStream
 {
     //TODO - replace the HttpClient with IHttpClientFactory, when implementing support for ASP.NET Core DI
-    //TODO - Change the return types of the methods (especially bool ones) to something more expressive
     private readonly HttpClient _httpClient;
     private readonly JsonSerializerOptions _toSnakeCaseOptions;
     
@@ -57,7 +56,8 @@ public class HttpMessageStream : IMessageStream
         var response = await _httpClient.GetAsync($"/streams");
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<IEnumerable<StreamsResponse>>(_toSnakeCaseOptions);
+            return await response.Content.ReadFromJsonAsync<IEnumerable<StreamsResponse>>(_toSnakeCaseOptions)
+                   ?? Enumerable.Empty<StreamsResponse>();
         }
         return Enumerable.Empty<StreamsResponse>();
     }

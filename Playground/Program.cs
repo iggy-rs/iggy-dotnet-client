@@ -1,15 +1,43 @@
-﻿using Iggy_SDK.Contracts;
-using Iggy_SDK.Enums;
-using Iggy_SDK.Factory;
+﻿using System.Net.Sockets;
+using System.Text;
 
-var bus = MessageStreamFactory.CreateMessageStream(options =>
-{
-    options.BaseAdress = "http://localhost:3000";
-    options.Protocol = Protocol.Http;
-});
 
-var groups = await bus.GetGroupsAsync(1, 1);
-Console.WriteLine();
+//this is payload
+var message = "";
+var messageLength = message.Length + 1;
+var messageBytes = new byte[4 + messageLength];
+
+using var client = new TcpClient("127.0.0.1", 8090);
+var stream = client.GetStream();
+
+byte[] messageLengthBytes = BitConverter.GetBytes(messageLength);
+Buffer.BlockCopy(messageLengthBytes, 0, messageBytes, 0, messageLengthBytes.Length);
+byte commandBytes = Convert.ToByte(1);
+byte[] payloadBytes = Encoding.ASCII.GetBytes(message);
+messageBytes[4] = commandBytes;
+
+Buffer.BlockCopy(payloadBytes, 0, messageBytes, 5, payloadBytes.Length);
+
+await stream.WriteAsync(messageBytes, 0, messageBytes.Length);
+Console.WriteLine($"client sent message: {message}");
+
+var buffer = new byte[1_024];
+var received = await stream.ReadAsync(buffer);
+var response = Encoding.ASCII.GetString(buffer, 0, received);
+Console.WriteLine(
+	$"client received : {response}");
+await stream.DisposeAsync();
+client.Close();
+
+
+
+// var bus = MessageStreamFactory.CreateMessageStream(options =>
+// {
+//     options.BaseAdress = "http://localhost:3000";
+//     options.Protocol = Protocol.Http;
+// });
+//
+// var groups = await bus.GetGroupsAsync(1, 1);
 
 // var groupResponse = await bus.GetGroupByIdAsync(1, 1, 1);
 
