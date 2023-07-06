@@ -1,5 +1,6 @@
-using System.Numerics;
 using System.Text;
+using System.Text.Json;
+using Iggy_SDK_Tests.Utils.DummyObj;
 using Iggy_SDK.Contracts;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Messages;
@@ -21,12 +22,12 @@ public static class MessageFactory
 				new DummyMessage
 				{
 					Id = Random.Shared.Next(1, 10),
-					Payload = Convert.ToBase64String(Encoding.UTF8.GetBytes("TROLOLO"))
+					Payload = JsonSerializer.Serialize(DummyObjFactory.CreateDummyObject())
 				},
 				new DummyMessage
 				{
 					Id = Random.Shared.Next(1, 10),
-					Payload = Convert.ToBase64String(Encoding.UTF8.GetBytes("TROLOLO"))
+					Payload =  JsonSerializer.Serialize(DummyObjFactory.CreateDummyObject())
 				}
 
 			}
@@ -60,8 +61,14 @@ public static class MessageFactory
 	}
 }
 
-public class DummyMessage : IMessage
+public class DummyMessage  : IMessage
 {
 	public int Id { get; set; }
 	public string Payload { get; set; }
+}
+
+public class DummyObject
+{
+	public int Id { get; set; }
+	public string Text { get; set; }
 }

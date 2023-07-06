@@ -7,9 +7,19 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
     options.BaseAdress = "http://localhost:3000";
     options.Protocol = Protocol.Http;
 });
-var topics = await bus.GetTopicsAsync(1);
 
-var topicOne = await bus.GetTopicByIdAsync(1, 1);
+var groups = await bus.GetGroupsAsync(1, 1);
+Console.WriteLine();
+
+// var groupResponse = await bus.GetGroupByIdAsync(1, 1, 1);
+
+/*
+var streamCreation = await bus.CreateStreamAsync(new CreateStreamRequest
+{
+	Name = "Test Stream",
+	StreamId = 1
+});
+	
 
 var stream = await bus.GetStreamByIdAsync(1);
 var streams = await bus.GetStreamsAsync();
@@ -20,7 +30,12 @@ var topic = await bus.CreateTopicAsync(1, new TopicRequest
 	PartitionsCount = 3,
 	TopicId = 1,
 });
+
+var topics = await bus.GetTopicsAsync(1);
+var topicOne = await bus.GetTopicByIdAsync(1, 1);
 Console.WriteLine();
+*/
+
 // var offset = await bus.UpdateOffsetAsync(1, 1, new OffsetContract
 // {
 // 	Offset = 0,
@@ -89,20 +104,17 @@ var orderConfirmed = new OrderConfirmed()
 	 }
  });*/
 
- var result = await bus.GetMessagesAsync(new MessageFetchRequest
- {
-     StreamId = 1,
-     TopicId = 1,
-     ConsumerId = 1,
-     PartitionId = 1,
-     PollingStrategy = MessagePolling.Offset,
-     Value = 0,
-     Count = 20,
-     AutoCommit = true
-});
-
-Console.WriteLine();
-Console.ReadKey();
+//  var result = await bus.GetMessagesAsync(new MessageFetchRequest
+//  {
+//      StreamId = 1,
+//      TopicId = 1,
+//      ConsumerId = 1,
+//      PartitionId = 1,
+//      PollingStrategy = MessagePolling.Offset,
+//      Value = 0,
+//      Count = 20,
+//      AutoCommit = true
+// });
 
 
 

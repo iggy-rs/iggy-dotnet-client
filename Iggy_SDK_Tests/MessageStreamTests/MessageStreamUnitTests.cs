@@ -1,6 +1,8 @@
 using System.Net;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Iggy_SDK_Tests.Utils.Groups;
 using Iggy_SDK_Tests.Utils.Messages;
 using Iggy_SDK_Tests.Utils.Offset;
 using Iggy_SDK_Tests.Utils.Streams;
@@ -27,7 +29,9 @@ public sealed class MessageStreamUnitTests
 		_toSnakeCaseOptions.PropertyNamingPolicy = new ToSnakeCaseNamingPolicy();
 		_toSnakeCaseOptions.WriteIndented = true;
         _toSnakeCaseOptions.Converters.Add(new UInt128Conveter());
-        _toSnakeCaseOptions.Converters.Add(new JsonStringEnumConverter(new ToSnakeCaseNamingPolicy()));		_httpHandler = new MockHttpMessageHandler();
+        _toSnakeCaseOptions.Converters.Add(new JsonStringEnumConverter(new ToSnakeCaseNamingPolicy()));
+        _httpHandler = new MockHttpMessageHandler();
+        
         
 		var client = _httpHandler.ToHttpClient();
 		client.BaseAddress = new Uri(URL);
@@ -267,9 +271,14 @@ public sealed class MessageStreamUnitTests
 	public async Task SendMessageAsync_Returns201Created_WhenSuccessfullyCreated()
 	{
 		var request = MessageFactory.CreateMessageSendRequest();
+		var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
 		
 		_httpHandler.When(HttpMethod.Post, $"/streams/{request.StreamId}/topics/{request.TopicId}/messages")
-			.WithContent(JsonSerializer.Serialize(request, _toSnakeCaseOptions))
+			.With(message =>
+			{
+				message.Content = new StringContent(json, Encoding.UTF8, "application/json");
+				return true;
+			})
 			.Respond(HttpStatusCode.Created);
 		
 		var result = await _sut.SendMessagesAsync(request);
@@ -281,9 +290,14 @@ public sealed class MessageStreamUnitTests
 	public async Task SendMessageAsync_Returns400BadRequest_OnFailure()
 	{
 		var request = MessageFactory.CreateMessageSendRequest();		
+		var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions); 
 		
 		_httpHandler.When(HttpMethod.Post, $"/streams/{request.StreamId}/topics/{request.TopicId}/messages")
-			.WithContent(JsonSerializer.Serialize(request, _toSnakeCaseOptions))
+			.With(message =>
+			{
+				message.Content = new StringContent(json, Encoding.UTF8, "application/json");
+				return true;
+			})
 			.Respond(HttpStatusCode.BadRequest);
 		
 		var result = await _sut.SendMessagesAsync(request);
@@ -386,5 +400,35 @@ public sealed class MessageStreamUnitTests
         
 		var result = await _sut.GetOffsetAsync(request);
 		Assert.Null(result);
+	}
+
+	[Fact]
+	public async Task GetGroupsAsync_Returns200Ok_WhenFound()
+	{
+		int streamId = 1;
+		int topicId = 1;
+		var response = GroupFactory.CreateGroupsResponse(3);
+
+		_httpHandler.When($"/streams/{streamId}/topics/{topicId}/groups")
+			.Respond(HttpStatusCode.OK, "application/json", JsonSerializer.Serialize(response, _toSnakeCaseOptions));
+		
+		var result = await _sut.GetGroupsAsync(streamId , topicId);
+		Assert.NotNull(result);
+		Assert.NotEmpty(result);
+	}
+
+	[Fact]
+	public async Task GetGroupsAsync_Returns200OkEmptyArray_WhenNotFound()
+	{
+		int streamId = 1;
+		int topicId = 1;
+		var response = GroupFactory.Empty();
+
+		_httpHandler.When($"/streams/{streamId}/topics/{topicId}/groups")
+			.Respond(HttpStatusCode.OK, "application/json", JsonSerializer.Serialize(response, _toSnakeCaseOptions));
+
+		var result = await _sut.GetGroupsAsync(streamId, topicId);
+		Assert.NotNull(result);
+		Assert.Empty(result);
 	}
 }

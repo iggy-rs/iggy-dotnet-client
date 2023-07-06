@@ -12,6 +12,7 @@ namespace Iggy_SDK.MessageStream;
 public class HttpMessageStream : IMessageStream
 {
     //TODO - replace the HttpClient with IHttpClientFactory, when implementing support for ASP.NET Core DI
+    //TODO - Change the return types of the methods (especially bool ones) to something more expressive
     private readonly HttpClient _httpClient;
     private readonly JsonSerializerOptions _toSnakeCaseOptions;
     
@@ -99,6 +100,12 @@ public class HttpMessageStream : IMessageStream
 
     public async Task<bool> SendMessagesAsync(MessageSendRequest request)
     {
+        foreach (var message in request.Messages)
+        {
+            var base64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(message.Payload));
+            message.Payload = base64;
+        }
+        
         var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
         
@@ -138,6 +145,42 @@ public class HttpMessageStream : IMessageStream
             return await response.Content.ReadFromJsonAsync<OffsetResponse>(_toSnakeCaseOptions);
         }
         return null;
+    }
+    public async Task<IEnumerable<GroupResponse>> GetGroupsAsync(int streamId, int topicId)
+    {
+        var response = await _httpClient.GetAsync($"/streams/{streamId}/topics/{topicId}/groups");
+        
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<IEnumerable<GroupResponse>>(_toSnakeCaseOptions)
+                ?? Enumerable.Empty<GroupResponse>();
+        }
+        return Enumerable.Empty<GroupResponse>();
+    }
+    
+    public async Task<GroupResponse?> GetGroupByIdAsync(int streamId, int topicId, int groupId)
+    {
+        var response = await _httpClient.GetAsync($"/streams/{streamId}/topics/{topicId}/groups/{groupId}");
+        
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<GroupResponse>(_toSnakeCaseOptions);
+        }
+        return null;
+    }
+    
+    public async Task<bool> CreateGroupAsync(int streamId, int topicId, GroupCreateRequest request)
+    {
+        var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
+        var data = new StringContent(json, Encoding.UTF8, "application/json");
+        
+        var response = await _httpClient.PostAsync($"/streams/{streamId}/topics/{topicId}/groups", data);
+        return response.StatusCode == HttpStatusCode.Created;
+    }
+    public async Task<bool> DeleteGroupAsync(int streamId, int topicId, int groupId)
+    {
+        var response = await _httpClient.DeleteAsync($"/streams/{streamId}/topics/{topicId}/groups/{groupId}");
+        return response.StatusCode == HttpStatusCode.NoContent;
     }
 
     private static string CreateUrl(ref MessageRequestInterpolationHandler message)

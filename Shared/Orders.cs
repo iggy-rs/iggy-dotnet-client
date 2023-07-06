@@ -1,6 +1,5 @@
 using System.Text;
 using System.Text.Json;
-using Iggy_SDK.SerializationConfiguration;
 
 namespace Shared;
 public class OrderCreated : ISerializableMessage
@@ -23,7 +22,7 @@ public class OrderCreated : ISerializableMessage
 	{
 		var envelope = new Envelope();
 		var env = envelope.New<OrderCreated>("order_created", this);
-		return Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(env, _jsonSerializerOptions)));
+		return JsonSerializer.Serialize(env, _jsonSerializerOptions);
 	}
 
 	private string ToJsonPrint()
@@ -53,7 +52,7 @@ public class OrderConfirmed : ISerializableMessage
 	{
 		var envelope = new Envelope();
 		var env = envelope.New<OrderConfirmed>("order_confirmed", this);
-		return Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(env, _jsonSerializerOptions)));
+		return JsonSerializer.Serialize(env, _jsonSerializerOptions);
 	}
 	private string ToJsonPrint()
 	{
@@ -81,7 +80,7 @@ public class OrderRejected : ISerializableMessage
 	{
 		var envelope = new Envelope();
 		var env = envelope.New<OrderRejected>("order_rejected", this);
-		return Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(env, _jsonSerializerOptions)));
+		return JsonSerializer.Serialize(env, _jsonSerializerOptions);
 	}
 
 	private string ToJsonPrint()
