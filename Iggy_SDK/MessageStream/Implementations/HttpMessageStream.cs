@@ -1,13 +1,13 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
 using System.Text;
-using Iggy_SDK.Contracts;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Iggy_SDK.Contracts;
 using Iggy_SDK.SerializationConfiguration;
 using Iggy_SDK.StringHandlers;
 
-namespace Iggy_SDK.MessageStream;
+namespace Iggy_SDK.MessageStream.Implementations;
 
 public class HttpMessageStream : IMessageStream
 {
@@ -26,7 +26,7 @@ public class HttpMessageStream : IMessageStream
         _toSnakeCaseOptions.Converters.Add(new UInt128Conveter());
         _toSnakeCaseOptions.Converters.Add(new JsonStringEnumConverter(new ToSnakeCaseNamingPolicy()));
     }
-    public async Task<bool> CreateStreamAsync(CreateStreamRequest request)
+    public async Task<bool> CreateStreamAsync(StreamRequest request)
     {
         var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
@@ -169,7 +169,7 @@ public class HttpMessageStream : IMessageStream
         return null;
     }
     
-    public async Task<bool> CreateGroupAsync(int streamId, int topicId, GroupCreateRequest request)
+    public async Task<bool> CreateGroupAsync(int streamId, int topicId, GroupRequest request)
     {
         var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");

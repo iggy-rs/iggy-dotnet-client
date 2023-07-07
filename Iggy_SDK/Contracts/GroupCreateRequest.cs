@@ -1,6 +1,6 @@
 namespace Iggy_SDK.Contracts;
 
-public sealed class GroupCreateRequest
+public sealed class GroupRequest
 {
 	public required int GroupId { get; init; }	
 }

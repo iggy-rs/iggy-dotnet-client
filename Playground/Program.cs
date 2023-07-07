@@ -1,34 +1,67 @@
-﻿using System.Net.Sockets;
-using System.Text;
+﻿using Iggy_SDK.Enums;
+using Iggy_SDK.Factory;
 
+var bus = MessageStreamFactory.CreateMessageStream(options =>
+{
+	options.BaseAdress = "127.0.0.1:8090";
+	options.Protocol = Protocol.Tcp;
+});
 
-//this is payload
-var message = "";
+//const int initialBytesLength = 4;
+
+// using var client = new TcpClient("127.0.0.1", 8090);
+// var stream = client.GetStream();
+// var newStream = new StreamRequest
+// {
+// 	Name = "stream from tcp",
+// 	StreamId = 3,
+// };
+	
+
+//var message = BitConverter.GetBytes(1);
+/*var message = new byte[0];
 var messageLength = message.Length + 1;
-var messageBytes = new byte[4 + messageLength];
 
-using var client = new TcpClient("127.0.0.1", 8090);
-var stream = client.GetStream();
-
+byte commandByte = CommandCodes.CREATE_STREAM_CODE;
 byte[] messageLengthBytes = BitConverter.GetBytes(messageLength);
-Buffer.BlockCopy(messageLengthBytes, 0, messageBytes, 0, messageLengthBytes.Length);
-byte commandBytes = Convert.ToByte(1);
-byte[] payloadBytes = Encoding.ASCII.GetBytes(message);
-messageBytes[4] = commandBytes;
 
-Buffer.BlockCopy(payloadBytes, 0, messageBytes, 5, payloadBytes.Length);
+byte[] CreatePayload()
+{
+	Span<byte> messageBytes = stackalloc byte[initialBytesLength + messageLength];
+	messageLengthBytes.CopyTo(messageBytes);
+	messageBytes[initialBytesLength] = commandByte;
+	message.CopyTo(messageBytes[(initialBytesLength + 1)..]);
+	return messageBytes.ToArray();
+}
+
+var messageBytes = CreatePayload();
 
 await stream.WriteAsync(messageBytes, 0, messageBytes.Length);
 Console.WriteLine($"client sent message: {message}");
 
-var buffer = new byte[1_024];
-var received = await stream.ReadAsync(buffer);
-var response = Encoding.ASCII.GetString(buffer, 0, received);
-Console.WriteLine(
-	$"client received : {response}");
-await stream.DisposeAsync();
-client.Close();
+var buffer = new byte[5];
+await stream.ReadExactlyAsync(buffer);
+if (buffer.Length != 5)
+{
+	Console.WriteLine("received wrong response");
+}
 
+var status = buffer[0];
+var length = buffer[1];
+Console.WriteLine($"Status {status}");
+Console.WriteLine($"Length {length}");
+//var response = Encoding.UTF8.GetString(buffer, 0, readBytes);
+if (status != 0)
+{
+	Console.WriteLine("Received an invalid response status");
+}
+if (length <= 1)
+{
+	Console.WriteLine("EMPTY RESPONSE");
+}
+var responseBuffer = new byte[length];
+await stream.ReadExactlyAsync(responseBuffer);
+var streams = BinaryMapper.MapTopics(responseBuffer); */ 
 
 
 // var bus = MessageStreamFactory.CreateMessageStream(options =>

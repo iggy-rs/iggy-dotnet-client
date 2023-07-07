@@ -5,9 +5,9 @@ namespace Iggy_SDK_Tests.Utils.Streams;
 
 public static class StreamFactory
 {
-	public static CreateStreamRequest CreateStreamRequest()
+	public static StreamRequest CreateStreamRequest()
 	{
-		return new CreateStreamRequest
+		return new StreamRequest
 		{
 			Name = "Test Topic" + Random.Shared.Next(1, 69),
 			StreamId = Random.Shared.Next(1, 10),

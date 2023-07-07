@@ -9,6 +9,7 @@ using Iggy_SDK_Tests.Utils.Streams;
 using Iggy_SDK_Tests.Utils.Topics;
 using Iggy_SDK.Contracts;
 using Iggy_SDK.MessageStream;
+using Iggy_SDK.MessageStream.Implementations;
 using Iggy_SDK.SerializationConfiguration;
 using RichardSzalay.MockHttp;
 

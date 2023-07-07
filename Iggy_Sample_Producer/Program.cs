@@ -22,7 +22,7 @@ var stream = await bus.GetStreamByIdAsync(streamId);
 var topic = await bus.GetTopicByIdAsync(streamId, topicId);
 if (stream is null)
 {
-    var result = await bus.CreateStreamAsync(new CreateStreamRequest
+    var result = await bus.CreateStreamAsync(new StreamRequest
     {
         StreamId = streamId,
         Name = "Test Producer Stream",
