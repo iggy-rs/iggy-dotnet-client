@@ -1,4 +1,5 @@
-﻿using Iggy_SDK.Enums;
+﻿using Iggy_SDK.Contracts;
+using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
 
 var bus = MessageStreamFactory.CreateMessageStream(options =>
@@ -6,6 +7,14 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
 	options.BaseAdress = "127.0.0.1:8090";
 	options.Protocol = Protocol.Tcp;
 });
+
+var resp = await bus.CreateStreamAsync(new StreamRequest
+{
+	Name = "Test Stream from tcp bytes",
+	StreamId = 4
+});
+
+Console.WriteLine();
 
 //const int initialBytesLength = 4;
 

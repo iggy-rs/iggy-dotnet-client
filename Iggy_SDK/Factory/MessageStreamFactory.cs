@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Net.Sockets;
 using Iggy_SDK.Configuration;
 using Iggy_SDK.Enums;
+using Iggy_SDK.Exceptions;
 using Iggy_SDK.MessageStream;
 using Iggy_SDK.MessageStream.Implementations;
 
@@ -26,7 +27,11 @@ public static class MessageStreamFactory
     private static TcpMessageStream CreateTcpMessageStream(string configBaseAdress)
     {
         var urlPortSplitter = configBaseAdress.Split(":");
-        using var client = new TcpClient(urlPortSplitter[0], int.Parse(urlPortSplitter[1]));
+        if (urlPortSplitter.Length > 2)
+        {
+            throw new InvalidBaseAdressException();
+        }
+        var client = new TcpClient(urlPortSplitter[0], int.Parse(urlPortSplitter[1]));
         return new TcpMessageStream(client);
     }
 

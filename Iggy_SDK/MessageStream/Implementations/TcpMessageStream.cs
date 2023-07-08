@@ -346,7 +346,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 
 	public async Task<GroupResponse?> GetGroupByIdAsync(int streamId, int topicId, int groupId)
 	{
-		var message = TcpContracts.GetGroups(streamId, topicId);
+		var message = TcpContracts.GetGroup(streamId, topicId, groupId);
 		var messageLength = message.Length + 1;
 
 		byte commandByte = CommandCodes.GET_GROUP_CODE;
@@ -431,7 +431,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		message.CopyTo(messageBytes[(InitialBytesLength + 1)..]);
 		return messageBytes.ToArray();
 	}
-
+	
 	public void Dispose()
 	{
 		_client.Dispose();
