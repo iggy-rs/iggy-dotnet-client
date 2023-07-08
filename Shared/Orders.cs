@@ -17,17 +17,17 @@ public class OrderCreated : ISerializableMessage
 	public double Quantity { get; init; }
 	public string Side { get; init; }
 	public ulong Timestamp { get; init; }
+
+	private string ToJsonPrint()
+	{
+		return JsonSerializer.Serialize(this, _jsonSerializerOptions); 
+	}
 	
 	public string ToJson()
 	{
 		var envelope = new Envelope();
 		var env = envelope.New<OrderCreated>("order_created", this);
 		return JsonSerializer.Serialize(env, _jsonSerializerOptions);
-	}
-
-	private string ToJsonPrint()
-	{
-		return JsonSerializer.Serialize(this, _jsonSerializerOptions); 
 	}
 	public override string ToString()
 	{

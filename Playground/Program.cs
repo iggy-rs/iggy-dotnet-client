@@ -1,6 +1,8 @@
-﻿using Iggy_SDK.Contracts;
+﻿using ConsoleApp;
+using Iggy_SDK.Contracts;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
+
 
 var bus = MessageStreamFactory.CreateMessageStream(options =>
 {
@@ -8,12 +10,45 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
 	options.Protocol = Protocol.Tcp;
 });
 
-var resp = await bus.CreateStreamAsync(new StreamRequest
+var order = new Shared.OrderCreated()
 {
-	Name = "Test Stream from tcp bytes",
-	StreamId = 4
+	Id = 69,
+	Timestamp = 123321312,
+	Price = 12.23,
+	Quantity = 12,
+	Side = "Buy",
+	CurrencyPair = "PLN/USD"
+};
+var env = order.ToJson();
+Console.WriteLine(env);
+
+var createMessage = await bus.SendMessagesAsync(new MessageSendRequest
+{
+	StreamId = 1,
+	TopicId = 1,
+	KeyKind = Keykind.PartitionId,
+	KeyValue = 3,
+	Messages = new List<DummyMessage>()
+	{
+		new DummyMessage
+		{
+			Id = 69,
+			Payload = env
+		}
+	}
 });
 
+var resp = await bus.GetMessagesAsync(new MessageFetchRequest
+{
+	Count = 1,
+	AutoCommit = true,
+	ConsumerId = 1,
+	PollingStrategy = MessagePolling.Next,
+	Value = 0,
+	PartitionId = 3,
+	StreamId = 1,
+	TopicId = 1,
+});
 Console.WriteLine();
 
 //const int initialBytesLength = 4;

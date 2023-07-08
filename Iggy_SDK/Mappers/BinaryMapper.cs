@@ -15,7 +15,7 @@ public static class BinaryMapper
             ConsumerId = consumerId
         };
     }
-    public static IEnumerable<MessageResponse> MapMessages(byte[] payload)
+    /*public static IEnumerable<MessageResponse> MapMessages(byte[] payload)
     {
         const int PROPERTIES_SIZE = 36;
         int length = payload.Length;
@@ -51,6 +51,50 @@ public static class BinaryMapper
 
             if (position + PROPERTIES_SIZE >= length)
                 break;
+        }
+
+        return messages;
+    }*/
+    public static IEnumerable<MessageResponse> MapMessages(byte[] payload)
+    {
+        var payloadBuffer = Encoding.ASCII.GetString(payload);
+        const int PROPERTIES_SIZE = 36;
+        int length = payload.Length;
+        int position = 4;
+        List<MessageResponse> messages = new();
+
+        while (position < length)
+        {
+            ulong offset = BitConverter.ToUInt64(payload, position );
+            ulong timestamp = BitConverter.ToUInt64(payload, position + 8);
+            ulong id = BitConverter.ToUInt64(payload, position + 16);
+            uint messageLength = BitConverter.ToUInt32(payload, position + 32);
+
+            int payloadRangeStart = position + PROPERTIES_SIZE;
+            int payloadRangeEnd = position + PROPERTIES_SIZE + (int)messageLength;
+            if (payloadRangeStart > length || payloadRangeEnd > length)
+            {
+                break;
+            }
+
+            var payloadSlice = payload.AsSpan()[payloadRangeStart..payloadRangeEnd];
+            var payloadStringify = Encoding.UTF8.GetString(payloadSlice);
+
+            int totalSize = PROPERTIES_SIZE + (int)messageLength;
+            position += totalSize;
+
+            messages.Add(new MessageResponse
+            {
+                Offset = (int)offset,
+                Timestamp = timestamp,
+                Id = id,
+                Payload = payloadStringify
+            });
+
+            if (position + PROPERTIES_SIZE >= length)
+            {
+                break;
+            }
         }
 
         return messages;

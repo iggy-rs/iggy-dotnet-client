@@ -10,6 +10,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Iggy_SDK\Iggy_SDK.csproj" />
+      <ProjectReference Include="..\Shared\Shared.csproj" />
     </ItemGroup>
 
 </Project>

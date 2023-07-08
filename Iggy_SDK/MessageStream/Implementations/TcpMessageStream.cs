@@ -1,6 +1,7 @@
 using System.Net.Sockets;
 using ConsoleApp;
 using Iggy_SDK.Contracts;
+using Iggy_SDK.Contracts.Tcp;
 using Iggy_SDK.Exceptions;
 using Iggy_SDK.Mappers;
 
@@ -59,7 +60,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 		
 		var status = buffer[0];
-		var length = buffer[1];
+		var length = BitConverter.ToUInt32(buffer.AsSpan()[1..]);
 		if (status != 0)
 		{
 			throw new TcpInvalidStatus();
@@ -93,7 +94,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 		
 		var status = buffer[0];
-		var length = buffer[1];
+		var length = BitConverter.ToUInt32(buffer.AsSpan()[1..]);
 		if (status != 0)
 		{
 			throw new TcpInvalidStatus();
@@ -149,7 +150,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 		
 		var status = buffer[0];
-		var length = buffer[1];
+		var length = BitConverter.ToUInt32(buffer.AsSpan()[1..]);
 		if (status != 0)
 		{
 			throw new TcpInvalidStatus();
@@ -183,7 +184,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 		
 		var status = buffer[0];
-		var length = buffer[1];
+		var length = BitConverter.ToUInt32(buffer.AsSpan()[1..]);
 		if (status != 0)
 		{
 			throw new TcpInvalidStatus();
@@ -243,14 +244,60 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		return status == 0;
 	}
 
-	public Task<bool> SendMessagesAsync(MessageSendRequest request)
+	public async Task<bool> SendMessagesAsync(MessageSendRequest request)
 	{
-		throw new NotImplementedException();
+		var message = TcpContracts.CreateMessage(request);
+		var messageLength = message.Length + 1;
+
+		byte commandByte = CommandCodes.SEND_MESSAGES_CODE;
+		byte[] messageLengthBytes = BitConverter.GetBytes(messageLength);
+		var payload = CreatePayload(messageLengthBytes, message, commandByte, messageLength);
+
+		await _stream.WriteAsync(payload, 0, payload.Length);
+
+		var buffer = new byte[ExpectedResponseSize];
+			await _stream.ReadExactlyAsync(buffer);
+		if (buffer.Length != ExpectedResponseSize)
+		{
+			throw new TcpInvalidResponseException();
+		}
+		
+		var status = buffer[0];
+		return status == 0;
 	}
 
-	public Task<IEnumerable<MessageResponse>> GetMessagesAsync(MessageFetchRequest request)
+	public async Task<IEnumerable<MessageResponse>> GetMessagesAsync(MessageFetchRequest request)
 	{
-		throw new NotImplementedException();
+		var message = TcpContracts.GetMessages(request);
+		var messageLength = message.Length + 1;
+
+		byte commandByte = CommandCodes.POLL_MESSAGES_CODE;
+		byte[] messageLengthBytes = BitConverter.GetBytes(messageLength);
+		var payload = CreatePayload(messageLengthBytes, message, commandByte, messageLength);
+
+		await _stream.WriteAsync(payload, 0, payload.Length);
+
+		var buffer = new byte[ExpectedResponseSize];
+		await _stream.ReadExactlyAsync(buffer);
+		if (buffer.Length != ExpectedResponseSize)
+		{
+			throw new TcpInvalidResponseException();
+		}
+		
+		var status = buffer[0];
+		var length = BitConverter.ToUInt32(buffer.AsSpan()[1..]);
+		if (status != 0)
+		{
+			throw new TcpInvalidStatus();
+		}
+		if (length <= 1)
+		{
+			return Enumerable.Empty<MessageResponse>();
+		}
+		
+		var responseBuffer = new byte[length];
+		await _stream.ReadExactlyAsync(responseBuffer);
+		return BinaryMapper.MapMessages(responseBuffer);
 	}
 
 	public async Task<bool> UpdateOffsetAsync(int streamId, int topicId, OffsetContract contract)
@@ -294,7 +341,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 		
 		var status = buffer[0];
-		var length = buffer[1];
+		var length = BitConverter.ToUInt32(buffer.AsSpan()[1..]);
 		if (status != 0)
 		{
 			throw new TcpInvalidStatus();
@@ -328,7 +375,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 
 		var status = buffer[0];
-		var length = buffer[1];
+		var length = BitConverter.ToUInt32(buffer.AsSpan()[1..]);
 		if (status != 0)
 		{
 			throw new TcpInvalidStatus();
@@ -363,7 +410,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 
 		var status = buffer[0];
-		var length = buffer[1];
+		var length = BitConverter.ToUInt32(buffer.AsSpan()[1..]);
 		if (status != 0)
 		{
 			throw new TcpInvalidStatus();

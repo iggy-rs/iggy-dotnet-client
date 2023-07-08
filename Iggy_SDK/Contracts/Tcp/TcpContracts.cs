@@ -1,11 +1,72 @@
-using System.ComponentModel;
 using System.Text;
-using Iggy_SDK.Contracts;
+using Iggy_SDK.Enums;
 
-namespace ConsoleApp;
+namespace Iggy_SDK.Contracts.Tcp;
 
 internal static class TcpContracts
 {
+    internal static byte[] GetMessages(MessageFetchRequest request)
+    {
+        Span<byte> bytes = stackalloc byte[31];
+        bytes[0] = 0;
+        BitConverter.TryWriteBytes(bytes.Slice(1, sizeof(int)), request.ConsumerId);
+        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int) + 1, sizeof(int)), request.StreamId);
+        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int) * 2 + 1, sizeof(int)), request.TopicId);
+        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int) * 3 + 1, sizeof(int)), request.PartitionId);
+        bytes[sizeof(int) * 4 + 1] = request.PollingStrategy switch
+        {
+            MessagePolling.Offset => 0,
+            MessagePolling.Timestamp => 1,
+            MessagePolling.First => 2,
+            MessagePolling.Last => 3,
+            MessagePolling.Next => 4,
+        };
+        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int) * 4 + 2, sizeof(ulong)), request.Value);
+        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int) * 4 + sizeof(ulong) + 2, sizeof(int)), request.Count);
+        
+        if (request.AutoCommit)
+        {
+            bytes[30] = 1;
+        }
+        else
+        {
+            bytes[30] = 0;
+        }
+        return bytes.ToArray();
+        
+    }
+    internal static byte[] CreateMessage(MessageSendRequest request)
+    {
+        int messageBytesCount = 0;
+        foreach (var message in request.Messages)
+        {
+            messageBytesCount += 16 + 4 + message.Payload.Length;
+        }
+        
+        Span<byte> bytes = stackalloc byte[17 + messageBytesCount];
+        BitConverter.TryWriteBytes(bytes.Slice(0, sizeof(int)), request.StreamId);
+        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int), sizeof(int)), request.TopicId);
+        bytes[sizeof(int) * 2] = request.KeyKind switch
+        {
+            Keykind.PartitionId => 0,
+            Keykind.EntityId => 1
+        };
+        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int) * 2 + 1, sizeof(int)), request.KeyValue);
+        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int) * 3 + 1, sizeof(int)), request.Messages.Count());
+
+        int position = 17;
+        foreach (var message in request.Messages)
+        {
+            BitConverter.TryWriteBytes(bytes.Slice(position, 16), message.Id);
+            BitConverter.TryWriteBytes(bytes.Slice(position + 16, sizeof(int)), message.Payload.Length);
+            var payloadBytes = Encoding.UTF8.GetBytes(message.Payload);
+            var slice = bytes.Slice(position + 16 + sizeof(int));
+            payloadBytes.AsSpan().CopyTo(slice);
+            position += payloadBytes.Length + 16 + sizeof(int);
+        }
+        
+        return bytes.ToArray();
+    }
     internal static byte[] CreateStream(StreamRequest request)
     {
         Span<byte> bytes = stackalloc byte[sizeof(int) + request.Name.Length];
