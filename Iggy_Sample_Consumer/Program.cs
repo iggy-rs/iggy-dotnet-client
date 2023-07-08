@@ -12,7 +12,7 @@ jsonOptions.WriteIndented = true;
 var protocol = Protocol.Http;
 var bus = MessageStreamFactory.CreateMessageStream(options =>
 {
-    options.BaseAdress = "http://localhost:3000";
+    options.BaseAdress = "http://127.0.0.1:3000";
     options.Protocol = protocol;
 });
 
@@ -61,9 +61,22 @@ async Task ConsumeMessages()
 
 async Task HandleMessage(MessageResponse messageResponse)
 {
-    var bytes = Convert.FromBase64String(messageResponse.Payload);
-    var json = Encoding.UTF8.GetString(bytes);
-    var message = JsonSerializer.Deserialize<Envelope>(json);
+    //this is giga inefficient, but its only a sample so who cares
+    var length = (messageResponse.Payload.Length * 3) / 4;
+    var bytes = new byte[length];
+    var isBase64 = Convert.TryFromBase64Chars(messageResponse.Payload, bytes, out _);
+    Envelope message = new Envelope();
+    if (isBase64)
+    {
+        bytes = Convert.FromBase64String(messageResponse.Payload);
+        var json = Encoding.UTF8.GetString(bytes);
+        message = JsonSerializer.Deserialize<Envelope>(json);
+    }
+    else
+    {
+        message = JsonSerializer.Deserialize<Envelope>(messageResponse.Payload, jsonOptions);
+    }
+    
     Console.Write($"Handling message type: {message!.MessageType} at offset: {messageResponse.Offset} ");
 
     switch (message.MessageType)
