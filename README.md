@@ -2,7 +2,6 @@
 
 
 ### TODO 
-- Implement TCP transfering protocol
 - Add support for `ASP.NET Core` Dependency Injection
 
 
