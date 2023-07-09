@@ -1,4 +1,5 @@
 using System.Buffers.Binary;
+using System.Runtime.InteropServices;
 using System.Text;
 using Iggy_SDK.Enums;
 
@@ -10,10 +11,11 @@ internal static class TcpContracts
     {
         Span<byte> bytes = stackalloc byte[31];
         bytes[0] = 0;
-        BitConverter.TryWriteBytes(bytes.Slice(1, sizeof(int)), request.ConsumerId);
-        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int) + 1, sizeof(int)), request.StreamId);
-        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int) * 2 + 1, sizeof(int)), request.TopicId);
-        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int) * 3 + 1, sizeof(int)), request.PartitionId);
+
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[1..5], request.ConsumerId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[5..9], request.StreamId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[9..13], request.TopicId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[13..17], request.PartitionId);
         bytes[sizeof(int) * 4 + 1] = request.PollingStrategy switch
         {
             MessagePolling.Offset => 0,
@@ -22,47 +24,37 @@ internal static class TcpContracts
             MessagePolling.Last => 3,
             MessagePolling.Next => 4,
         };
-        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int) * 4 + 2, sizeof(ulong)), request.Value);
-        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int) * 4 + sizeof(ulong) + 2, sizeof(int)), request.Count);
+        BinaryPrimitives.WriteUInt64LittleEndian(bytes[18..26], (ulong)request.Value);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[26..30], request.Count);
         
-        if (request.AutoCommit)
-        {
-            bytes[30] = 1;
-        }
-        else
-        {
-            bytes[30] = 0;
-        }
+        bytes[30] = request.AutoCommit ? (byte)1 : (byte)0;
         return bytes.ToArray();
         
     }
     internal static byte[] CreateMessage(MessageSendRequest request)
     {
-        int messageBytesCount = 0;
-        foreach (var message in request.Messages)
-        {
-            messageBytesCount += 16 + 4 + message.Payload.Length;
-        }
-        
+        int messageBytesCount = request.Messages.Sum(message => 16 + 4 + message.Payload.Length);
+
         Span<byte> bytes = stackalloc byte[17 + messageBytesCount];
-        BitConverter.TryWriteBytes(bytes.Slice(0, sizeof(int)), request.StreamId);
-        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int), sizeof(int)), request.TopicId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[0..4], request.StreamId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[4..8], request.TopicId);
         bytes[sizeof(int) * 2] = request.KeyKind switch
         {
             Keykind.PartitionId => 0,
             Keykind.EntityId => 1
         };
-        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int) * 2 + 1, sizeof(int)), request.KeyValue);
-        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int) * 3 + 1, sizeof(int)), request.Messages.Count());
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[9..13], request.KeyValue);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[13..17], request.Messages.Count());
 
         int position = 17;
         foreach (var message in request.Messages)
         {
-            BitConverter.TryWriteBytes(bytes.Slice(position, 16), message.Id);
-            BitConverter.TryWriteBytes(bytes.Slice(position + 16, sizeof(int)), message.Payload.Length);
-            var payloadBytes = Encoding.UTF8.GetBytes(message.Payload);
-            var slice = bytes.Slice(position + 16 + sizeof(int));
-            payloadBytes.AsSpan().CopyTo(slice);
+            BinaryPrimitives.WriteInt64LittleEndian(bytes[(position + 16)..(position + 24)], message.Id);
+            BinaryPrimitives.WriteInt32LittleEndian(bytes.Slice(position + 16, sizeof(int)), message.Payload.Length);
+            BinaryPrimitives.WriteInt32LittleEndian(bytes[(position + 24)..(position + 28)], message.Payload.Length);
+            var payloadBytes = Encoding.UTF8.GetBytes(message.Payload).AsSpan();
+            var slice = bytes[(position + 16 + 4)..];
+            payloadBytes.CopyTo(slice);
             position += payloadBytes.Length + 16 + sizeof(int);
         }
         
@@ -71,92 +63,92 @@ internal static class TcpContracts
     internal static byte[] CreateStream(StreamRequest request)
     {
         Span<byte> bytes = stackalloc byte[sizeof(int) + request.Name.Length];
-        BitConverter.TryWriteBytes(bytes.Slice(0, sizeof(int)), request.StreamId);
-        Encoding.UTF8.GetBytes(request.Name, bytes.Slice(sizeof(int)));
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[..4], request.StreamId);
+        Encoding.UTF8.GetBytes(request.Name, bytes[4..]);
         return bytes.ToArray();
     }
 
     internal static byte[] CreateGroup(int streamId, int topicId, GroupRequest request)
     {
         Span<byte> bytes = stackalloc byte[sizeof(int) * 3];
-        BitConverter.TryWriteBytes(bytes.Slice(0, sizeof(int)), streamId);
-        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int), sizeof(int)), topicId);
-        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int) * 2, sizeof(int)), request.GroupId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[..4], streamId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[4..8], topicId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[8..12], request.GroupId);
         return bytes.ToArray();
     }
 
     internal static byte[] DeleteGroup(int streamId, int topicId, int groupId)
     {
         Span<byte> bytes = stackalloc byte[sizeof(int) * 3];
-        BitConverter.TryWriteBytes(bytes.Slice(0, sizeof(int)), streamId);
-        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int), sizeof(int)), topicId);
-        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int) * 2, sizeof(int)), groupId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[..4], streamId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[4..8], topicId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[8..12], groupId);
         return bytes.ToArray();
     }
 
     internal static byte[] GetGroups(int streamId, int topicId)
     {
         Span<byte> bytes = stackalloc byte[sizeof(int) * 2];
-        BitConverter.TryWriteBytes(bytes.Slice(0, sizeof(int)), streamId);
-        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int), sizeof(int)), topicId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[..4], streamId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[4..8], topicId);
         return bytes.ToArray();
     }
 
     internal static byte[] GetGroup(int streamId, int topicId, int groupId)
     {
         Span<byte> bytes = stackalloc byte[sizeof(int) * 3];
-        BitConverter.TryWriteBytes(bytes.Slice(0, sizeof(int)), streamId);
-        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int), sizeof(int)), topicId);
-        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int) * 2, sizeof(int)), groupId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[..4], streamId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[4..8], topicId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[8..12], groupId);
         return bytes.ToArray();
     }
 
     internal static byte[] CreateTopic(int streamId, TopicRequest request)
     {
         Span<byte> bytes = stackalloc byte[sizeof(int) * 3 + request.Name.Length];
-        BitConverter.TryWriteBytes(bytes.Slice(0, sizeof(int)), streamId);
-        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int), sizeof(int)), request.TopicId);
-        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int) * 2, sizeof(int)), request.PartitionsCount);
-        Encoding.UTF8.GetBytes(request.Name, bytes.Slice(sizeof(int) * 3));
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[..4], streamId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[4..8], request.TopicId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[8..12], request.PartitionsCount);
+        Encoding.UTF8.GetBytes(request.Name, bytes[12..]);
         return bytes.ToArray();
     }
 
     internal static byte[] GetTopicById(int streamId, int topicId)
     {
         Span<byte> bytes = stackalloc byte[sizeof(int) * 2];
-        BitConverter.TryWriteBytes(bytes.Slice(0, sizeof(int)), streamId);
-        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int), sizeof(int)), topicId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[..4], streamId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[4..8], topicId);
         return bytes.ToArray();
     }
 
     internal static byte[] DeleteTopic(int streamId, int topicId)
     {
         Span<byte> bytes = stackalloc byte[sizeof(int) * 2];
-        BitConverter.TryWriteBytes(bytes.Slice(0, sizeof(int)), streamId);
-        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int), sizeof(int)), topicId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[..4], streamId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[4..8], topicId);
         return bytes.ToArray();
     }
 
     internal static byte[] UpdateOffset(int streamId, int topicId, OffsetContract contract)
     {
-        Span<byte> bytes = stackalloc byte[sizeof(int) * 4 + sizeof(ulong)];
+        Span<byte> bytes = stackalloc byte[sizeof(int) * 4 + sizeof(ulong) + 1];
         bytes[0] = 0;
-        BitConverter.TryWriteBytes(bytes.Slice(1, sizeof(int)), streamId);
-        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int) + 1, sizeof(int)), topicId);
-        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int) * 2 + 1, sizeof(int)), contract.ConsumerId);
-        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int) * 3 + 1, sizeof(int)), contract.PartitionId);
-        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int) * 4 + 1, sizeof(ulong)), (ulong)contract.Offset);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[1..5], streamId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[5..9], topicId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[9..13], contract.ConsumerId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[13..17], contract.PartitionId);
+        BinaryPrimitives.WriteUInt64LittleEndian(bytes[17..25], (ulong)contract.Offset);
         return bytes.ToArray();
     }
 
     internal static byte[] GetOffset(OffsetRequest request)
     {
-        Span<byte> bytes = stackalloc byte[sizeof(int) * 4];
+        Span<byte> bytes = stackalloc byte[sizeof(int) * 4 + 1];
         bytes[0] = 0;
-        BitConverter.TryWriteBytes(bytes.Slice(1, sizeof(int)), request.StreamId);
-        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int) + 1, sizeof(int)), request.TopicId);
-        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int) * 2 + 1, sizeof(int)), request.ConsumerId);
-        BitConverter.TryWriteBytes(bytes.Slice(sizeof(int) * 3 + 1, sizeof(int)), request.PartitionId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[1..5], request.StreamId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[5..9], request.TopicId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[9..13], request.ConsumerId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[13..17], request.PartitionId);
         return bytes.ToArray();
     }
 

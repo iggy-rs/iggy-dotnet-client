@@ -353,7 +353,7 @@ public sealed class MessageStreamUnitTests
 		_httpHandler.When(HttpMethod.Put, $"/streams/{streamId}/topics/{topicId}/messages/offsets")
 			.Respond(HttpStatusCode.NoContent);
 		
-		var result = await _sut.UpdateOffsetAsync(streamId, topicId, contract);
+		var result = await _sut.StoreOffsetAsync(streamId, topicId, contract);
 		Assert.True(result);
 		_httpHandler.Flush();
 	}
@@ -368,7 +368,7 @@ public sealed class MessageStreamUnitTests
 		_httpHandler.When(HttpMethod.Put, $"/streams/{streamId}/topics/{topicId}/messages/offsets")
 			.Respond(HttpStatusCode.BadRequest);
 		
-		var result = await _sut.UpdateOffsetAsync(streamId, topicId, contract);
+		var result = await _sut.StoreOffsetAsync(streamId, topicId, contract);
 		Assert.False(result);
 		_httpHandler.Flush();
 	}

@@ -127,7 +127,7 @@ public class HttpMessageStream : IMessageStream
         return Enumerable.Empty<MessageResponse>();
     }
 
-    public async Task<bool> UpdateOffsetAsync(int streamId, int topicId, OffsetContract contract)
+    public async Task<bool> StoreOffsetAsync(int streamId, int topicId, OffsetContract contract)
     {
         var json = JsonSerializer.Serialize(contract, _toSnakeCaseOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
