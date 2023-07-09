@@ -1,3 +1,4 @@
+using System.Buffers.Binary;
 using System.Net.Sockets;
 using ConsoleApp;
 using Iggy_SDK.Contracts;
@@ -21,7 +22,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	}
 	public async Task<bool> CreateStreamAsync(StreamRequest request)
 	{
-		var message = TcpContracts.CreateStream(request);
+		byte[] message = TcpContracts.CreateStream(request);
 		var messageLength = message.Length + 1;
 
 		byte commandByte = CommandCodes.CREATE_STREAM_CODE;
@@ -54,13 +55,15 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 
 		var buffer = new byte[ExpectedResponseSize];
 		await _stream.ReadExactlyAsync(buffer);
+		
 		if (buffer.Length != ExpectedResponseSize)
 		{
 			throw new TcpInvalidResponseException();
 		}
-		
+
+		await _stream.ReadExactlyAsync(buffer);
 		var status = buffer[0];
-		var length = BitConverter.ToUInt32(buffer.AsSpan()[1..]);
+		var length = BinaryPrimitives.ReadInt32LittleEndian(buffer.AsSpan()[1..]);
 		if (status != 0)
 		{
 			throw new TcpInvalidStatus();
@@ -74,7 +77,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		await _stream.ReadExactlyAsync(responseBuffer);
 		return BinaryMapper.MapStream(responseBuffer);
 	}
-
+	
 	public async Task<IEnumerable<StreamsResponse>> GetStreamsAsync()
 	{
 		var message = Enumerable.Empty<byte>().ToArray();
@@ -94,7 +97,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 		
 		var status = buffer[0];
-		var length = BitConverter.ToUInt32(buffer.AsSpan()[1..]);
+		var length = BinaryPrimitives.ReadInt32LittleEndian(buffer.AsSpan()[1..]);
 		if (status != 0)
 		{
 			throw new TcpInvalidStatus();
@@ -150,7 +153,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 		
 		var status = buffer[0];
-		var length = BitConverter.ToUInt32(buffer.AsSpan()[1..]);
+		var length = BinaryPrimitives.ReadInt32LittleEndian(buffer.AsSpan()[1..]);
 		if (status != 0)
 		{
 			throw new TcpInvalidStatus();
@@ -184,7 +187,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 		
 		var status = buffer[0];
-		var length = BitConverter.ToUInt32(buffer.AsSpan()[1..]);
+		var length = BinaryPrimitives.ReadInt32LittleEndian(buffer.AsSpan()[1..]);
 		if (status != 0)
 		{
 			throw new TcpInvalidStatus();
@@ -268,7 +271,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 
 	public async Task<IEnumerable<MessageResponse>> GetMessagesAsync(MessageFetchRequest request)
 	{
-		var message = TcpContracts.GetMessages(request);
+		byte[] message = TcpContracts.GetMessages(request);
 		var messageLength = message.Length + 1;
 
 		byte commandByte = CommandCodes.POLL_MESSAGES_CODE;
@@ -285,7 +288,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 		
 		var status = buffer[0];
-		var length = BitConverter.ToUInt32(buffer.AsSpan()[1..]);
+		var length = BinaryPrimitives.ReadInt32LittleEndian(buffer.AsSpan()[1..]);
 		if (status != 0)
 		{
 			throw new TcpInvalidStatus();
@@ -341,7 +344,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 		
 		var status = buffer[0];
-		var length = BitConverter.ToUInt32(buffer.AsSpan()[1..]);
+		var length = BinaryPrimitives.ReadInt32LittleEndian(buffer.AsSpan()[1..]);
 		if (status != 0)
 		{
 			throw new TcpInvalidStatus();
@@ -375,7 +378,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 
 		var status = buffer[0];
-		var length = BitConverter.ToUInt32(buffer.AsSpan()[1..]);
+		var length = BinaryPrimitives.ReadInt32LittleEndian(buffer.AsSpan()[1..]);
 		if (status != 0)
 		{
 			throw new TcpInvalidStatus();
@@ -410,7 +413,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 
 		var status = buffer[0];
-		var length = BitConverter.ToUInt32(buffer.AsSpan()[1..]);
+		var length = BinaryPrimitives.ReadInt32LittleEndian(buffer.AsSpan()[1..]);
 		if (status != 0)
 		{
 			throw new TcpInvalidStatus();
@@ -470,7 +473,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		return status == 0;
 	}
 	
-	private static byte[] CreatePayload(byte[] messageLengthBytes, byte[] message, byte commandByte, int messageLength)
+	private static byte[] CreatePayload(Span<byte> messageLengthBytes, Span<byte> message, byte commandByte, int messageLength)
 	{
 		Span<byte> messageBytes = stackalloc byte[InitialBytesLength + messageLength];
 		messageLengthBytes.CopyTo(messageBytes);

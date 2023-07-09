@@ -15,50 +15,10 @@ public static class BinaryMapper
             ConsumerId = consumerId
         };
     }
-    /*public static IEnumerable<MessageResponse> MapMessages(byte[] payload)
-    {
-        const int PROPERTIES_SIZE = 36;
-        int length = payload.Length;
-        int position = 4;
-        List<MessageResponse> messages = new();
-        while (position < length)
-        {
-            int offset = BitConverter.ToInt32(payload, position);
-            ulong timestamp = BitConverter.ToUInt64(payload, position + 8);
-            byte[] idBytes = new byte[16];
-            Array.Copy(payload, position + 16, idBytes, 0, 16);
-            UInt128 id = BitConverter.ToUInt64(idBytes);
-            uint messageLength = BitConverter.ToUInt32(payload, position + 32);
-
-            int payloadRangeStart = position + PROPERTIES_SIZE;
-            int payloadRangeEnd = payloadRangeStart + (int)messageLength;
-            if (payloadRangeStart > length || payloadRangeEnd > length)
-                break;
-
-            byte[] messagePayload = new byte[messageLength];
-            Array.Copy(payload, payloadRangeStart, messagePayload, 0, messageLength);
-            int totalSize = PROPERTIES_SIZE + (int)messageLength;
-            
-            position += totalSize;
-
-            messages.Add(new MessageResponse
-            {
-                Offset = offset,
-                Timestamp = timestamp,
-                Id = id,
-                Payload = Encoding.ASCII.GetString(messagePayload)
-            });
-
-            if (position + PROPERTIES_SIZE >= length)
-                break;
-        }
-
-        return messages;
-    }*/
+    
     public static IEnumerable<MessageResponse> MapMessages(byte[] payload)
     {
-        var payloadBuffer = Encoding.ASCII.GetString(payload);
-        const int PROPERTIES_SIZE = 36;
+        const int propertiesSize = 36;
         int length = payload.Length;
         int position = 4;
         List<MessageResponse> messages = new();
@@ -70,8 +30,8 @@ public static class BinaryMapper
             ulong id = BitConverter.ToUInt64(payload, position + 16);
             uint messageLength = BitConverter.ToUInt32(payload, position + 32);
 
-            int payloadRangeStart = position + PROPERTIES_SIZE;
-            int payloadRangeEnd = position + PROPERTIES_SIZE + (int)messageLength;
+            int payloadRangeStart = position + propertiesSize;
+            int payloadRangeEnd = position + propertiesSize + (int)messageLength;
             if (payloadRangeStart > length || payloadRangeEnd > length)
             {
                 break;
@@ -80,7 +40,7 @@ public static class BinaryMapper
             var payloadSlice = payload.AsSpan()[payloadRangeStart..payloadRangeEnd];
             var payloadStringify = Encoding.UTF8.GetString(payloadSlice);
 
-            int totalSize = PROPERTIES_SIZE + (int)messageLength;
+            int totalSize = propertiesSize + (int)messageLength;
             position += totalSize;
 
             messages.Add(new MessageResponse
@@ -91,7 +51,7 @@ public static class BinaryMapper
                 Payload = payloadStringify
             });
 
-            if (position + PROPERTIES_SIZE >= length)
+            if (position + propertiesSize >= length)
             {
                 break;
             }
@@ -144,13 +104,13 @@ public static class BinaryMapper
         int topicsCount = BitConverter.ToInt16(payload, position + 4);
         int nameLength = BitConverter.ToInt16(payload, position + 8);
         
-        string name = Encoding.UTF8.GetString(payload, position + 12, (int)nameLength);
+        string name = Encoding.UTF8.GetString(payload, position + 12, nameLength);
         int readBytes = 4 + 4 + 4 + nameLength;
         
         return (new StreamResponse { Id = id, TopicsCount = topicsCount, Name = name }, readBytes);
     }
 
-    private static Tuple<StreamsResponse, int> MapToStreams(byte[] payload, int position)
+    private static (StreamsResponse stream, int readBytes) MapToStreams(byte[] payload, int position)
     {
         int id = BitConverter.ToInt32(payload, position);
         int topicsCount = BitConverter.ToInt32(payload, position + 4);
@@ -165,7 +125,7 @@ public static class BinaryMapper
             Name = name
         };
 
-        return Tuple.Create(stream, readBytes);
+        return (stream, readBytes);
     } 
 
     public static IEnumerable<TopicsResponse> MapTopics(byte[] payload)
@@ -224,6 +184,7 @@ public static class BinaryMapper
         int currentOffset = BitConverter.ToInt32(payload, position + 8);
         int sizeBytes = BitConverter.ToInt32(payload, position + 16);
         int readBytes = 4 + 4 + 8 + 8;
+        
         return (new PartitionContract { Id = id, SegmentsCount = segmentsCount, CurrentOffset = currentOffset, SizeBytes = sizeBytes }, readBytes);
     }
 
@@ -238,18 +199,21 @@ public static class BinaryMapper
             consumerGroups.Add(consumerGroup);
             position += readBytes;
         }
+        
         return consumerGroups;
     }
 
     public static GroupResponse MapConsumerGroup(byte[] payload)
     {
         (GroupResponse consumerGroup, int position) = MapToConsumerGroup(payload, 0);
+        
         return consumerGroup;
     }
     private static (GroupResponse consumerGroup, int readBytes) MapToConsumerGroup(byte[] payload, int position)
     {
         int id = BitConverter.ToInt32(payload, position);
         int membersCount = BitConverter.ToInt32(payload, position + 4);
+        
         return (new GroupResponse { Id = id, MembersCount = membersCount }, 8);
     }
 }

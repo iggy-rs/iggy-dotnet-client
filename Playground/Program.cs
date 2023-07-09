@@ -20,9 +20,8 @@ var order = new Shared.OrderCreated()
 	CurrencyPair = "PLN/USD"
 };
 var env = order.ToJson();
-Console.WriteLine(env);
 
-/*
+
 var createMessage = await bus.SendMessagesAsync(new MessageSendRequest
 {
 	StreamId = 1,
@@ -38,7 +37,6 @@ var createMessage = await bus.SendMessagesAsync(new MessageSendRequest
 		}
 	}
 });
-*/
 
 var resp = await bus.GetMessagesAsync(new MessageFetchRequest
 {

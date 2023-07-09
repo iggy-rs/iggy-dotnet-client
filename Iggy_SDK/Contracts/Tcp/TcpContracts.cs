@@ -1,3 +1,4 @@
+using System.Buffers.Binary;
 using System.Text;
 using Iggy_SDK.Enums;
 
