@@ -2,9 +2,9 @@ using Iggy_SDK.Contracts;
 
 namespace Iggy_SDK_Tests.Utils.Topics;
 
-public static class TopicFactory
+internal static class TopicFactory
 {
-	public static TopicRequest CreateTopicRequest()
+	internal static TopicRequest CreateTopicRequest()
 	{
 		return new TopicRequest
 		{
@@ -14,7 +14,7 @@ public static class TopicFactory
 		};
 	}
 
-	public static TopicsResponse CreateTopicsResponse()
+	internal static TopicsResponse CreateTopicsResponse()
 	{
 		return new TopicsResponse
 		{

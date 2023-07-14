@@ -3,9 +3,9 @@ using Iggy_SDK.Contracts;
 
 namespace Iggy_SDK_Tests.Utils.Streams;
 
-public static class StreamFactory
+internal static class StreamFactory
 {
-	public static StreamRequest CreateStreamRequest()
+	internal static StreamRequest CreateStreamRequest()
 	{
 		return new StreamRequest
 		{
@@ -14,7 +14,7 @@ public static class StreamFactory
 		};
 	}
 
-	public static StreamResponse CreateStreamResponse()
+	internal static StreamResponse CreateStreamResponse()
 	{
 		var responses = new List<TopicsResponse>();
 		var topicResponse = TopicFactory.CreateTopicsResponse();
@@ -27,7 +27,7 @@ public static class StreamFactory
 			Topics = responses
 		};
 	}
-	public static StreamsResponse CreateStreamsResponse()
+	internal static StreamsResponse CreateStreamsResponse()
 	{
 		return new StreamsResponse
 		{

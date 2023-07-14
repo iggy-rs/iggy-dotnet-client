@@ -3,9 +3,9 @@ using System.Text;
 using Iggy_SDK.Contracts;
 
 namespace Iggy_SDK.Mappers;
-public static class BinaryMapper
+internal static class BinaryMapper
 {
-    public static OffsetResponse MapOffsets(ReadOnlySpan<byte> payload)
+    internal static OffsetResponse MapOffsets(ReadOnlySpan<byte> payload)
     {
         int consumerId = BinaryPrimitives.ReadInt32LittleEndian(payload[0..4]);
         int offset = BinaryPrimitives.ReadInt32LittleEndian(payload[4..8]);
@@ -17,7 +17,7 @@ public static class BinaryMapper
         };
     }
     
-    public static IEnumerable<MessageResponse> MapMessages(ReadOnlySpan<byte> payload)
+    internal static IEnumerable<MessageResponse> MapMessages(ReadOnlySpan<byte> payload)
     {
         const int propertiesSize = 36;
         int length = payload.Length;
@@ -61,7 +61,7 @@ public static class BinaryMapper
         return messages;
     }
 
-    public static IEnumerable<StreamsResponse> MapStreams(ReadOnlySpan<byte> payload)
+    internal static IEnumerable<StreamsResponse> MapStreams(ReadOnlySpan<byte> payload)
     {
         List<StreamsResponse> streams = new();
         int length = payload.Length;
@@ -77,7 +77,7 @@ public static class BinaryMapper
         return streams;
     }
 
-    public static StreamResponse MapStream(ReadOnlySpan<byte> payload)
+    internal static StreamResponse MapStream(ReadOnlySpan<byte> payload)
     {
         (StreamResponse stream, int position) = MapToStream(payload, 0);
         List<TopicsResponse> topics = new();
@@ -129,7 +129,7 @@ public static class BinaryMapper
         return (stream, readBytes);
     }
 
-    public static IEnumerable<TopicsResponse> MapTopics(ReadOnlySpan<byte> payload)
+    internal static IEnumerable<TopicsResponse> MapTopics(ReadOnlySpan<byte> payload)
     {
         List<TopicsResponse> topics = new();
         int length = payload.Length;
@@ -145,7 +145,7 @@ public static class BinaryMapper
         return topics;
     }
 
-    public static TopicsResponse MapTopic(ReadOnlySpan<byte> payload)
+    internal static TopicsResponse MapTopic(ReadOnlySpan<byte> payload)
     {
         (TopicsResponse topic, int position) = MapToTopic(payload, 0);
         List<PartitionContract> partitions = new();
@@ -190,7 +190,7 @@ public static class BinaryMapper
         return (new PartitionContract { Id = id, SegmentsCount = segmentsCount, CurrentOffset = currentOffset, SizeBytes = sizeBytes }, readBytes);
     }
 
-   public static List<GroupResponse> MapConsumerGroups(ReadOnlySpan<byte> payload)
+   internal static List<GroupResponse> MapConsumerGroups(ReadOnlySpan<byte> payload)
     {
         List<GroupResponse> consumerGroups = new();
         int length = payload.Length;
@@ -205,7 +205,7 @@ public static class BinaryMapper
         return consumerGroups;
     }
 
-    public static GroupResponse MapConsumerGroup(ReadOnlySpan<byte> payload)
+    internal static GroupResponse MapConsumerGroup(ReadOnlySpan<byte> payload)
     {
         (GroupResponse consumerGroup, int position) = MapToConsumerGroup(payload, 0);
         

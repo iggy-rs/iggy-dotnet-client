@@ -388,7 +388,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	
 	public void Dispose()
 	{
-			_client.Dispose();
+		_client.Dispose();
 		_stream.Dispose();
 	}
 }

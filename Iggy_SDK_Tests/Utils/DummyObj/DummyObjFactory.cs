@@ -2,9 +2,9 @@ using Iggy_SDK_Tests.Utils.Messages;
 
 namespace Iggy_SDK_Tests.Utils.DummyObj;
 
-public static class DummyObjFactory
+internal static class DummyObjFactory
 {
-	public static DummyObject CreateDummyObject()
+	internal static DummyObject CreateDummyObject()
 	{
 		return new DummyObject
 		{

@@ -2,9 +2,9 @@ using Iggy_SDK.Contracts;
 
 namespace Iggy_SDK_Tests.Utils.Offset;
 
-public static class OffsetFactory
+internal static class OffsetFactory
 {
-	public static OffsetRequest CreateOffsetRequest()
+	internal static OffsetRequest CreateOffsetRequest()
 	{
 		return new OffsetRequest
 		{
@@ -15,7 +15,7 @@ public static class OffsetFactory
 		};
 	}
 
-	public static OffsetResponse CreateOffsetResponse()
+	internal static OffsetResponse CreateOffsetResponse()
 	{
 		return new OffsetResponse
 		{
@@ -24,7 +24,7 @@ public static class OffsetFactory
 		};
 	}
 
-	public static OffsetContract CreateOffsetContract()
+	internal static OffsetContract CreateOffsetContract()
 	{
 		return new OffsetContract
 		{

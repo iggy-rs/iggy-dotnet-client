@@ -7,9 +7,9 @@ using Iggy_SDK.Messages;
 
 namespace Iggy_SDK_Tests.Utils.Messages;
 
-public static class MessageFactory
+internal static class MessageFactory
 {
-	public static MessageSendRequest CreateMessageSendRequest()
+	internal static MessageSendRequest CreateMessageSendRequest()
 	{
 		return new MessageSendRequest
 		{
@@ -34,7 +34,7 @@ public static class MessageFactory
 		};
 	}
 
-	public static MessageFetchRequest CreateMessageFetchRequest()
+	internal static MessageFetchRequest CreateMessageFetchRequest()
 	{
 		return new MessageFetchRequest
 		{
@@ -49,7 +49,7 @@ public static class MessageFactory
 		};
 	}
 
-	public static MessageResponse CreateMessageResponse()
+	internal static MessageResponse CreateMessageResponse()
 	{
 		return new MessageResponse
 		{
@@ -61,13 +61,13 @@ public static class MessageFactory
 	}
 }
 
-public class DummyMessage  : IMessage
+internal class DummyMessage  : IMessage
 {
-	public int Id { get; set; }
+	public long Id { get; set; }
 	public string Payload { get; set; }
 }
 
-public class DummyObject
+internal class DummyObject
 {
 	public int Id { get; set; }
 	public string Text { get; set; }

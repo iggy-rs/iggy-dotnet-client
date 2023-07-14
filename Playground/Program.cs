@@ -1,17 +1,18 @@
-﻿using ConsoleApp;
-using Iggy_SDK.Contracts;
+﻿using System.Net;
+using System.Net.Security;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
 
-
-var bus = MessageStreamFactory.CreateMessageStream(options =>
-{
-	options.BaseAdress = "127.0.0.1:8090";
-	options.Protocol = Protocol.Tcp;
-});
-
-var stream = await bus.GetStreamByIdAsync(1);
 Console.WriteLine();
+
+// var bus = MessageStreamFactory.CreateMessageStream(options =>
+// {
+// 	options.BaseAdress = "127.0.0.1:8090";
+// 	options.Protocol = Protocol.Tcp;
+// });
+//
+// var stream = await bus.GetStreamByIdAsync(1);
+// Console.WriteLine();
 
 
 // var bus = MessageStreamFactory.CreateMessageStream(options =>
