@@ -46,7 +46,7 @@ internal static class BinaryMapper
 
             messages.Add(new MessageResponse
             {
-                Offset = (int)offset,
+                Offset = offset,
                 Timestamp = timestamp,
                 Id = id,
                 Payload = payloadStringify
@@ -61,15 +61,15 @@ internal static class BinaryMapper
         return messages;
     }
 
-    internal static IEnumerable<StreamsResponse> MapStreams(ReadOnlySpan<byte> payload)
+    internal static IEnumerable<StreamResponse> MapStreams(ReadOnlySpan<byte> payload)
     {
-        List<StreamsResponse> streams = new();
+        List<StreamResponse> streams = new();
         int length = payload.Length;
         int position = 0;
         
         while (position < length)
         {
-            (StreamsResponse stream, int readBytes) = MapToStreams(payload, position);
+            (StreamResponse stream, int readBytes) = MapToStreams(payload, position);
             streams.Add(stream);
             position += readBytes;
         }
@@ -80,12 +80,12 @@ internal static class BinaryMapper
     internal static StreamResponse MapStream(ReadOnlySpan<byte> payload)
     {
         (StreamResponse stream, int position) = MapToStream(payload, 0);
-        List<TopicsResponse> topics = new();
+        List<TopicResponse> topics = new();
         int length = payload.Length;
         
         while (position < length)
         {
-            (TopicsResponse topic, int readBytes) = MapToTopic(payload, position);
+            (TopicResponse topic, int readBytes) = MapToTopic(payload, position);
             topics.Add(topic);
             position += readBytes;
         }
@@ -111,7 +111,7 @@ internal static class BinaryMapper
         return (new StreamResponse { Id = id, TopicsCount = topicsCount, Name = name }, readBytes);
     }
 
-    private static (StreamsResponse stream, int readBytes) MapToStreams(ReadOnlySpan<byte> payload, int position)
+    private static (StreamResponse stream, int readBytes) MapToStreams(ReadOnlySpan<byte> payload, int position)
     {
         int id = BinaryPrimitives.ReadInt32LittleEndian(payload[position..(position + 4)]);
         int topicsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 4)..(position + 8)]);
@@ -119,7 +119,7 @@ internal static class BinaryMapper
         string name = Encoding.UTF8.GetString(payload[(position + 12)..(position + 12 + nameLength)]);
         int readBytes = 4 + 4 + 4 + nameLength;
 
-        var stream = new StreamsResponse
+        var stream = new StreamResponse
         {
             Id = id,
             TopicsCount = topicsCount,
@@ -129,15 +129,15 @@ internal static class BinaryMapper
         return (stream, readBytes);
     }
 
-    internal static IEnumerable<TopicsResponse> MapTopics(ReadOnlySpan<byte> payload)
+    internal static IEnumerable<TopicResponse> MapTopics(ReadOnlySpan<byte> payload)
     {
-        List<TopicsResponse> topics = new();
+        List<TopicResponse> topics = new();
         int length = payload.Length;
         int position = 0;
         
         while (position < length)
         {
-            (TopicsResponse topic, int readBytes) = MapToTopic(payload, position);
+            (TopicResponse topic, int readBytes) = MapToTopic(payload, position);
             topics.Add(topic);
             position += readBytes;
         }
@@ -145,9 +145,9 @@ internal static class BinaryMapper
         return topics;
     }
 
-    internal static TopicsResponse MapTopic(ReadOnlySpan<byte> payload)
+    internal static TopicResponse MapTopic(ReadOnlySpan<byte> payload)
     {
-        (TopicsResponse topic, int position) = MapToTopic(payload, 0);
+        (TopicResponse topic, int position) = MapToTopic(payload, 0);
         List<PartitionContract> partitions = new();
         int length = payload.Length;
         
@@ -158,7 +158,7 @@ internal static class BinaryMapper
             position += readBytes;
         }
 
-        return new TopicsResponse
+        return new TopicResponse
         {
             Id = topic.Id,
             Name = topic.Name,
@@ -167,7 +167,7 @@ internal static class BinaryMapper
         };
     }
 
-    private static (TopicsResponse topic, int readBytes) MapToTopic(ReadOnlySpan<byte> payload, int position)
+    private static (TopicResponse topic, int readBytes) MapToTopic(ReadOnlySpan<byte> payload, int position)
     {
         int id = BinaryPrimitives.ReadInt32LittleEndian(payload[position..(position + 4)]);
         int partitionsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 4)..(position + 8)]);
@@ -175,7 +175,7 @@ internal static class BinaryMapper
         string name = Encoding.UTF8.GetString(payload[(position + 12)..(position + 12 + nameLength)]);
         int readBytes = 4 + 4 + 4 + nameLength;
         
-        return (new TopicsResponse { Id = id, PartitionsCount = partitionsCount, Name = name }, readBytes);
+        return (new TopicResponse { Id = id, PartitionsCount = partitionsCount, Name = name }, readBytes);
     }
 
     private static (PartitionContract partition, int readBytes) MapToPartition(ReadOnlySpan<byte>

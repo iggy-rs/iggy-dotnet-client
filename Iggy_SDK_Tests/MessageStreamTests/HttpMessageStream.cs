@@ -15,7 +15,7 @@ using RichardSzalay.MockHttp;
 
 namespace Iggy_SDK_Tests.MessageStreamTests;
 
-public sealed class MessageStreamUnitTests
+public sealed class HttpMessageStream
 {
 	private readonly MockHttpMessageHandler _httpHandler;
 	private readonly IMessageStream _sut;
@@ -24,7 +24,7 @@ public sealed class MessageStreamUnitTests
 	
 	private const string URL = "http://localhost:3000";
 	
-	public MessageStreamUnitTests()
+	public HttpMessageStream()
 	{
 		_toSnakeCaseOptions = new();
 		_toSnakeCaseOptions.PropertyNamingPolicy = new ToSnakeCaseNamingPolicy();
@@ -36,7 +36,7 @@ public sealed class MessageStreamUnitTests
         
 		var client = _httpHandler.ToHttpClient();
 		client.BaseAddress = new Uri(URL);
-		_sut = new HttpMessageStream(client);
+		_sut = new Iggy_SDK.MessageStream.Implementations.HttpMessageStream(client);
 	}
 	
 	[Fact]
@@ -115,7 +115,7 @@ public sealed class MessageStreamUnitTests
 	[Fact]
 	public async Task GetStreamsAsync_Returns200Ok_WhenFound()
 	{
-		var response = new List<StreamsResponse>();
+		var response = new List<StreamResponse>();
 		response.Add(StreamFactory.CreateStreamsResponse());
 		var content = JsonSerializer.Serialize(response, _toSnakeCaseOptions);
 
@@ -132,7 +132,7 @@ public sealed class MessageStreamUnitTests
 	[Fact]
 	public async Task GetStreamsAsync_Returns404NotFound_OnFailure()
 	{
-		var response = new List<StreamsResponse>();
+		var response = new List<StreamResponse>();
 		var content = JsonSerializer.Serialize(response, _toSnakeCaseOptions);
 
 		_httpHandler.When(HttpMethod.Get, $"/streams")
@@ -208,7 +208,7 @@ public sealed class MessageStreamUnitTests
 	{
 		int streamId = 1;
 		
-		var response = new List<TopicsResponse>();
+		var response = new List<TopicResponse>();
 		response.Add(TopicFactory.CreateTopicsResponse());
 		var content = JsonSerializer.Serialize(response, _toSnakeCaseOptions);
 		
@@ -240,7 +240,7 @@ public sealed class MessageStreamUnitTests
 	{
 		int streamId = 1;
 		int topicId = 1;
-		TopicsResponse? topic = TopicFactory.CreateTopicsResponse();
+		TopicResponse? topic = TopicFactory.CreateTopicsResponse();
 		var content = JsonSerializer.Serialize(topic, _toSnakeCaseOptions);
 
 		_httpHandler.When(HttpMethod.Get, $"/streams/{streamId}/topics/{topicId}")
@@ -410,7 +410,7 @@ public sealed class MessageStreamUnitTests
 		int topicId = 1;
 		var response = GroupFactory.CreateGroupsResponse(3);
 
-		_httpHandler.When($"/streams/{streamId}/topics/{topicId}/groups")
+		_httpHandler.When($"/streams/{streamId}/topics/{topicId}/consumer_groups")
 			.Respond(HttpStatusCode.OK, "application/json", JsonSerializer.Serialize(response, _toSnakeCaseOptions));
 		
 		var result = await _sut.GetGroupsAsync(streamId , topicId);
@@ -425,7 +425,7 @@ public sealed class MessageStreamUnitTests
 		int topicId = 1;
 		var response = GroupFactory.Empty();
 
-		_httpHandler.When($"/streams/{streamId}/topics/{topicId}/groups")
+		_httpHandler.When($"/streams/{streamId}/topics/{topicId}/consumer_groups")
 			.Respond(HttpStatusCode.OK, "application/json", JsonSerializer.Serialize(response, _toSnakeCaseOptions));
 
 		var result = await _sut.GetGroupsAsync(streamId, topicId);

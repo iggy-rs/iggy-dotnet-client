@@ -13,7 +13,7 @@ internal sealed class BinaryFactory
         return payload;
     }
 
-    internal static byte[] CreateMessagePayload(int offset, int timestamp, int id, string payload)
+    internal static byte[] CreateMessagePayload(ulong offset, ulong timestamp, ulong id, string payload)
     {
         int messageLength = payload.Length;
         var payloadBytes = Encoding.UTF8.GetBytes(payload);

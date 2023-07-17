@@ -51,15 +51,15 @@ public class HttpMessageStream : IMessageStream
         return null;
     }
 
-    public async Task<IEnumerable<StreamsResponse>> GetStreamsAsync()
+    public async Task<IEnumerable<StreamResponse>> GetStreamsAsync()
     {
         var response = await _httpClient.GetAsync($"/streams");
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<IEnumerable<StreamsResponse>>(_toSnakeCaseOptions)
-                   ?? Enumerable.Empty<StreamsResponse>();
+            return await response.Content.ReadFromJsonAsync<IEnumerable<StreamResponse>>(_toSnakeCaseOptions)
+                   ?? Enumerable.Empty<StreamResponse>();
         }
-        return Enumerable.Empty<StreamsResponse>();
+        return Enumerable.Empty<StreamResponse>();
     }
 
     public async Task<bool> CreateTopicAsync(int streamId, TopicRequest topic)
@@ -77,23 +77,23 @@ public class HttpMessageStream : IMessageStream
         return response.StatusCode == HttpStatusCode.NoContent;
     }
 
-    public async Task<IEnumerable<TopicsResponse>> GetTopicsAsync(int streamId)
+    public async Task<IEnumerable<TopicResponse>> GetTopicsAsync(int streamId)
     {
         var response = await _httpClient.GetAsync($"/streams/{streamId}/topics");
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<IEnumerable<TopicsResponse>>(_toSnakeCaseOptions) 
-                   ?? Enumerable.Empty<TopicsResponse>();
+            return await response.Content.ReadFromJsonAsync<IEnumerable<TopicResponse>>(_toSnakeCaseOptions) 
+                   ?? Enumerable.Empty<TopicResponse>();
         }
-        return Enumerable.Empty<TopicsResponse>();
+        return Enumerable.Empty<TopicResponse>();
     }
 
-    public async Task<TopicsResponse?> GetTopicByIdAsync(int streamId, int topicId)
+    public async Task<TopicResponse?> GetTopicByIdAsync(int streamId, int topicId)
     {
         var response = await _httpClient.GetAsync($"/streams/{streamId}/topics/{topicId}");
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<TopicsResponse>(_toSnakeCaseOptions);
+            return await response.Content.ReadFromJsonAsync<TopicResponse>(_toSnakeCaseOptions);
         }
         return null;
     }
@@ -148,7 +148,7 @@ public class HttpMessageStream : IMessageStream
     }
     public async Task<IEnumerable<GroupResponse>> GetGroupsAsync(int streamId, int topicId)
     {
-        var response = await _httpClient.GetAsync($"/streams/{streamId}/topics/{topicId}/groups");
+        var response = await _httpClient.GetAsync($"/streams/{streamId}/topics/{topicId}/consumer_groups");
         
         if (response.IsSuccessStatusCode)
         {
@@ -160,7 +160,7 @@ public class HttpMessageStream : IMessageStream
     
     public async Task<GroupResponse?> GetGroupByIdAsync(int streamId, int topicId, int groupId)
     {
-        var response = await _httpClient.GetAsync($"/streams/{streamId}/topics/{topicId}/groups/{groupId}");
+        var response = await _httpClient.GetAsync($"/streams/{streamId}/topics/{topicId}/consumer_groups/{groupId}");
         
         if (response.IsSuccessStatusCode)
         {
@@ -169,17 +169,17 @@ public class HttpMessageStream : IMessageStream
         return null;
     }
     
-    public async Task<bool> CreateGroupAsync(int streamId, int topicId, GroupRequest request)
+    public async Task<bool> CreateGroupAsync(int streamId, int topicId, CreateGroupRequest request)
     {
         var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
         
-        var response = await _httpClient.PostAsync($"/streams/{streamId}/topics/{topicId}/groups", data);
+        var response = await _httpClient.PostAsync($"/streams/{streamId}/topics/{topicId}/consumer_groups", data);
         return response.StatusCode == HttpStatusCode.Created;
     }
     public async Task<bool> DeleteGroupAsync(int streamId, int topicId, int groupId)
     {
-        var response = await _httpClient.DeleteAsync($"/streams/{streamId}/topics/{topicId}/groups/{groupId}");
+        var response = await _httpClient.DeleteAsync($"/streams/{streamId}/topics/{topicId}/consumer_groups/{groupId}");
         return response.StatusCode == HttpStatusCode.NoContent;
     }
 

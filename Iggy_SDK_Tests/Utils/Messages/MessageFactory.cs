@@ -21,12 +21,12 @@ internal static class MessageFactory
 			{
 				new DummyMessage
 				{
-					Id = Random.Shared.Next(1, 10),
+					Id = (ulong)Random.Shared.Next(1, 10),
 					Payload = JsonSerializer.Serialize(DummyObjFactory.CreateDummyObject())
 				},
 				new DummyMessage
 				{
-					Id = Random.Shared.Next(1, 10),
+					Id = (ulong)Random.Shared.Next(1, 10),
 					Payload =  JsonSerializer.Serialize(DummyObjFactory.CreateDummyObject())
 				}
 
@@ -53,7 +53,7 @@ internal static class MessageFactory
 	{
 		return new MessageResponse
 		{
-			Offset = Random.Shared.Next(1, 10),
+			Offset = (ulong)Random.Shared.Next(1, 10),
 			Payload = Convert.ToBase64String(Encoding.UTF8.GetBytes("TROLOLO")),
 			Timestamp = 12371237821L,
 			Id = UInt128.MaxValue,
@@ -63,7 +63,7 @@ internal static class MessageFactory
 
 internal class DummyMessage  : IMessage
 {
-	public long Id { get; set; }
+	public ulong Id { get; set; }
 	public string Payload { get; set; }
 }
 

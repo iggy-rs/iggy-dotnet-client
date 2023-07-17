@@ -1,8 +1,8 @@
 namespace Iggy_SDK.Exceptions;
 
-public sealed class TcpInvalidStatus : Exception
+internal sealed class TcpInvalidStatus : Exception
 {
-	public TcpInvalidStatus() : base("Received an Invalid Response Status")
+	internal TcpInvalidStatus() : base("Received an Invalid Response Status")
 	{
 		
 	}	

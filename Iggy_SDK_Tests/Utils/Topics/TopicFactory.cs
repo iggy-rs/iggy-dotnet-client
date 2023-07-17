@@ -14,9 +14,9 @@ internal static class TopicFactory
 		};
 	}
 
-	internal static TopicsResponse CreateTopicsResponse()
+	internal static TopicResponse CreateTopicsResponse()
 	{
-		return new TopicsResponse
+		return new TopicResponse
 		{
 			Id = Random.Shared.Next(1, 10),
 			Name = "Test Topic" + Random.Shared.Next(1, 69),

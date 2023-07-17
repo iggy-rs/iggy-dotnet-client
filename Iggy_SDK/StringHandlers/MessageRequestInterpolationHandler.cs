@@ -7,12 +7,12 @@ namespace Iggy_SDK.StringHandlers;
 internal ref struct MessageRequestInterpolationHandler
 {
 	private DefaultInterpolatedStringHandler _innerHandler;
-	public MessageRequestInterpolationHandler(int literalLength, int formattedCount)
+	internal MessageRequestInterpolationHandler(int literalLength, int formattedCount)
 	{
 		_innerHandler = new DefaultInterpolatedStringHandler(literalLength, formattedCount);
 	}
 
-	public void AppendLiteral(string message)
+	internal void AppendLiteral(string message)
 	{
 		_innerHandler.AppendLiteral(message);	
 	}

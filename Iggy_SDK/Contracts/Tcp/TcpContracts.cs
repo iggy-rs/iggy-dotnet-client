@@ -48,7 +48,7 @@ internal static class TcpContracts
         int position = 17;
         foreach (var message in request.Messages)
         {
-            BinaryPrimitives.WriteInt64LittleEndian(bytes[(position + 16)..(position + 24)], message.Id);
+            BinaryPrimitives.WriteUInt64LittleEndian(bytes[(position + 16)..(position + 24)], message.Id);
             BinaryPrimitives.WriteInt32LittleEndian(bytes.Slice(position + 16, sizeof(int)), message.Payload.Length);
             BinaryPrimitives.WriteInt32LittleEndian(bytes[(position + 24)..(position + 28)], message.Payload.Length);
             var payloadBytes = Encoding.UTF8.GetBytes(message.Payload).AsSpan();
@@ -67,12 +67,12 @@ internal static class TcpContracts
         return bytes.ToArray();
     }
 
-    internal static byte[] CreateGroup(int streamId, int topicId, GroupRequest request)
+    internal static byte[] CreateGroup(int streamId, int topicId, CreateGroupRequest request)
     {
         Span<byte> bytes = stackalloc byte[sizeof(int) * 3];
         BinaryPrimitives.WriteInt32LittleEndian(bytes[..4], streamId);
         BinaryPrimitives.WriteInt32LittleEndian(bytes[4..8], topicId);
-        BinaryPrimitives.WriteInt32LittleEndian(bytes[8..12], request.GroupId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[8..12], request.ConsumerGroupId);
         return bytes.ToArray();
     }
 

@@ -65,7 +65,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		return BinaryMapper.MapStream(responseBuffer);
 	}
 	
-	public async Task<IEnumerable<StreamsResponse>> GetStreamsAsync()
+	public async Task<IEnumerable<StreamResponse>> GetStreamsAsync()
 	{
 		var message = Enumerable.Empty<byte>().ToArray();
 
@@ -85,7 +85,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 		if (length <= 1)
 		{
-			return Enumerable.Empty<StreamsResponse>();
+			return Enumerable.Empty<StreamResponse>();
 		}
 		
 		var responseBuffer = new byte[length];
@@ -109,7 +109,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		return status == 0;
 	}
 
-	public async Task<IEnumerable<TopicsResponse>> GetTopicsAsync(int streamId)
+	public async Task<IEnumerable<TopicResponse>> GetTopicsAsync(int streamId)
 	{
 		var message = BitConverter.GetBytes(streamId);
 
@@ -129,7 +129,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 		if (length <= 1)
 		{
-			return Enumerable.Empty<TopicsResponse>();
+			return Enumerable.Empty<TopicResponse>();
 		}
 		
 		var responseBuffer = new byte[length];
@@ -137,7 +137,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		return BinaryMapper.MapTopics(responseBuffer);
 	}
 
-	public async Task<TopicsResponse?> GetTopicByIdAsync(int streamId, int topicId)
+	public async Task<TopicResponse?> GetTopicByIdAsync(int streamId, int topicId)
 	{
 		var message = TcpContracts.GetTopicById(streamId, topicId);
 
@@ -344,7 +344,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		return BinaryMapper.MapConsumerGroup(responseBuffer);
 	}
 
-	public async Task<bool> CreateGroupAsync(int streamId, int topicId, GroupRequest request)
+	public async Task<bool> CreateGroupAsync(int streamId, int topicId, CreateGroupRequest request)
 	{
 		var message = TcpContracts.CreateGroup(streamId, topicId, request);
 

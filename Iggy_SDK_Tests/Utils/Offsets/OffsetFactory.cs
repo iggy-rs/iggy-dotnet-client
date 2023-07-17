@@ -28,7 +28,7 @@ internal static class OffsetFactory
 	{
 		return new OffsetContract
 		{
-			Offset = Random.Shared.Next(1, 10),
+			Offset = (ulong)Random.Shared.Next(1, 10),
 			ConsumerId = Random.Shared.Next(1, 10),
 			PartitionId = Random.Shared.Next(1, 10),
 		};

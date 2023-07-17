@@ -16,7 +16,7 @@ internal static class StreamFactory
 
 	internal static StreamResponse CreateStreamResponse()
 	{
-		var responses = new List<TopicsResponse>();
+		var responses = new List<TopicResponse>();
 		var topicResponse = TopicFactory.CreateTopicsResponse();
 		responses.Add(topicResponse);
 		return new StreamResponse
@@ -27,9 +27,9 @@ internal static class StreamFactory
 			Topics = responses
 		};
 	}
-	internal static StreamsResponse CreateStreamsResponse()
+	internal static StreamResponse CreateStreamsResponse()
 	{
-		return new StreamsResponse
+		return new StreamResponse
 		{
 			Id = Random.Shared.Next(1, 10),
 			Name = "Test Topic" + Random.Shared.Next(1, 69),

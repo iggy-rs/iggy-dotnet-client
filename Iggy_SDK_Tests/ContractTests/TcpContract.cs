@@ -10,9 +10,9 @@ using Iggy_SDK.Enums;
 
 namespace Iggy_SDK_Tests.ContractTests;
 
-public sealed class TcpContractTests
+public sealed class TcpContract
 {
-	public TcpContractTests()
+	public TcpContract()
 	{
 		
 	}
@@ -51,7 +51,7 @@ public sealed class TcpContractTests
         Assert.Equal(expectedBytesLength, result.Length);
         Assert.Equal(streamId, BitConverter.ToInt32(result[..4]));
         Assert.Equal(topicId, BitConverter.ToInt32(result[4..8]));
-        Assert.Equal(request.GroupId, BitConverter.ToInt32(result[8..12]));
+        Assert.Equal(request.ConsumerGroupId, BitConverter.ToInt32(result[8..12]));
     }
 
     [Fact]

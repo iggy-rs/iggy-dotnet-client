@@ -4,7 +4,8 @@ using Iggy_SDK.Mappers;
 
 namespace Iggy_SDK_Tests.MapperTests;
 
-public sealed class BinaryMapperTests
+//#TODO - those tests could be cleaned-up, the Arrange part in particular
+public sealed class BinaryMapper
 {
 	[Fact]
     public void MapOffsets_ReturnsValidOffsetResponse()
@@ -15,7 +16,7 @@ public sealed class BinaryMapperTests
         byte[] payload = BinaryFactory.CreateOffsetPayload(consumerId, offset);
 
         // Act
-        OffsetResponse response = BinaryMapper.MapOffsets(payload);
+        OffsetResponse response = Iggy_SDK.Mappers.BinaryMapper.MapOffsets(payload);
 
         // Assert
         Assert.NotNull(response);
@@ -27,15 +28,15 @@ public sealed class BinaryMapperTests
     public void MapMessages_ReturnsValidMessageResponses()
     {
         // Arrange
-        int offset1 = 12;
-        int timestamp1 = 69;
-        int id1 = 3;
+        ulong offset1 = 12;
+        ulong timestamp1 = 69;
+        ulong id1 = 3;
         string payloadString1 = "Test1";
         byte[] payload1 = BinaryFactory.CreateMessagePayload(offset1, timestamp1, id1, payloadString1);
         
-        int offset2 = 234;
-        int timestamp2 = 987654321;
-        int id2 = 567;
+        ulong offset2 = 234;
+        ulong timestamp2 = 987654321;
+        ulong id2 = 567;
         int messageLength2 = 8;
         string payloadString2 = "Test 2";
         byte[] payload2 = BinaryFactory.CreateMessagePayload(offset2, timestamp2, id2, payloadString2);
@@ -54,7 +55,7 @@ public sealed class BinaryMapperTests
         
 
         // Act
-        IEnumerable<MessageResponse> responses = BinaryMapper.MapMessages(combinedPayload).ToList();
+        IEnumerable<MessageResponse> responses = Iggy_SDK.Mappers.BinaryMapper.MapMessages(combinedPayload).ToList();
 
         // Assert
         Assert.NotNull(responses);
@@ -92,7 +93,7 @@ public sealed class BinaryMapperTests
         payload2.CopyTo(combinedPayload.AsSpan(payload1.Length));
 
         // Act
-        IEnumerable<StreamsResponse> responses = BinaryMapper.MapStreams(combinedPayload).ToList();
+        IEnumerable<StreamResponse> responses = Iggy_SDK.Mappers.BinaryMapper.MapStreams(combinedPayload).ToList();
 
         // Assert
         Assert.NotNull(responses);
@@ -131,7 +132,7 @@ public sealed class BinaryMapperTests
         topicCombinedPayload.CopyTo(streamCombinedPayload.AsSpan(streamPayload.Length));
 
         // Act
-        var response = BinaryMapper.MapStream(streamCombinedPayload);
+        var response = Iggy_SDK.Mappers.BinaryMapper.MapStream(streamCombinedPayload);
 
         // Assert
         Assert.NotNull(response);
@@ -166,7 +167,7 @@ public sealed class BinaryMapperTests
         payload2.CopyTo(combinedPayload.AsSpan(payload1.Length));
 
         // Act
-        var responses = BinaryMapper.MapTopics(combinedPayload);
+        var responses = Iggy_SDK.Mappers.BinaryMapper.MapTopics(combinedPayload);
 
         // Assert
         Assert.NotNull(responses);
@@ -196,7 +197,7 @@ public sealed class BinaryMapperTests
         topicPayload.CopyTo(combinedPayload.AsSpan());
 
         // Act
-        TopicsResponse response = BinaryMapper.MapTopic(combinedPayload);
+        TopicResponse response = Iggy_SDK.Mappers.BinaryMapper.MapTopic(combinedPayload);
 
         // Assert
         Assert.NotNull(response);
@@ -223,7 +224,7 @@ public sealed class BinaryMapperTests
         payload2.CopyTo(combinedPayload.AsSpan(payload1.Length));
 
         // Act
-        List<GroupResponse> responses = BinaryMapper.MapConsumerGroups(combinedPayload);
+        List<GroupResponse> responses = Iggy_SDK.Mappers.BinaryMapper.MapConsumerGroups(combinedPayload);
 
         // Assert
         Assert.NotNull(responses);
@@ -250,7 +251,7 @@ public sealed class BinaryMapperTests
         byte[] groupPayload = BinaryFactory.CreateGroupPayload(groupId, membersCount, partitionsCount);
 
         // Act
-        GroupResponse response = BinaryMapper.MapConsumerGroup(groupPayload);
+        GroupResponse response = Iggy_SDK.Mappers.BinaryMapper.MapConsumerGroup(groupPayload);
 
         // Assert
         Assert.NotNull(response);

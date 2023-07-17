@@ -14,11 +14,11 @@ internal static class GroupFactory
 		};
 	}
 
-	internal static GroupRequest CreateGroupRequest()
+	internal static CreateGroupRequest CreateGroupRequest()
 	{
-		return new GroupRequest
+		return new CreateGroupRequest
 		{
-			GroupId = Random.Shared.Next(1, 10),
+			ConsumerGroupId = Random.Shared.Next(1, 10),
 		};
 	}
 
