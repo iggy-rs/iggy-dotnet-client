@@ -7,10 +7,10 @@ using Iggy_SDK.Messages;
 using Iggy_SDK.MessageStream;
 using Shared;
 
-var protocol = Protocol.Http;
+var protocol = Protocol.Tcp;
 var bus = MessageStreamFactory.CreateMessageStream(options =>
 {
-    options.BaseAdress = "http://127.0.0.1:3000";
+    options.BaseAdress = "127.0.0.1:8090";
     options.Protocol = protocol;
 });
 
@@ -28,7 +28,7 @@ if (stream is null)
         StreamId = streamId,
         Name = "Test Producer Stream",
     });
-    if (!result)
+    if (!result.IsSuccess)
     {
         throw new SystemException("Failed to create stream");
     }
@@ -39,7 +39,7 @@ if (stream is null)
         PartitionsCount = 3,
         TopicId = topicId,
     });
-    if (!topicResult)
+    if (!topicResult.IsSuccess)
     {
         throw new SystemException("Failed to create topic");
     }

@@ -52,7 +52,7 @@ public sealed class HttpMessageStream
 			.Respond(HttpStatusCode.Created);
 		
 		var result = await _sut.CreateStreamAsync(content);
-		Assert.True(result);
+		Assert.True(result.IsSuccess);
 		_httpHandler.Flush();
 	}
 	
@@ -68,7 +68,7 @@ public sealed class HttpMessageStream
 			.Respond(HttpStatusCode.BadRequest);
 		
 		var result = await _sut.CreateStreamAsync(content);
-		Assert.False(result);
+		Assert.False(result.IsSuccess);
 		_httpHandler.Flush();
 	}
 	
@@ -81,7 +81,7 @@ public sealed class HttpMessageStream
 			.Respond(HttpStatusCode.NoContent);
 		
 		var result = await _sut.DeleteStreamAsync(streamId);
-		Assert.True(result);
+		Assert.True(result.IsSuccess);
 		_httpHandler.Flush();
 	}
 
@@ -157,7 +157,7 @@ public sealed class HttpMessageStream
 			.Respond(HttpStatusCode.Created);
 
 		var result = await _sut.CreateTopicAsync(streamId, content);
-		Assert.True(result);
+		Assert.True(result.IsSuccess);
 		_httpHandler.Flush();
 	}
 	[Fact]
@@ -186,7 +186,7 @@ public sealed class HttpMessageStream
 			.Respond(HttpStatusCode.NoContent);
 
 		var result = await _sut.DeleteTopicAsync(streamId, topicId);
-		Assert.True(result);
+		Assert.True(result.IsSuccess);
 		_httpHandler.Flush();
 	}
 
@@ -200,7 +200,7 @@ public sealed class HttpMessageStream
 			.Respond(HttpStatusCode.BadRequest);
 
 		var result = await _sut.DeleteTopicAsync(streamId, topicId);
-		Assert.False(result);
+		Assert.False(result.IsSuccess);
 		_httpHandler.Flush();
 	}
 	
@@ -284,7 +284,7 @@ public sealed class HttpMessageStream
 			.Respond(HttpStatusCode.Created);
 		
 		var result = await _sut.SendMessagesAsync(request);
-		Assert.True(result);
+		Assert.True(result.IsSuccess);
 		_httpHandler.Flush();
 	}
 
@@ -303,7 +303,7 @@ public sealed class HttpMessageStream
 			.Respond(HttpStatusCode.BadRequest);
 		
 		var result = await _sut.SendMessagesAsync(request);
-		Assert.False(result);
+		Assert.False(result.IsSuccess);
 		_httpHandler.Flush();
 	}
 
@@ -355,7 +355,7 @@ public sealed class HttpMessageStream
 			.Respond(HttpStatusCode.NoContent);
 		
 		var result = await _sut.StoreOffsetAsync(streamId, topicId, contract);
-		Assert.True(result);
+		Assert.True(result.IsSuccess);
 		_httpHandler.Flush();
 	}
 	
@@ -370,7 +370,7 @@ public sealed class HttpMessageStream
 			.Respond(HttpStatusCode.BadRequest);
 		
 		var result = await _sut.StoreOffsetAsync(streamId, topicId, contract);
-		Assert.False(result);
+		Assert.False(result.IsSuccess);
 		_httpHandler.Flush();
 	}
 

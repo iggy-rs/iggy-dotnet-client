@@ -7,6 +7,7 @@ using Iggy_SDK.Contracts;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.SerializationConfiguration;
 using Iggy_SDK.StringHandlers;
+using Iggy_SDK.Utils;
 
 namespace Iggy_SDK.MessageStream.Implementations;
 
@@ -27,19 +28,35 @@ public class HttpMessageStream : IMessageStream
         _toSnakeCaseOptions.Converters.Add(new UInt128Conveter());
         _toSnakeCaseOptions.Converters.Add(new JsonStringEnumConverter(new ToSnakeCaseNamingPolicy()));
     }
-    public async Task<bool> CreateStreamAsync(StreamRequest request)
+    public async Task<Result> CreateStreamAsync(StreamRequest request)
     {
         var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
         
         var response = await _httpClient.PostAsync("/streams", data);
-        return response.StatusCode == HttpStatusCode.Created;
+        return response.StatusCode switch
+        {
+            HttpStatusCode.Created => Result.Success(),
+            HttpStatusCode.BadRequest => new Result
+            {
+                IsSuccess = false, Error = await response.Content.ReadFromJsonAsync<ErrorModel>(_toSnakeCaseOptions),
+            },
+            _ => new Result { IsSuccess = false, Error = ErrorFactory.Error }, 
+        };
     }
 
-    public async Task<bool> DeleteStreamAsync(int streamId)
+    public async Task<Result> DeleteStreamAsync(int streamId)
     {
         var response = await _httpClient.DeleteAsync($"/streams/{streamId}");
-        return response.StatusCode == HttpStatusCode.NoContent;
+        return response.StatusCode switch
+        {
+            HttpStatusCode.Created => Result.Success(),
+            HttpStatusCode.BadRequest => new Result
+            {
+                IsSuccess = false, Error = await response.Content.ReadFromJsonAsync<ErrorModel>(_toSnakeCaseOptions),
+            },
+            _ => new Result { IsSuccess = false, Error = ErrorFactory.Error }, 
+        };
     }
 
     public async Task<StreamResponse?> GetStreamByIdAsync(int streamId)
@@ -63,19 +80,35 @@ public class HttpMessageStream : IMessageStream
         return Enumerable.Empty<StreamResponse>();
     }
 
-    public async Task<bool> CreateTopicAsync(int streamId, TopicRequest topic)
+    public async Task<Result> CreateTopicAsync(int streamId, TopicRequest topic)
     {
         var json = JsonSerializer.Serialize(topic, _toSnakeCaseOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
         
         var response = await _httpClient.PostAsync($"/streams/{streamId}/topics", data);
-        return response.StatusCode == HttpStatusCode.Created;
+        return response.StatusCode switch
+        {
+            HttpStatusCode.Created => Result.Success(),
+            HttpStatusCode.BadRequest => new Result
+            {
+                IsSuccess = false, Error = await response.Content.ReadFromJsonAsync<ErrorModel>(_toSnakeCaseOptions),
+            },
+            _ => new Result { IsSuccess = false, Error = ErrorFactory.Error }, 
+        };
     }
 
-    public async Task<bool> DeleteTopicAsync(int streamId, int topicId)
+    public async Task<Result> DeleteTopicAsync(int streamId, int topicId)
     {
         var response = await _httpClient.DeleteAsync($"/streams/{streamId}/topics/{topicId}");
-        return response.StatusCode == HttpStatusCode.NoContent;
+        return response.StatusCode switch
+        {
+            HttpStatusCode.Created => Result.Success(),
+            HttpStatusCode.BadRequest => new Result
+            {
+                IsSuccess = false, Error = await response.Content.ReadFromJsonAsync<ErrorModel>(_toSnakeCaseOptions),
+            },
+            _ => new Result { IsSuccess = false, Error = ErrorFactory.Error }, 
+        };
     }
 
     public async Task<IEnumerable<TopicResponse>> GetTopicsAsync(int streamId)
@@ -99,7 +132,7 @@ public class HttpMessageStream : IMessageStream
         return null;
     }
 
-    public async Task<bool> SendMessagesAsync(MessageSendRequest request)
+    public async Task<Result> SendMessagesAsync(MessageSendRequest request)
     {
         foreach (var message in request.Messages)
         {
@@ -111,7 +144,15 @@ public class HttpMessageStream : IMessageStream
         var data = new StringContent(json, Encoding.UTF8, "application/json");
         
         var response = await _httpClient.PostAsync($"/streams/{request.StreamId}/topics/{request.TopicId}/messages", data);
-        return response.StatusCode == HttpStatusCode.Created;
+        return response.StatusCode switch
+        {
+            HttpStatusCode.Created => Result.Success(),
+            HttpStatusCode.BadRequest => new Result
+            {
+                IsSuccess = false, Error = await response.Content.ReadFromJsonAsync<ErrorModel>(_toSnakeCaseOptions),
+            },
+            _ => new Result { IsSuccess = false, Error = ErrorFactory.Error }, 
+        };
     }
 
     public async Task<IEnumerable<MessageResponse>> PollMessagesAsync(MessageFetchRequest request)
@@ -128,13 +169,21 @@ public class HttpMessageStream : IMessageStream
         return Enumerable.Empty<MessageResponse>();
     }
 
-    public async Task<bool> StoreOffsetAsync(int streamId, int topicId, OffsetContract contract)
+    public async Task<Result> StoreOffsetAsync(int streamId, int topicId, OffsetContract contract)
     {
         var json = JsonSerializer.Serialize(contract, _toSnakeCaseOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
         
         var response = await _httpClient.PutAsync($"/streams/{streamId}/topics/{topicId}/messages/offsets", data);
-        return response.StatusCode == HttpStatusCode.NoContent; 
+        return response.StatusCode switch
+        {
+            HttpStatusCode.Created => Result.Success(),
+            HttpStatusCode.BadRequest => new Result
+            {
+                IsSuccess = false, Error = await response.Content.ReadFromJsonAsync<ErrorModel>(_toSnakeCaseOptions),
+            },
+            _ => new Result { IsSuccess = false, Error = ErrorFactory.Error }, 
+        };
     }
 
     public async Task<OffsetResponse?> GetOffsetAsync(OffsetRequest request)
@@ -170,18 +219,34 @@ public class HttpMessageStream : IMessageStream
         return null;
     }
     
-    public async Task<bool> CreateGroupAsync(int streamId, int topicId, CreateGroupRequest request)
+    public async Task<Result> CreateGroupAsync(int streamId, int topicId, CreateGroupRequest request)
     {
         var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
         
         var response = await _httpClient.PostAsync($"/streams/{streamId}/topics/{topicId}/consumer_groups", data);
-        return response.StatusCode == HttpStatusCode.Created;
+        return response.StatusCode switch
+        {
+            HttpStatusCode.Created => Result.Success(),
+            HttpStatusCode.BadRequest => new Result
+            {
+                IsSuccess = false, Error = await response.Content.ReadFromJsonAsync<ErrorModel>(_toSnakeCaseOptions),
+            },
+            _ => new Result { IsSuccess = false, Error = ErrorFactory.Error }, 
+        };
     }
-    public async Task<bool> DeleteGroupAsync(int streamId, int topicId, int groupId)
+    public async Task<Result> DeleteGroupAsync(int streamId, int topicId, int groupId)
     {
         var response = await _httpClient.DeleteAsync($"/streams/{streamId}/topics/{topicId}/consumer_groups/{groupId}");
-        return response.StatusCode == HttpStatusCode.NoContent;
+        return response.StatusCode switch
+        {
+            HttpStatusCode.Created => Result.Success(),
+            HttpStatusCode.BadRequest => new Result
+            {
+                IsSuccess = false, Error = await response.Content.ReadFromJsonAsync<ErrorModel>(_toSnakeCaseOptions),
+            },
+            _ => new Result { IsSuccess = false, Error = ErrorFactory.Error }, 
+        };
     }
 
     private static string CreateUrl(ref MessageRequestInterpolationHandler message)

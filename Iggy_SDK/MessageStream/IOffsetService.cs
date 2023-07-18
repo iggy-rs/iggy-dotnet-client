@@ -1,10 +1,11 @@
 using Iggy_SDK.Contracts;
 using Iggy_SDK.Contracts.Http;
+using Iggy_SDK.Utils;
 
 namespace Iggy_SDK.MessageStream;
 
 public interface IOffsetClient
 {
-	Task<bool> StoreOffsetAsync(int streamId, int topicId, OffsetContract contract);
+	Task<Result> StoreOffsetAsync(int streamId, int topicId, OffsetContract contract);
 	Task<OffsetResponse?> GetOffsetAsync(OffsetRequest request);
 }

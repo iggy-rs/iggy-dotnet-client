@@ -1,10 +1,4 @@
-﻿using System.Net;
-using System.Net.Security;
-using Iggy_SDK.Contracts;
-using Iggy_SDK.Contracts.Http;
-using Iggy_SDK.Enums;
-using Iggy_SDK.Factory;
-
+﻿
 Console.WriteLine();
 
 // var bus = MessageStreamFactory.CreateMessageStream(options =>
@@ -15,20 +9,6 @@ Console.WriteLine();
 //
 // var stream = await bus.GetStreamByIdAsync(1);
 // Console.WriteLine();
-
-
-var bus = MessageStreamFactory.CreateMessageStream(options =>
-{
-     options.BaseAdress = "localhost:8090";
-     options.Protocol = Protocol.Tcp;
-});
-
-var createStream = await bus.CreateStreamAsync(new StreamRequest
-{
-	Name = "Test Stream",
-	StreamId = 1
-});
-Console.WriteLine();
 
 // var groupResponse = await bus.GetGroupByIdAsync(1, 1, 1);
 
