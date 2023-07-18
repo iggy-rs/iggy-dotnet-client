@@ -1,4 +1,5 @@
 using Iggy_SDK.Contracts;
+using Iggy_SDK.Contracts.Http;
 
 namespace Iggy_SDK_Tests.Utils.Topics;
 

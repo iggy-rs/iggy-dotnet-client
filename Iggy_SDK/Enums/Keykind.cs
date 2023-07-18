@@ -1,4 +1,3 @@
-using System.Runtime.Serialization;
 
 namespace Iggy_SDK.Enums;
 

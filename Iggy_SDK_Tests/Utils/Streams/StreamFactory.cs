@@ -1,5 +1,6 @@
 using Iggy_SDK_Tests.Utils.Topics;
 using Iggy_SDK.Contracts;
+using Iggy_SDK.Contracts.Http;
 
 namespace Iggy_SDK_Tests.Utils.Streams;
 

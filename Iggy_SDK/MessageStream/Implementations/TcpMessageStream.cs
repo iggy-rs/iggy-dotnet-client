@@ -1,10 +1,11 @@
 using System.Buffers.Binary;
 using System.Net.Sockets;
-using ConsoleApp;
 using Iggy_SDK.Contracts;
+using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Contracts.Tcp;
 using Iggy_SDK.Exceptions;
 using Iggy_SDK.Mappers;
+using Iggy_SDK.Utils;
 
 namespace Iggy_SDK.MessageStream.Implementations;
 
@@ -214,7 +215,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		return status == 0;
 	}
 
-	public async Task<IEnumerable<MessageResponse>> GetMessagesAsync(MessageFetchRequest request)
+	public async Task<IEnumerable<MessageResponse>> PollMessagesAsync(MessageFetchRequest request)
 	{
 		byte[] message = TcpContracts.GetMessages(request);
 

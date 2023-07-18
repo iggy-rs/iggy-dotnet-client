@@ -1,5 +1,6 @@
 using System.Buffers.Binary;
 using System.Text;
+using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 
 namespace Iggy_SDK.Contracts.Tcp;

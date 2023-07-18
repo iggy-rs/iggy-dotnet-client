@@ -1,8 +1,9 @@
 using Iggy_SDK.Contracts;
+using Iggy_SDK.Contracts.Http;
 
 namespace Iggy_SDK.MessageStream;
 
-public interface ITopicService
+public interface ITopicClient
 {
 	Task<IEnumerable<TopicResponse>> GetTopicsAsync(int streamId);
 	Task<TopicResponse?> GetTopicByIdAsync(int streamId, int topicId);

@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Security;
 using Iggy_SDK.Contracts;
+using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
 

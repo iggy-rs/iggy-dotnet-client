@@ -1,6 +1,6 @@
 using Iggy_SDK.Enums;
 
-namespace Iggy_SDK.Contracts;
+namespace Iggy_SDK.Contracts.Http;
 
 public sealed class MessageFetchRequest
 {

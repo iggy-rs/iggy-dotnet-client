@@ -1,4 +1,4 @@
-namespace ConsoleApp;
+namespace Iggy_SDK.Utils;
 
 internal static class CommandCodes
 {

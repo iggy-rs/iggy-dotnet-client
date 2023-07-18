@@ -1,12 +1,12 @@
 using Iggy_SDK.Contracts;
+using Iggy_SDK.Contracts.Http;
 
 namespace Iggy_SDK.MessageStream;
 
-public interface IGroupService
+public interface IGroupClient
 {
 	Task<IEnumerable<GroupResponse>> GetGroupsAsync(int streamId, int topicId);
 	Task<GroupResponse?> GetGroupByIdAsync(int streamId, int topicId, int groupId);
 	Task<bool> CreateGroupAsync(int streamId, int topicId, CreateGroupRequest request);
 	Task<bool> DeleteGroupAsync(int streamId, int topicId, int groupId);
-	//delete group
 }

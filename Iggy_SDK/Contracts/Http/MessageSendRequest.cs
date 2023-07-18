@@ -1,7 +1,7 @@
 using Iggy_SDK.Enums;
 using Iggy_SDK.Messages;
 
-namespace Iggy_SDK.Contracts;
+namespace Iggy_SDK.Contracts.Http;
 
 public sealed class MessageSendRequest
 {

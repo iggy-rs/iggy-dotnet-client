@@ -8,6 +8,7 @@ using Iggy_SDK_Tests.Utils.Offset;
 using Iggy_SDK_Tests.Utils.Streams;
 using Iggy_SDK_Tests.Utils.Topics;
 using Iggy_SDK.Contracts;
+using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.MessageStream;
 using Iggy_SDK.MessageStream.Implementations;
 using Iggy_SDK.SerializationConfiguration;
@@ -320,7 +321,7 @@ public sealed class HttpMessageStream
 							$"&auto_commit={request.AutoCommit.ToString().ToLower()}")
 					.Respond(HttpStatusCode.OK, "application/json", content);
         
-		var result = await _sut.GetMessagesAsync(request);
+		var result = await _sut.PollMessagesAsync(request);
 		Assert.NotEmpty(result);
 		_httpHandler.Flush();
 	}
@@ -338,7 +339,7 @@ public sealed class HttpMessageStream
 							$"&auto_commit={request.AutoCommit.ToString().ToLower()}")
 					.Respond(HttpStatusCode.BadRequest, "application/json", content);
 		
-		var result = await _sut.GetMessagesAsync(request);
+		var result = await _sut.PollMessagesAsync(request);
 		Assert.Empty(result);
 		_httpHandler.Flush();
 	}

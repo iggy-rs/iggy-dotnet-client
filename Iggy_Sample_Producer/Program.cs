@@ -1,5 +1,6 @@
 ﻿using Iggy_Sample_Producer;
 using Iggy_SDK.Contracts;
+using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
 using Iggy_SDK.Messages;
@@ -49,7 +50,7 @@ if (stream is null)
 
 await ProduceMessages(bus, stream, topic);
 
-async Task ProduceMessages(IMessageService bus, StreamResponse? stream, TopicResponse? topic)
+async Task ProduceMessages(IMessageClient bus, StreamResponse? stream, TopicResponse? topic)
 {
     var messageBatchCount = 1;
     int intervalInMs = 1000;

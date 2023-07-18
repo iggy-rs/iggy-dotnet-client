@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using System.Text.Json;
 using Iggy_SDK.Contracts;
+using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
 using Iggy_SDK.SerializationConfiguration;
@@ -32,7 +33,7 @@ async Task ConsumeMessages()
     Console.WriteLine($"Messages will be polled from stream {streamId}, topic {topicId}, partition {partitionId} with interval {intervalInMs} ms");
     while (true)
     {
-        var messages = await bus.GetMessagesAsync(new MessageFetchRequest
+        var messages = await bus.PollMessagesAsync(new MessageFetchRequest
         {
             Count = 1,
             TopicId = topicId,

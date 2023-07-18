@@ -2,7 +2,7 @@ using Iggy_SDK.Contracts;
 
 namespace Iggy_SDK.MessageStream;
 
-public interface IMessageStream : IStreamService, ITopicService, IMessageService, IOffsetService, IGroupService
+public interface IMessageStream : IStreamClient, ITopicClient, IMessageClient, IOffsetClient, IGroupClient
 {
 	
 }

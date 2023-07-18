@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Iggy_SDK.Contracts;
+using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.SerializationConfiguration;
 using Iggy_SDK.StringHandlers;
 
@@ -113,7 +114,7 @@ public class HttpMessageStream : IMessageStream
         return response.StatusCode == HttpStatusCode.Created;
     }
 
-    public async Task<IEnumerable<MessageResponse>> GetMessagesAsync(MessageFetchRequest request)
+    public async Task<IEnumerable<MessageResponse>> PollMessagesAsync(MessageFetchRequest request)
     {
         var url = CreateUrl($"/streams/{request.StreamId}/topics/{request.TopicId}/messages?consumer_id={request.ConsumerId}" +
                             $"&partition_id={request.PartitionId}&kind={request.PollingStrategy}&value={request.Value}&count={request.Count}&auto_commit={request.AutoCommit}");
