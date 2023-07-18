@@ -2,15 +2,14 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Iggy_SDK_Tests.Utils.Errors;
 using Iggy_SDK_Tests.Utils.Groups;
 using Iggy_SDK_Tests.Utils.Messages;
 using Iggy_SDK_Tests.Utils.Offset;
 using Iggy_SDK_Tests.Utils.Streams;
 using Iggy_SDK_Tests.Utils.Topics;
-using Iggy_SDK.Contracts;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.MessageStream;
-using Iggy_SDK.MessageStream.Implementations;
 using Iggy_SDK.SerializationConfiguration;
 using RichardSzalay.MockHttp;
 
@@ -62,10 +61,11 @@ public sealed class HttpMessageStream
 		var streamId = 1;
 		var content = StreamFactory.CreateStreamRequest();
 		var json = JsonSerializer.Serialize(content, _toSnakeCaseOptions);
+		var error = JsonSerializer.Serialize(ErrorModelFactory.CreateErrorModelBadRequest(), _toSnakeCaseOptions);
 
 		_httpHandler.When(HttpMethod.Post, $"/streams")
 			.WithContent(json)
-			.Respond(HttpStatusCode.BadRequest);
+			.Respond(HttpStatusCode.BadRequest, "application/json", error);
 		
 		var result = await _sut.CreateStreamAsync(content);
 		Assert.False(result.IsSuccess);
@@ -166,10 +166,12 @@ public sealed class HttpMessageStream
 		var streamId = 1;
 		var content = TopicFactory.CreateTopicRequest();
 		var json = JsonSerializer.Serialize(content, _toSnakeCaseOptions);
+		var error = JsonSerializer.Serialize(ErrorModelFactory.CreateErrorModelBadRequest(), _toSnakeCaseOptions);
+
 
 		_httpHandler.When(HttpMethod.Post, $"/streams/{streamId}/topics")
 			.WithContent(json)
-			.Respond(HttpStatusCode.BadRequest);
+			.Respond(HttpStatusCode.BadRequest, "application/json", error);
 
 		var result = await _sut.CreateTopicAsync(streamId, content);
 		Assert.False(false);
@@ -195,9 +197,11 @@ public sealed class HttpMessageStream
 	{
 		var streamId = 1;
 		var topicId = 1;
+		var error = JsonSerializer.Serialize(ErrorModelFactory.CreateErrorModelBadRequest(), _toSnakeCaseOptions);
+
 
 		_httpHandler.When(HttpMethod.Delete, $"/streams/{streamId}/topics/{topicId}")
-			.Respond(HttpStatusCode.BadRequest);
+			.Respond(HttpStatusCode.BadRequest, "application/json", error);
 
 		var result = await _sut.DeleteTopicAsync(streamId, topicId);
 		Assert.False(result.IsSuccess);
@@ -293,6 +297,8 @@ public sealed class HttpMessageStream
 	{
 		var request = MessageFactory.CreateMessageSendRequest();		
 		var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions); 
+		var error = JsonSerializer.Serialize(ErrorModelFactory.CreateErrorModelBadRequest(), _toSnakeCaseOptions);
+
 		
 		_httpHandler.When(HttpMethod.Post, $"/streams/{request.StreamId}/topics/{request.TopicId}/messages")
 			.With(message =>
@@ -300,7 +306,7 @@ public sealed class HttpMessageStream
 				message.Content = new StringContent(json, Encoding.UTF8, "application/json");
 				return true;
 			})
-			.Respond(HttpStatusCode.BadRequest);
+			.Respond(HttpStatusCode.BadRequest, "application/json", error);
 		
 		var result = await _sut.SendMessagesAsync(request);
 		Assert.False(result.IsSuccess);
@@ -365,9 +371,11 @@ public sealed class HttpMessageStream
 		int streamId = 1;
 		int topicId = 1;
 		var contract = OffsetFactory.CreateOffsetContract();
+		var error = JsonSerializer.Serialize(ErrorModelFactory.CreateErrorModelBadRequest(), _toSnakeCaseOptions);
+
 
 		_httpHandler.When(HttpMethod.Put, $"/streams/{streamId}/topics/{topicId}/messages/offsets")
-			.Respond(HttpStatusCode.BadRequest);
+			.Respond(HttpStatusCode.BadRequest, "application/json", error);
 		
 		var result = await _sut.StoreOffsetAsync(streamId, topicId, contract);
 		Assert.False(result.IsSuccess);

@@ -50,7 +50,7 @@ public class HttpMessageStream : IMessageStream
         var response = await _httpClient.DeleteAsync($"/streams/{streamId}");
         return response.StatusCode switch
         {
-            HttpStatusCode.Created => Result.Success(),
+            HttpStatusCode.NoContent => Result.Success(),
             HttpStatusCode.BadRequest => new Result
             {
                 IsSuccess = false, Error = await response.Content.ReadFromJsonAsync<ErrorModel>(_toSnakeCaseOptions),
@@ -102,7 +102,7 @@ public class HttpMessageStream : IMessageStream
         var response = await _httpClient.DeleteAsync($"/streams/{streamId}/topics/{topicId}");
         return response.StatusCode switch
         {
-            HttpStatusCode.Created => Result.Success(),
+            HttpStatusCode.NoContent => Result.Success(),
             HttpStatusCode.BadRequest => new Result
             {
                 IsSuccess = false, Error = await response.Content.ReadFromJsonAsync<ErrorModel>(_toSnakeCaseOptions),
@@ -177,7 +177,7 @@ public class HttpMessageStream : IMessageStream
         var response = await _httpClient.PutAsync($"/streams/{streamId}/topics/{topicId}/messages/offsets", data);
         return response.StatusCode switch
         {
-            HttpStatusCode.Created => Result.Success(),
+            HttpStatusCode.NoContent => Result.Success(),
             HttpStatusCode.BadRequest => new Result
             {
                 IsSuccess = false, Error = await response.Content.ReadFromJsonAsync<ErrorModel>(_toSnakeCaseOptions),
@@ -240,7 +240,7 @@ public class HttpMessageStream : IMessageStream
         var response = await _httpClient.DeleteAsync($"/streams/{streamId}/topics/{topicId}/consumer_groups/{groupId}");
         return response.StatusCode switch
         {
-            HttpStatusCode.Created => Result.Success(),
+            HttpStatusCode.NoContent => Result.Success(),
             HttpStatusCode.BadRequest => new Result
             {
                 IsSuccess = false, Error = await response.Content.ReadFromJsonAsync<ErrorModel>(_toSnakeCaseOptions),
