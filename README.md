@@ -1,3 +1,9 @@
+<div align="center">
+  
+[![.NET](https://github.com/numinnex/Iggy_SDK/actions/workflows/dotnet.yml/badge.svg)](https://github.com/numinnex/Iggy_SDK/actions/workflows/dotnet.yml)
+
+</div>
+
 # C# SDK for [Iggy](https://github.com/spetz/iggy)
 
 
