@@ -201,9 +201,9 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 	}
 
-	public async Task SendMessagesAsync(MessageSendRequest request)
+	public async Task SendMessagesAsync(int streamId, int topicId, MessageSendRequest request)
 	{
-		var message = TcpContracts.CreateMessage(request);
+		var message = TcpContracts.CreateMessage(streamId, topicId, request);
 		var payload = CreatePayload(message, CommandCodes.SEND_MESSAGES_CODE);
 
 		await _stream.WriteAsync(payload, 0, payload.Length);

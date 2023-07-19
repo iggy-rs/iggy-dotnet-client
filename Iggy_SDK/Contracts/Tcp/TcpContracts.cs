@@ -1,6 +1,4 @@
 using System.Buffers.Binary;
-using System.Numerics;
-using System.Runtime.InteropServices;
 using System.Text;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
@@ -33,13 +31,13 @@ internal static class TcpContracts
         return bytes.ToArray();
         
     }
-    internal static byte[] CreateMessage(MessageSendRequest request)
+    internal static byte[] CreateMessage(int streamId, int topicId, MessageSendRequest request)
     {
         int messageBytesCount = request.Messages.Sum(message => 16 + 4 + message.Payload.Length);
 
         Span<byte> bytes = stackalloc byte[17 + messageBytesCount];
-        BinaryPrimitives.WriteInt32LittleEndian(bytes[0..4], request.StreamId);
-        BinaryPrimitives.WriteInt32LittleEndian(bytes[4..8], request.TopicId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[0..4], streamId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[4..8], topicId);
         bytes[sizeof(int) * 2] = request.KeyKind switch
         {
             Keykind.PartitionId => 0,
@@ -58,7 +56,7 @@ internal static class TcpContracts
                 bytes[i] = id[i - position];
             }
             BinaryPrimitives.WriteInt32LittleEndian(bytes[(position + 16)..(position + 20)], message.Payload.Length);
-            var payloadBytes = Encoding.UTF8.GetBytes(message.Payload).AsSpan();
+            var payloadBytes = message.Payload.AsSpan();
             var slice = bytes[(position + 16 + 4)..];
             payloadBytes.CopyTo(slice);
             position += payloadBytes.Length + 16 + sizeof(int);

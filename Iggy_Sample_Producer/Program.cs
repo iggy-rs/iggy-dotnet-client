@@ -1,6 +1,4 @@
-﻿using System.Numerics;
-using Iggy_Sample_Producer;
-using Iggy_SDK.Contracts;
+﻿using Iggy_Sample_Producer;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
@@ -56,16 +54,15 @@ async Task ProduceMessages(IMessageClient bus, StreamResponse? stream, TopicResp
     while (true)
     {
         var debugMessages = new List<ISerializableMessage>();
-        var messages = new List<IMessage>();
+        var messages = new List<Message>();
         
         for (int i = 0; i < messageBatchCount; i++)
         {
             var message = MessageGenerator.GenerateMessage();
-            var json = message.ToJson();
-            
+            var json = message.ToBytes();
             
             debugMessages.Add(message);
-            messages.Add(new DummyMessage
+            messages.Add(new Message
             {
                 Id = Guid.NewGuid(),
                 Payload = json
@@ -74,11 +71,9 @@ async Task ProduceMessages(IMessageClient bus, StreamResponse? stream, TopicResp
 
         try
         {
-            await bus.SendMessagesAsync(new MessageSendRequest
+            await bus.SendMessagesAsync(streamId,topicId, new MessageSendRequest
             {
                 Messages = messages,
-                StreamId = stream.Id,
-                TopicId = topic.Id,
                 KeyKind = Keykind.PartitionId,
                 KeyValue = topic.PartitionsCount,
             });

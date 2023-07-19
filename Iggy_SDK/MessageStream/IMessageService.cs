@@ -6,6 +6,6 @@ namespace Iggy_SDK.MessageStream;
 
 public interface IMessageClient
 {
-	Task SendMessagesAsync(MessageSendRequest request);
+	Task SendMessagesAsync(int streamId, int topicId, MessageSendRequest request);
 	Task<IEnumerable<MessageResponse>> PollMessagesAsync(MessageFetchRequest request);
 }

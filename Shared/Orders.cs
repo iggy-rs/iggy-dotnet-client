@@ -29,6 +29,15 @@ public class OrderCreated : ISerializableMessage
 		var env = envelope.New<OrderCreated>("order_created", this);
 		return JsonSerializer.Serialize(env, _jsonSerializerOptions);
 	}
+
+	public byte[] ToBytes()
+	{
+		var envelope = new Envelope();
+		var env = envelope.New<OrderCreated>("order_created", this);
+		var json = JsonSerializer.Serialize(env, _jsonSerializerOptions);
+		return Encoding.UTF8.GetBytes(json);
+	}
+
 	public override string ToString()
 	{
 		return $"OrderCreated {ToJsonPrint()}";
@@ -54,6 +63,15 @@ public class OrderConfirmed : ISerializableMessage
 		var env = envelope.New<OrderConfirmed>("order_confirmed", this);
 		return JsonSerializer.Serialize(env, _jsonSerializerOptions);
 	}
+
+	public byte[] ToBytes()
+	{
+		var envelope = new Envelope();
+		var env = envelope.New<OrderConfirmed>("order_confirmed", this);
+		var json = JsonSerializer.Serialize(env, _jsonSerializerOptions);
+		return Encoding.UTF8.GetBytes(json);
+	}
+
 	private string ToJsonPrint()
 	{
 		return JsonSerializer.Serialize(this, _jsonSerializerOptions);
@@ -81,6 +99,14 @@ public class OrderRejected : ISerializableMessage
 		var envelope = new Envelope();
 		var env = envelope.New<OrderRejected>("order_rejected", this);
 		return JsonSerializer.Serialize(env, _jsonSerializerOptions);
+	}
+
+	public byte[] ToBytes()
+	{
+		var envelope = new Envelope();
+		var env = envelope.New<OrderRejected>("order_rejected", this);
+		var json = JsonSerializer.Serialize(env, _jsonSerializerOptions);
+		return Encoding.UTF8.GetBytes(json);
 	}
 
 	private string ToJsonPrint()

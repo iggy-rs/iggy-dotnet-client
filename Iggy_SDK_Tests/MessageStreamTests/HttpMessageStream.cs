@@ -215,12 +215,14 @@ public sealed class HttpMessageStream
 	[Fact]
 	public async Task SendMessageAsync_ThrowsErrorResponseException_OnFailure()
 	{
+		int streamId = 1;
+		int topicId = 1;
 		var request = MessageFactory.CreateMessageSendRequest();		
 		var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions); 
 		var error = JsonSerializer.Serialize(ErrorModelFactory.CreateErrorModelBadRequest(), _toSnakeCaseOptions);
 
 		
-		_httpHandler.When(HttpMethod.Post, $"/streams/{request.StreamId}/topics/{request.TopicId}/messages")
+		_httpHandler.When(HttpMethod.Post, $"/streams/{streamId}/topics/{topicId}/messages")
 			.With(message =>
 			{
 				message.Content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -228,7 +230,7 @@ public sealed class HttpMessageStream
 			})
 			.Respond(HttpStatusCode.BadRequest, "application/json", error);
 		
-		Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.SendMessagesAsync(request));
+		Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.SendMessagesAsync(streamId, topicId, request));
 		_httpHandler.Flush();
 	}
 
@@ -236,7 +238,7 @@ public sealed class HttpMessageStream
 	public async Task GetMessagesAsync_ReturnsMessages_WhenFound()
 	{
 		var request = MessageFactory.CreateMessageFetchRequest();
-		var response = new List<MessageResponse>();
+		var response = new List<MessageResponseHttp>();
 		response.Add(MessageFactory.CreateMessageResponse());
 		var content = JsonSerializer.Serialize(response, _toSnakeCaseOptions); 
 		

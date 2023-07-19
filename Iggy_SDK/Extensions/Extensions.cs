@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace Iggy_SDK.Extensions;
 
@@ -27,6 +28,26 @@ internal static class Extensions
 	      }
        });
    }
+   
+   internal static UInt128 ToUInt128(this Guid g)
+   {
+	   var array = g.ToByteArray();
+	   var hi = BitConverter.ToUInt64(array, 8);
+	   var lo = BitConverter.ToUInt64(array, 0);
+	   return new UInt128(hi, lo);
+   }
+   internal static byte[] GetBytesFromUInt128(this UInt128 value)
+   {
+
+	   Span<byte> result = stackalloc byte[16];
+	   var span = MemoryMarshal.Cast<UInt128, byte>(MemoryMarshal.CreateReadOnlySpan(ref value, 1));
+	   for (int i = 0; i < 16; i++)
+	   {
+		   result[i] = span[i];
+	   }
+	   return result.ToArray();
+   }
+
    private static int CountUppercaseLetters(string input)
    {
 	   return input.Count(char.IsUpper);

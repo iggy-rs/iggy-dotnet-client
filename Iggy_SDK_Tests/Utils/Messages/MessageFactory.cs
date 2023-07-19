@@ -16,19 +16,17 @@ internal static class MessageFactory
 		{
 			KeyKind = Keykind.PartitionId,
 			KeyValue = Random.Shared.Next(1, 10),
-			StreamId = Random.Shared.Next(1, 10),
-			TopicId = Random.Shared.Next(1, 10),
-			Messages = new List<IMessage>
+			Messages = new List<Message>
 			{
-				new DummyMessage
+				new Message
 				{
 					Id = Guid.NewGuid(),
-					Payload = JsonSerializer.Serialize(DummyObjFactory.CreateDummyObject())
+					Payload = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(DummyObjFactory.CreateDummyObject()))
 				},
-				new DummyMessage
+				new Message
 				{
 					Id = Guid.NewGuid(),
-					Payload =  JsonSerializer.Serialize(DummyObjFactory.CreateDummyObject())
+					Payload =  Encoding.UTF8.GetBytes(JsonSerializer.Serialize(DummyObjFactory.CreateDummyObject()))
 				}
 
 			}
@@ -50,22 +48,16 @@ internal static class MessageFactory
 		};
 	}
 
-	internal static MessageResponse CreateMessageResponse()
+	internal static MessageResponseHttp CreateMessageResponse()
 	{
-		return new MessageResponse
+		return new MessageResponseHttp
 		{
 			Offset = (ulong)Random.Shared.Next(1, 10),
 			Payload = Convert.ToBase64String(Encoding.UTF8.GetBytes("TROLOLO")),
 			Timestamp = 12371237821L,
-			Id = Guid.NewGuid(),
+			Id = 123123123123
 		};
 	}
-}
-
-internal class DummyMessage  : IMessage
-{
-	public Guid Id { get; set; }
-	public string Payload { get; set; }
 }
 
 internal class DummyObject
