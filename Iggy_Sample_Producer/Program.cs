@@ -1,4 +1,5 @@
-﻿using Iggy_Sample_Producer;
+﻿using System.Numerics;
+using Iggy_Sample_Producer;
 using Iggy_SDK.Contracts;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
@@ -62,10 +63,11 @@ async Task ProduceMessages(IMessageClient bus, StreamResponse? stream, TopicResp
             var message = MessageGenerator.GenerateMessage();
             var json = message.ToJson();
             
+            
             debugMessages.Add(message);
             messages.Add(new DummyMessage
             {
-                Id = (ulong)i,
+                Id = Guid.NewGuid(),
                 Payload = json
             });
         }

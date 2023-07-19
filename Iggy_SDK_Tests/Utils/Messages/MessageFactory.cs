@@ -22,12 +22,12 @@ internal static class MessageFactory
 			{
 				new DummyMessage
 				{
-					Id = (ulong)Random.Shared.Next(1, 10),
+					Id = Guid.NewGuid(),
 					Payload = JsonSerializer.Serialize(DummyObjFactory.CreateDummyObject())
 				},
 				new DummyMessage
 				{
-					Id = (ulong)Random.Shared.Next(1, 10),
+					Id = Guid.NewGuid(),
 					Payload =  JsonSerializer.Serialize(DummyObjFactory.CreateDummyObject())
 				}
 
@@ -57,14 +57,14 @@ internal static class MessageFactory
 			Offset = (ulong)Random.Shared.Next(1, 10),
 			Payload = Convert.ToBase64String(Encoding.UTF8.GetBytes("TROLOLO")),
 			Timestamp = 12371237821L,
-			Id = UInt128.MaxValue,
+			Id = Guid.NewGuid(),
 		};
 	}
 }
 
 internal class DummyMessage  : IMessage
 {
-	public ulong Id { get; set; }
+	public Guid Id { get; set; }
 	public string Payload { get; set; }
 }
 

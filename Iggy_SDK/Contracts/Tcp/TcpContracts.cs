@@ -1,4 +1,6 @@
 using System.Buffers.Binary;
+using System.Numerics;
+using System.Runtime.InteropServices;
 using System.Text;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
@@ -49,9 +51,13 @@ internal static class TcpContracts
         int position = 17;
         foreach (var message in request.Messages)
         {
-            BinaryPrimitives.WriteUInt64LittleEndian(bytes[(position + 16)..(position + 24)], message.Id);
-            BinaryPrimitives.WriteInt32LittleEndian(bytes.Slice(position + 16, sizeof(int)), message.Payload.Length);
-            BinaryPrimitives.WriteInt32LittleEndian(bytes[(position + 24)..(position + 28)], message.Payload.Length);
+
+            var id = message.Id.ToByteArray();
+            for (int i = position; i < position + 16; i++)
+            {
+                bytes[i] = id[i - position];
+            }
+            BinaryPrimitives.WriteInt32LittleEndian(bytes[(position + 16)..(position + 20)], message.Payload.Length);
             var payloadBytes = Encoding.UTF8.GetBytes(message.Payload).AsSpan();
             var slice = bytes[(position + 16 + 4)..];
             payloadBytes.CopyTo(slice);

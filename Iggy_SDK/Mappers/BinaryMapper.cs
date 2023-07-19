@@ -29,7 +29,7 @@ internal static class BinaryMapper
         {
             ulong offset = BinaryPrimitives.ReadUInt64LittleEndian(payload[position..(position + 8)]);
             ulong timestamp = BinaryPrimitives.ReadUInt64LittleEndian(payload[(position + 8)..(position + 16)]);
-            ulong id = BinaryPrimitives.ReadUInt64LittleEndian(payload[(position + 16)..(position + 24)]);
+            var id = new Guid(payload[(position + 16)..(position + 32)]);
             uint messageLength = BinaryPrimitives.ReadUInt32LittleEndian(payload[(position + 32)..(position + 36)]);
 
             int payloadRangeStart = position + propertiesSize;

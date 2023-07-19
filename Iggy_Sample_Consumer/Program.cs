@@ -86,8 +86,9 @@ async Task HandleMessage(MessageResponse messageResponse)
     {
         message = JsonSerializer.Deserialize<Envelope>(messageResponse.Payload, jsonOptions);
     }
+
     
-    Console.Write($"Handling message type: {message!.MessageType} at offset: {messageResponse.Offset} ");
+    Console.Write($"Handling message type: {message!.MessageType} at offset: {messageResponse.Offset} with message Id:{messageResponse.Id.ToString()} ");
 
     switch (message.MessageType)
     {

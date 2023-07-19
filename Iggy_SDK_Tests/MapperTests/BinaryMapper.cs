@@ -29,13 +29,13 @@ public sealed class BinaryMapper
         // Arrange
         ulong offset1 = 12;
         ulong timestamp1 = 69;
-        ulong id1 = 3;
+        var id1 = Guid.NewGuid();
         string payloadString1 = "Test1";
         byte[] payload1 = BinaryFactory.CreateMessagePayload(offset1, timestamp1, id1, payloadString1);
         
         ulong offset2 = 234;
         ulong timestamp2 = 987654321;
-        ulong id2 = 567;
+        var id2 = Guid.NewGuid();
         int messageLength2 = 8;
         string payloadString2 = "Test 2";
         byte[] payload2 = BinaryFactory.CreateMessagePayload(offset2, timestamp2, id2, payloadString2);
@@ -63,13 +63,13 @@ public sealed class BinaryMapper
         MessageResponse response1 = responses.ElementAt(0);
         Assert.Equal(offset1, response1.Offset);
         Assert.Equal((ulong)timestamp1, response1.Timestamp);
-        Assert.Equal((ulong)id1, response1.Id);
+        Assert.Equal(id1, response1.Id);
         Assert.Equal(payloadString1, response1.Payload);
 
         MessageResponse response2 = responses.ElementAt(1);
         Assert.Equal(offset2, response2.Offset);
         Assert.Equal((ulong)timestamp2, response2.Timestamp);
-        Assert.Equal((ulong)id2, response2.Id);
+        Assert.Equal(id2, response2.Id);
         Assert.Equal(payloadString2, response2.Payload);
     }
 

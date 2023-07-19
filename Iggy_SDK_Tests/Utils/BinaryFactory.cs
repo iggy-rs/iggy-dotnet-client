@@ -13,15 +13,21 @@ internal sealed class BinaryFactory
         return payload;
     }
 
-    internal static byte[] CreateMessagePayload(ulong offset, ulong timestamp, ulong id, string payload)
+    internal static byte[] CreateMessagePayload(ulong offset, ulong timestamp, Guid id, string payload)
     {
         int messageLength = payload.Length;
         var payloadBytes = Encoding.UTF8.GetBytes(payload);
         var totalSize = 36 + payloadBytes.Length;
         var payloadBuffer = new byte[totalSize];
+        
+        
         BinaryPrimitives.WriteUInt64LittleEndian(payloadBuffer, (ulong)offset);
         BinaryPrimitives.WriteUInt64LittleEndian(payloadBuffer.AsSpan(8), (ulong)timestamp);
-        BinaryPrimitives.WriteUInt64LittleEndian(payloadBuffer.AsSpan(16), (ulong)id);
+        var idBytes = id.ToByteArray();
+        for (int i = 16; i < 32; i++)
+        {
+            payloadBuffer[i] = idBytes[i - 16];
+        }
         BinaryPrimitives.WriteUInt32LittleEndian(payloadBuffer.AsSpan(32), (uint)messageLength);
         payloadBytes.CopyTo(payloadBuffer.AsSpan(36));
         return payloadBuffer;
