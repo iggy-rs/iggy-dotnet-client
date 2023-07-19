@@ -33,30 +33,39 @@ async Task ConsumeMessages()
     Console.WriteLine($"Messages will be polled from stream {streamId}, topic {topicId}, partition {partitionId} with interval {intervalInMs} ms");
     while (true)
     {
-        var messages = await bus.PollMessagesAsync(new MessageFetchRequest
+        try
         {
-            Count = 1,
-            TopicId = topicId,
-            StreamId = streamId,
-            ConsumerId = consumerId,
-            PartitionId = partitionId,
-            PollingStrategy = MessagePolling.Next,
-            Value = 0,
-            AutoCommit = true
-        });
-        if (!messages.Any())
-        {
-            Console.WriteLine("No messages were found");
+            var messages = (await bus.PollMessagesAsync(new MessageFetchRequest
+            {
+                Count = 1,
+                TopicId = topicId,
+                StreamId = streamId,
+                ConsumerId = consumerId,
+                PartitionId = partitionId,
+                PollingStrategy = MessagePolling.Next,
+                Value = 0,
+                AutoCommit = true
+            })).ToList();
+            
+            if (!messages.Any())
+            {
+                Console.WriteLine("No messages were found");
+                await Task.Delay(intervalInMs);
+                continue;
+            }
+
+            foreach (var message in messages)
+            {
+                await HandleMessage(message);
+            }
+
             await Task.Delay(intervalInMs);
-            continue;
         }
-
-        foreach (var message in messages)
+        catch (Exception e)
         {
-            await HandleMessage(message);
+            Console.WriteLine(e.Message);
+            throw;
         }
-
-        await Task.Delay(intervalInMs);
     }
 }
 
@@ -105,31 +114,35 @@ async Task HandleMessage(MessageResponse messageResponse)
 
 async Task ValidateSystem(int streamId, int topicId, int partitionId)
 {
-    Console.WriteLine($"Validating if stream exists.. {streamId}");
-    var result = await bus.GetStreamByIdAsync(streamId);
-    if (result is not null)
+    try
     {
-        Console.WriteLine($"Stream {streamId} was found");
+        Console.WriteLine($"Validating if stream exists.. {streamId}");
+        var result = await bus.GetStreamByIdAsync(streamId);
+        Console.WriteLine($"Validating if topic exists.. {topicId}");
+        var topicResult = await bus.GetTopicByIdAsync(streamId, topicId);
+        if (topicResult.PartitionsCount < partitionId)
+        {
+            throw new SystemException(
+                $"Topic {topicId} has only {topicResult.PartitionsCount} partitions, but partition {partitionId} was requested");
+        }
     }
-    else
+    catch
     {
-        throw new SystemException($"Stream {streamId} was not found");
+        Console.WriteLine($"Creating stream with {streamId}");
+        await bus.CreateStreamAsync(new StreamRequest
+        {
+            StreamId = streamId,
+            Name = "Test Consumer Stream",
+        });
+        Console.WriteLine($"Creating topic with {topicId}");
+        await bus.CreateTopicAsync(streamId, new TopicRequest
+        {
+            Name = "Test Consumer Topic",
+            PartitionsCount = 12,
+            TopicId = topicId
+        });
+        
     }
 
-    Console.WriteLine($"Validating if topic exists.. {topicId}");
-    var topicResult = await bus.GetTopicByIdAsync(streamId, topicId);
-    if (topicResult is not null)
-    {
-        Console.WriteLine($"Topic {topicId} was found");
-    }
-    else
-    {
-        throw new SystemException($"Topic {topicId} was not found");
-    }
-
-    if (topicResult.PartitionsCount < partitionId)
-    {
-        throw new SystemException($"Topic {topicId} has only {topicResult.PartitionsCount} partitions, but partition {partitionId} was requested");
-    }
 }
 

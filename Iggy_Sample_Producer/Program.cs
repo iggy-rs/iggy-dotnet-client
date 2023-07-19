@@ -19,36 +19,49 @@ var topicId = 1;
 
 Console.WriteLine($"Producer has started, selected protocol {protocol.ToString()}");
 
-var stream = await bus.GetStreamByIdAsync(streamId);
-var topic = await bus.GetTopicByIdAsync(streamId, topicId);
-if (stream is null)
+try
 {
-    var result = await bus.CreateStreamAsync(new StreamRequest
+    var stream = await bus.GetStreamByIdAsync(streamId);
+    var topic = await bus.GetTopicByIdAsync(streamId, topicId);
+}
+catch
+{
+    Console.WriteLine($"Creating stream with id:{streamId}");
+    try
     {
-        StreamId = streamId,
-        Name = "Test Producer Stream",
-    });
-    if (!result.IsSuccess)
+        await bus.CreateStreamAsync(new StreamRequest
+        {
+            StreamId = streamId,
+            Name = "Test Producer Stream",
+        });
+    }
+    catch (Exception e)
     {
-        throw new SystemException("Failed to create stream");
+        Console.WriteLine($"Failed to Create stream: {streamId}");
+        throw;
     }
 
-    var topicResult = await bus.CreateTopicAsync(streamId, new TopicRequest
+    Console.WriteLine($"Creating topic with id:{topicId}");
+    try
     {
-        Name = "Test Topic From Producer Sample",
-        PartitionsCount = 3,
-        TopicId = topicId,
-    });
-    if (!topicResult.IsSuccess)
-    {
-        throw new SystemException("Failed to create topic");
+        await bus.CreateTopicAsync(streamId, new TopicRequest
+        {
+            Name = "Test Topic From Producer Sample",
+            PartitionsCount = 3,
+            TopicId = topicId,
+        });
     }
-
-    stream = await bus.GetStreamByIdAsync(streamId);
-    topic = await bus.GetTopicByIdAsync(streamId, topicId);
+    catch (Exception e)
+    {
+        Console.WriteLine($"Failed to create topic: {e.Message}");
+        throw;
+    }
 }
 
-await ProduceMessages(bus, stream, topic);
+var actualStream = await bus.GetStreamByIdAsync(streamId);
+var actualTopic = await bus.GetTopicByIdAsync(streamId, topicId);
+
+await ProduceMessages(bus, actualStream, actualTopic);
 
 async Task ProduceMessages(IMessageClient bus, StreamResponse? stream, TopicResponse? topic)
 {
@@ -73,15 +86,23 @@ async Task ProduceMessages(IMessageClient bus, StreamResponse? stream, TopicResp
                 Payload = json
             });
         }
-        
-        var result = await bus.SendMessagesAsync(new MessageSendRequest
+
+        try
         {
-            Messages = messages,
-            StreamId = stream.Id,
-            TopicId = topic.Id,
-            KeyKind = Keykind.PartitionId,
-            KeyValue = topic.PartitionsCount,
-        });
+            await bus.SendMessagesAsync(new MessageSendRequest
+            {
+                Messages = messages,
+                StreamId = stream.Id,
+                TopicId = topic.Id,
+                KeyKind = Keykind.PartitionId,
+                KeyValue = topic.PartitionsCount,
+            });
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            throw;
+        }
         Console.WriteLine($"Sent messages: {string.Join(Environment.NewLine, debugMessages.ConvertAll(m => m.ToString()))}");
         await Task.Delay(intervalInMs);
     }

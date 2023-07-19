@@ -1,7 +1,5 @@
 using Iggy_SDK_Tests.Utils;
-using Iggy_SDK.Contracts;
 using Iggy_SDK.Contracts.Http;
-using Iggy_SDK.Mappers;
 
 namespace Iggy_SDK_Tests.MapperTests;
 

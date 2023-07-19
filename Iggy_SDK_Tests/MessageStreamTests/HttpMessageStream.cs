@@ -9,6 +9,7 @@ using Iggy_SDK_Tests.Utils.Offset;
 using Iggy_SDK_Tests.Utils.Streams;
 using Iggy_SDK_Tests.Utils.Topics;
 using Iggy_SDK.Contracts.Http;
+using Iggy_SDK.Exceptions;
 using Iggy_SDK.MessageStream;
 using Iggy_SDK.SerializationConfiguration;
 using RichardSzalay.MockHttp;
@@ -40,23 +41,7 @@ public sealed class HttpMessageStream
 	}
 	
 	[Fact]
-	public async Task CreateStreamAsync_Returns201Created_WhenSuccessfullyCreated()
-	{
-		var streamId = 1;
-		var content = StreamFactory.CreateStreamRequest();
-		var json = JsonSerializer.Serialize(content, _toSnakeCaseOptions);
-
-		_httpHandler.When(HttpMethod.Post, $"/streams")
-			.WithContent(json)
-			.Respond(HttpStatusCode.Created);
-		
-		var result = await _sut.CreateStreamAsync(content);
-		Assert.True(result.IsSuccess);
-		_httpHandler.Flush();
-	}
-	
-	[Fact]
-	public async Task CreateStreamAsync_Returns400BadRequest_OnFailure()
+	public async Task CreateStreamAsync_ThrowsErrorResponseException_OnFailure()
 	{
 		var streamId = 1;
 		var content = StreamFactory.CreateStreamRequest();
@@ -67,26 +52,12 @@ public sealed class HttpMessageStream
 			.WithContent(json)
 			.Respond(HttpStatusCode.BadRequest, "application/json", error);
 		
-		var result = await _sut.CreateStreamAsync(content);
-		Assert.False(result.IsSuccess);
-		_httpHandler.Flush();
-	}
-	
-	[Fact]
-	public async Task DeleteStreamAsync_Returns204NoContent_WhenSuccessfullyCreated()
-	{
-		var streamId = 1;
-
-		_httpHandler.When(HttpMethod.Delete, $"/streams/{streamId}")
-			.Respond(HttpStatusCode.NoContent);
-		
-		var result = await _sut.DeleteStreamAsync(streamId);
-		Assert.True(result.IsSuccess);
+		await Assert.ThrowsAsync<InvalidResponseException>(async () => await _sut.CreateStreamAsync(content));
 		_httpHandler.Flush();
 	}
 
 	[Fact]
-	public async Task GetStreamByIdAsync_Returns200Ok_WhenFound()
+	public async Task GetStreamByIdAsync_ReturnsStreamResponse_WhenFound()
 	{
 		var streamId = 1;
 		var streamResponse = StreamFactory.CreateStreamResponse();
@@ -101,20 +72,20 @@ public sealed class HttpMessageStream
 	}	
 	
 	[Fact]
-	public async Task GetStreamByIdAsync_Returns404NotFound_OnFailure()
+	public async Task GetStreamByIdAsync_ThrowsErrorResponseException_OnFailure()
 	{
 		var streamId = 1;
+		var error = JsonSerializer.Serialize(ErrorModelFactory.CreateErrorModelNotFound(), _toSnakeCaseOptions); 
 		
 		_httpHandler.When(HttpMethod.Get, $"/streams/{streamId}")
-			.Respond(HttpStatusCode.NotFound);
+			.Respond(HttpStatusCode.NotFound, "application/json", error);
 		
-		var result = await _sut.GetStreamByIdAsync(streamId);
-		Assert.Null(result);
+		await Assert.ThrowsAsync<InvalidResponseException>( async ()=> await _sut.GetStreamByIdAsync(streamId));
 		_httpHandler.Flush();
 	}
 
 	[Fact]
-	public async Task GetStreamsAsync_Returns200Ok_WhenFound()
+	public async Task GetStreamsAsync_ReturnsListOfStreamResponse_WhenFound()
 	{
 		var response = new List<StreamResponse>();
 		response.Add(StreamFactory.CreateStreamsResponse());
@@ -131,37 +102,21 @@ public sealed class HttpMessageStream
 	}
 
 	[Fact]
-	public async Task GetStreamsAsync_Returns404NotFound_OnFailure()
+	public async Task GetStreamsAsync_ThrowsErrorResponseException_OnFailure()
 	{
 		var response = new List<StreamResponse>();
-		var content = JsonSerializer.Serialize(response, _toSnakeCaseOptions);
+		var content = JsonSerializer.Serialize(ErrorModelFactory.CreateErrorModelNotFound(), _toSnakeCaseOptions);
 
 		_httpHandler.When(HttpMethod.Get, $"/streams")
 			.Respond(HttpStatusCode.NotFound, "application/json", content);
 
 
-		var result = await _sut.GetStreamsAsync();
-		Assert.Empty(result);
+		await Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.GetStreamsAsync());
 		_httpHandler.Flush();
 	}
 
 	[Fact]
-	public async Task CreateTopicAsync_Returns201Created_WhenSuccessfullyCreated()
-	{
-		var streamId = 1;
-		var content = TopicFactory.CreateTopicRequest();
-		var json = JsonSerializer.Serialize(content, _toSnakeCaseOptions);
-
-		_httpHandler.When(HttpMethod.Post, $"/streams/{streamId}/topics")
-			.WithContent(json)
-			.Respond(HttpStatusCode.Created);
-
-		var result = await _sut.CreateTopicAsync(streamId, content);
-		Assert.True(result.IsSuccess);
-		_httpHandler.Flush();
-	}
-	[Fact]
-	public async Task CreateTopicAsync_Returns400BadRequest_OnFailure()
+	public async Task CreateTopicAsync_ThrowsErrorResponseException_OnFailure()
 	{
 		var streamId = 1;
 		var content = TopicFactory.CreateTopicRequest();
@@ -173,27 +128,12 @@ public sealed class HttpMessageStream
 			.WithContent(json)
 			.Respond(HttpStatusCode.BadRequest, "application/json", error);
 
-		var result = await _sut.CreateTopicAsync(streamId, content);
-		Assert.False(false);
-		_httpHandler.Flush();
-	}
-	
-	[Fact]	
-	public async Task DeleteTopicAsync_Returns204NoContent_WhenSuccessfullyCreated()
-	{
-		var streamId = 1;
-		var topicId = 1;
-
-		_httpHandler.When(HttpMethod.Delete, $"/streams/{streamId}/topics/{topicId}")
-			.Respond(HttpStatusCode.NoContent);
-
-		var result = await _sut.DeleteTopicAsync(streamId, topicId);
-		Assert.True(result.IsSuccess);
+		await Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.CreateTopicAsync(streamId, content));
 		_httpHandler.Flush();
 	}
 
 	[Fact]
-	public async Task DeleteTopicAsync_Returns400BadRequest_OnFailure()
+	public async Task DeleteTopicAsync_ThrowsErrorResponseException_OnFailure()
 	{
 		var streamId = 1;
 		var topicId = 1;
@@ -203,13 +143,12 @@ public sealed class HttpMessageStream
 		_httpHandler.When(HttpMethod.Delete, $"/streams/{streamId}/topics/{topicId}")
 			.Respond(HttpStatusCode.BadRequest, "application/json", error);
 
-		var result = await _sut.DeleteTopicAsync(streamId, topicId);
-		Assert.False(result.IsSuccess);
+		await Assert.ThrowsAsync<InvalidResponseException>(async () => await _sut.DeleteTopicAsync(streamId, topicId));
 		_httpHandler.Flush();
 	}
 	
 	[Fact]
-	public async Task GetTopicsAsync_Returns200Ok_WhenFound()
+	public async Task GetTopicsAsync_ReturnsListOfTopicResponse_WhenFound()
 	{
 		int streamId = 1;
 		
@@ -227,21 +166,21 @@ public sealed class HttpMessageStream
 	}
 
 	[Fact]
-	public async Task GetTopicsAsync_Returns404NotFound_OnFailure()
+	public async Task GetTopicsAsync_ThrowsErrorResponseException_OnFailure()
 	{
 		int streamId = 1;
+		var error = JsonSerializer.Serialize(ErrorModelFactory.CreateErrorModelNotFound(), _toSnakeCaseOptions); 
 		
 		_httpHandler.When(HttpMethod.Get, $"/streams/{streamId}/topics")
-			.Respond(HttpStatusCode.NotFound);
+			.Respond(HttpStatusCode.NotFound, "application/json", error);
 		
-		var result = await _sut.GetTopicsAsync(streamId);
-		Assert.Empty(result);
+		await Assert.ThrowsAsync<InvalidResponseException>(async () => await _sut.GetTopicsAsync(streamId));
 		_httpHandler.Flush();
 		
 	}
 	
 	[Fact]
-	public async Task GetTopicByIdAsync_Returns200Ok_WhenFound()
+	public async Task GetTopicByIdAsync_ReturnsTopicResponse_WhenFound()
 	{
 		int streamId = 1;
 		int topicId = 1;
@@ -260,40 +199,21 @@ public sealed class HttpMessageStream
 	}
 	
 	[Fact]
-	public async Task GetTopicByIdAsync_Returns404NotFound_OnFailure()
+	public async Task GetTopicByIdAsync_ThrowsErrorResponseException_OnFailure()
 	{
 		int streamId = 1;
 		int topicId = 1;
+		var error = JsonSerializer.Serialize(ErrorModelFactory.CreateErrorModelNotFound(), _toSnakeCaseOptions); 
 		
 		_httpHandler.When(HttpMethod.Get, $"/streams/{streamId}/topics/{topicId}")
-			.Respond(HttpStatusCode.NotFound);
+			.Respond(HttpStatusCode.NotFound, "application/json", error);
 		
-		var result = await _sut.GetTopicByIdAsync(streamId, topicId);
-		Assert.Null(result);
+		await Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.GetTopicByIdAsync(streamId, topicId));
 		_httpHandler.Flush();
 	}
 
 	[Fact]
-	public async Task SendMessageAsync_Returns201Created_WhenSuccessfullyCreated()
-	{
-		var request = MessageFactory.CreateMessageSendRequest();
-		var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
-		
-		_httpHandler.When(HttpMethod.Post, $"/streams/{request.StreamId}/topics/{request.TopicId}/messages")
-			.With(message =>
-			{
-				message.Content = new StringContent(json, Encoding.UTF8, "application/json");
-				return true;
-			})
-			.Respond(HttpStatusCode.Created);
-		
-		var result = await _sut.SendMessagesAsync(request);
-		Assert.True(result.IsSuccess);
-		_httpHandler.Flush();
-	}
-
-	[Fact]
-	public async Task SendMessageAsync_Returns400BadRequest_OnFailure()
+	public async Task SendMessageAsync_ThrowsErrorResponseException_OnFailure()
 	{
 		var request = MessageFactory.CreateMessageSendRequest();		
 		var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions); 
@@ -308,13 +228,12 @@ public sealed class HttpMessageStream
 			})
 			.Respond(HttpStatusCode.BadRequest, "application/json", error);
 		
-		var result = await _sut.SendMessagesAsync(request);
-		Assert.False(result.IsSuccess);
+		Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.SendMessagesAsync(request));
 		_httpHandler.Flush();
 	}
 
 	[Fact]
-	public async Task GetMessagesAsync_Returns200Ok_WhenFound()
+	public async Task GetMessagesAsync_ReturnsMessages_WhenFound()
 	{
 		var request = MessageFactory.CreateMessageFetchRequest();
 		var response = new List<MessageResponse>();
@@ -333,11 +252,10 @@ public sealed class HttpMessageStream
 	}
 
 	[Fact]
-	public async Task GetMessagesAsync_ReturnsEmpty_OnFailure()
+	public async Task GetMessagesAsync_ThrowsErrorResponseException_OnFailure()
 	{
 		var request = MessageFactory.CreateMessageFetchRequest();
-		var response = new List<MessageResponse>();
-		var content = JsonSerializer.Serialize(response, _toSnakeCaseOptions);
+		var content = JsonSerializer.Serialize(ErrorModelFactory.CreateErrorModelBadRequest(), _toSnakeCaseOptions);
 		
 		_httpHandler.When(HttpMethod.Get, 
         $"/streams/{request.StreamId}/topics/{request.TopicId}/messages?consumer_id={request.ConsumerId}" +
@@ -345,28 +263,13 @@ public sealed class HttpMessageStream
 							$"&auto_commit={request.AutoCommit.ToString().ToLower()}")
 					.Respond(HttpStatusCode.BadRequest, "application/json", content);
 		
-		var result = await _sut.PollMessagesAsync(request);
-		Assert.Empty(result);
+		await Assert.ThrowsAsync<InvalidResponseException>(async () => await _sut.PollMessagesAsync(request));
 		_httpHandler.Flush();
 	}
 
-	[Fact]
-	public async Task UpdateOffsetAsync_Returns204NoContent_WhenSuccessfullyUpdated()
-	{
-		int streamId = 1;
-		int topicId = 1;
-		var contract = OffsetFactory.CreateOffsetContract();
-
-		_httpHandler.When(HttpMethod.Put, $"/streams/{streamId}/topics/{topicId}/messages/offsets")
-			.Respond(HttpStatusCode.NoContent);
-		
-		var result = await _sut.StoreOffsetAsync(streamId, topicId, contract);
-		Assert.True(result.IsSuccess);
-		_httpHandler.Flush();
-	}
 	
 	[Fact]
-	public async Task UpdateOffsetAsync_Returns400BadRequest_OnFailure()
+	public async Task UpdateOffsetAsync_ThrowsErrorResponseException_OnFailure()
 	{
 		int streamId = 1;
 		int topicId = 1;
@@ -377,13 +280,12 @@ public sealed class HttpMessageStream
 		_httpHandler.When(HttpMethod.Put, $"/streams/{streamId}/topics/{topicId}/messages/offsets")
 			.Respond(HttpStatusCode.BadRequest, "application/json", error);
 		
-		var result = await _sut.StoreOffsetAsync(streamId, topicId, contract);
-		Assert.False(result.IsSuccess);
+		await Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.StoreOffsetAsync(streamId, topicId, contract));
 		_httpHandler.Flush();
 	}
 
 	[Fact]
-	public async Task GetOffsetAsync_Returns200Ok_WhenFound()
+	public async Task GetOffsetAsync_ReturnsOffsetResponse_WhenFound()
 	{
 		var request = OffsetFactory.CreateOffsetRequest();
 		var response = OffsetFactory.CreateOffsetResponse();
@@ -399,21 +301,20 @@ public sealed class HttpMessageStream
 	}
 	
 	[Fact]
-	public async Task GetOffsetAsync_Returns404NotFound_OnFailure()
+	public async Task GetOffsetAsync_ThrowsErrorResponseException_OnFailure()
 	{
 		var request = OffsetFactory.CreateOffsetRequest();
-		var response = OffsetFactory.CreateOffsetResponse();
+		var response = ErrorModelFactory.CreateErrorModelNotFound();
 		
         _httpHandler.When(HttpMethod.Get, $"/streams/{request.StreamId}/topics/{request.TopicId}/messages/" +
                        $"offsets?consumer_id={request.ConsumerId}&partition_id={request.PartitionId}")
 					.Respond(HttpStatusCode.NotFound, "application/json", JsonSerializer.Serialize(response, _toSnakeCaseOptions));
         
-		var result = await _sut.GetOffsetAsync(request);
-		Assert.Null(result);
+		await Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.GetOffsetAsync(request));
 	}
 
 	[Fact]
-	public async Task GetGroupsAsync_Returns200Ok_WhenFound()
+	public async Task GetGroupsAsync_ReturnsGroupResponse_WhenFound()
 	{
 		int streamId = 1;
 		int topicId = 1;
@@ -428,17 +329,17 @@ public sealed class HttpMessageStream
 	}
 
 	[Fact]
-	public async Task GetGroupsAsync_Returns200OkEmptyArray_WhenNotFound()
+	public async Task GetGroupsAsync_ThrowsErrorResponseException_WhenNotFound()
 	{
 		int streamId = 1;
 		int topicId = 1;
-		var response = GroupFactory.Empty();
+		var error = ErrorModelFactory.CreateErrorModelNotFound();
 
 		_httpHandler.When($"/streams/{streamId}/topics/{topicId}/consumer_groups")
-			.Respond(HttpStatusCode.OK, "application/json", JsonSerializer.Serialize(response, _toSnakeCaseOptions));
+			.Respond(HttpStatusCode.NotFound, "application/json", JsonSerializer.Serialize(error, _toSnakeCaseOptions));
 
-		var result = await _sut.GetGroupsAsync(streamId, topicId);
-		Assert.NotNull(result);
-		Assert.Empty(result);
+		await Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.GetGroupsAsync(streamId, topicId));
+		_httpHandler.Flush();
+		
 	}
 }

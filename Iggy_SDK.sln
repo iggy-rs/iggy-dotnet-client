@@ -2,8 +2,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Iggy_SDK", "Iggy_SDK\Iggy_SDK.csproj", "{661540EB-81F9-492C-828B-CF787BEBD50B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Playground", "Playground\Playground.csproj", "{075F85E8-228E-4160-BC51-5EA4964C1F22}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Iggy_SDK_Tests", "Iggy_SDK_Tests\Iggy_SDK_Tests.csproj", "{8514D555-35CF-4538-97D3-DC42A182B694}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Iggy_Sample_Producer", "Iggy_Sample_Producer\Iggy_Sample_Producer.csproj", "{ABF3900E-D9C1-46F8-97B1-E0918DCFC89C}"
@@ -22,10 +20,6 @@ Global
 		{661540EB-81F9-492C-828B-CF787BEBD50B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{661540EB-81F9-492C-828B-CF787BEBD50B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{661540EB-81F9-492C-828B-CF787BEBD50B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{075F85E8-228E-4160-BC51-5EA4964C1F22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{075F85E8-228E-4160-BC51-5EA4964C1F22}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{075F85E8-228E-4160-BC51-5EA4964C1F22}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{075F85E8-228E-4160-BC51-5EA4964C1F22}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8514D555-35CF-4538-97D3-DC42A182B694}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8514D555-35CF-4538-97D3-DC42A182B694}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8514D555-35CF-4538-97D3-DC42A182B694}.Release|Any CPU.ActiveCfg = Release|Any CPU
