@@ -53,7 +53,7 @@ await bus.SendMessagesAsync(streamId, topicId, new MessageSendRequest
 ```
 The `Message` struct has two fields `Id` and `Payload`
 ```c#
-class Message
+struct Message
 {
     public ulong Id { get; set; }
     public byte[] Payload { get; set; }
