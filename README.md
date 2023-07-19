@@ -80,6 +80,8 @@ It is worth noting that every method will throw an `InvalidResponseException` wh
 If you register `IMessageStream` in a dependency injection container, you will have access to intefaces
 that encapsulate smaller parts of the system `IStreamClient` `ITopicClient` `IMessageClient` `IOffsetClient` `IConsumerGroupClient`
 
+For more information about how Iggy works check it's [documentation](https://docs.iggy.rs/)
+
 # Producer / Consumer Sample
 
 https://github.com/numinnex/Iggy_SDK/assets/112548209/0b894c86-8fb5-4e45-b705-5688a9fdf9e1
