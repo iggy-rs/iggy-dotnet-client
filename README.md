@@ -33,7 +33,7 @@ bus.CreateStreamAsync(new StreamRequest
 Every stream has a topic to which you can broadcast messages, to create a topic
 use `CreateTopicAsync` method
 ```c#
-bus.CreateTopicAsync(1, new TopicRequest
+bus.CreateTopicAsync(streamId, new TopicRequest
 {
     Name = "First Topic",
     PartitionsCount = 3,
@@ -43,26 +43,22 @@ bus.CreateTopicAsync(1, new TopicRequest
 ```
 To send messages you can use `SendMessagesAsync` method.
 ```c#
-var messages = new List<IMessage>();
-await bus.SendMessagesAsync(new MessageSendRequest
+var messages = new List<Message>();
+await bus.SendMessagesAsync(streamId, topicId, new MessageSendRequest
 {
     Messages = messages,
-    StreamId = 1,
-    TopicId = 1,
     KeyKind = Keykind.PartitionId,
     KeyValue = 1,
 });
 ```
-The `IMessage` interface has two fields `Id` and `Payload`
+The `Message` struct has two fields `Id` and `Payload`
 ```c#
-class DummyMessage : IMessage
+class Message
 {
     public ulong Id { get; set; }
-    public string Payload { get; set; }
+    public byte[] Payload { get; set; }
 }
 ```
-Payload is the Json serialized message that you want to send.</br>
-<b>IMPORTANT</b> Don't encode the serialized message as Base64, it is already done behind the scenes.
 
 Polling messages is done with `PollMessagesAsync` 
 ```c#
@@ -80,7 +76,7 @@ It is worth noting that every method will throw an `InvalidResponseException` wh
 If you register `IMessageStream` in a dependency injection container, you will have access to interfaces
 that encapsulate smaller parts of the system `IStreamClient` `ITopicClient` `IMessageClient` `IOffsetClient` `IConsumerGroupClient`
 
-For more information about how Iggy works check it's [documentation](https://docs.iggy.rs/)
+For more information about how Iggy works check its [documentation](https://docs.iggy.rs/)
 
 # Producer / Consumer Sample
 
