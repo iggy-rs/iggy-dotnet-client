@@ -128,6 +128,7 @@ async Task ValidateSystem(int streamId, int topicId, int partitionId)
     }
     catch
     {
+        
         Console.WriteLine($"Creating stream with {streamId}");
         await bus.CreateStreamAsync(new StreamRequest
         {
@@ -141,7 +142,12 @@ async Task ValidateSystem(int streamId, int topicId, int partitionId)
             PartitionsCount = 12,
             TopicId = topicId
         });
-        
+        var topicRes = await bus.GetTopicByIdAsync(streamId, topicId);
+        if (topicRes.PartitionsCount < partitionId)
+        {
+            throw new SystemException(
+                $"Topic {topicId} has only {topicRes.PartitionsCount} partitions, but partition {partitionId} was requested");
+        }
     }
 
 }

@@ -7,7 +7,7 @@ namespace Iggy_SDK.MessageStream;
 public interface ITopicClient
 {
 	Task<IEnumerable<TopicResponse>> GetTopicsAsync(int streamId);
-	Task<TopicResponse> GetTopicByIdAsync(int streamId, int topicId);
+	Task<TopicResponse?> GetTopicByIdAsync(int streamId, int topicId);
 	Task CreateTopicAsync(int streamId, TopicRequest topic);
 	Task DeleteTopicAsync(int streamId, int topicId);
 }

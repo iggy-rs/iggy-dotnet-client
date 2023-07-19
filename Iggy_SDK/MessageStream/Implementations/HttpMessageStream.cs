@@ -35,25 +35,24 @@ public class HttpMessageStream : IMessageStream
         
         var response = await _httpClient.PostAsync("/streams", data);
         await HandleResponseAsync(response);
+        throw new Exception("Unknown error occurred.");
     }
-
     public async Task DeleteStreamAsync(int streamId)
     {
         var response = await _httpClient.DeleteAsync($"/streams/{streamId}");
         await HandleResponseAsync(response);
+        throw new Exception("Unknown error occurred.");
     }
-
-    public async Task<StreamResponse> GetStreamByIdAsync(int streamId)
+    public async Task<StreamResponse?> GetStreamByIdAsync(int streamId)
     {
         var response = await _httpClient.GetAsync($"/streams/{streamId}");
         if (response.IsSuccessStatusCode)
         {
             return await response.Content.ReadFromJsonAsync<StreamResponse>(_toSnakeCaseOptions);
         }
-        var errResponse = await response.Content.ReadFromJsonAsync<ErrorModel>(_toSnakeCaseOptions);
-        throw new InvalidResponseException(errResponse.Reason);
+        await HandleResponseAsync(response);
+        throw new Exception("Unknown error occurred.");
     }
-
     public async Task<IEnumerable<StreamResponse>> GetStreamsAsync()
     {
         var response = await _httpClient.GetAsync($"/streams");
@@ -62,10 +61,9 @@ public class HttpMessageStream : IMessageStream
             return await response.Content.ReadFromJsonAsync<IEnumerable<StreamResponse>>(_toSnakeCaseOptions)
                    ?? Enumerable.Empty<StreamResponse>();
         }
-        var errResponse = await response.Content.ReadFromJsonAsync<ErrorModel>(_toSnakeCaseOptions);
-        throw new InvalidResponseException(errResponse.Reason);
+        await HandleResponseAsync(response);
+        throw new Exception("Unknown error occurred.");
     }
-
     public async Task CreateTopicAsync(int streamId, TopicRequest topic)
     {
         var json = JsonSerializer.Serialize(topic, _toSnakeCaseOptions);
@@ -73,14 +71,14 @@ public class HttpMessageStream : IMessageStream
         
         var response = await _httpClient.PostAsync($"/streams/{streamId}/topics", data);
         await HandleResponseAsync(response);
+        throw new Exception("Unknown error occurred.");
     }
-
     public async Task DeleteTopicAsync(int streamId, int topicId)
     {
         var response = await _httpClient.DeleteAsync($"/streams/{streamId}/topics/{topicId}");
         await HandleResponseAsync(response);
+        throw new Exception("Unknown error occurred.");
     }
-
     public async Task<IEnumerable<TopicResponse>> GetTopicsAsync(int streamId)
     {
         var response = await _httpClient.GetAsync($"/streams/{streamId}/topics");
@@ -89,21 +87,20 @@ public class HttpMessageStream : IMessageStream
             return await response.Content.ReadFromJsonAsync<IEnumerable<TopicResponse>>(_toSnakeCaseOptions) 
                    ?? Enumerable.Empty<TopicResponse>();
         }
-        var errResponse = await response.Content.ReadFromJsonAsync<ErrorModel>(_toSnakeCaseOptions);
-        throw new InvalidResponseException(errResponse.Reason);
+        await HandleResponseAsync(response);
+        throw new Exception("Unknown error occurred.");
     }
 
-    public async Task<TopicResponse> GetTopicByIdAsync(int streamId, int topicId)
+    public async Task<TopicResponse?> GetTopicByIdAsync(int streamId, int topicId)
     {
         var response = await _httpClient.GetAsync($"/streams/{streamId}/topics/{topicId}");
         if (response.IsSuccessStatusCode)
         {
             return await response.Content.ReadFromJsonAsync<TopicResponse>(_toSnakeCaseOptions);
         }
-        var errResponse = await response.Content.ReadFromJsonAsync<ErrorModel>(_toSnakeCaseOptions);
-        throw new InvalidResponseException(errResponse.Reason);
+        await HandleResponseAsync(response);
+        throw new Exception("Unknown error occurred.");
     }
-
     public async Task SendMessagesAsync(MessageSendRequest request)
     {
         foreach (var message in request.Messages)
@@ -117,8 +114,8 @@ public class HttpMessageStream : IMessageStream
         
         var response = await _httpClient.PostAsync($"/streams/{request.StreamId}/topics/{request.TopicId}/messages", data);
         await HandleResponseAsync(response);
+        throw new Exception("Unknown error occurred.");
     }
-
     public async Task<IEnumerable<MessageResponse>> PollMessagesAsync(MessageFetchRequest request)
     {
         var url = CreateUrl($"/streams/{request.StreamId}/topics/{request.TopicId}/messages?consumer_id={request.ConsumerId}" +
@@ -130,8 +127,8 @@ public class HttpMessageStream : IMessageStream
             return await response.Content.ReadFromJsonAsync<IEnumerable<MessageResponse>>(_toSnakeCaseOptions) 
                    ?? Enumerable.Empty<MessageResponse>();
         }
-        var errResponse = await response.Content.ReadFromJsonAsync<ErrorModel>(_toSnakeCaseOptions);
-        throw new InvalidResponseException(errResponse.Reason);
+        await HandleResponseAsync(response);
+        throw new Exception("Unknown error occurred.");
     }
 
     public async Task StoreOffsetAsync(int streamId, int topicId, OffsetContract contract)
@@ -141,9 +138,10 @@ public class HttpMessageStream : IMessageStream
         
         var response = await _httpClient.PutAsync($"/streams/{streamId}/topics/{topicId}/messages/offsets", data);
         await HandleResponseAsync(response);
+        throw new Exception("Unknown error occurred.");
     }
 
-    public async Task<OffsetResponse> GetOffsetAsync(OffsetRequest request)
+    public async Task<OffsetResponse?> GetOffsetAsync(OffsetRequest request)
     {
         var response = await _httpClient.GetAsync($"/streams/{request.StreamId}/topics/{request.TopicId}/messages/" +
                        $"offsets?consumer_id={request.ConsumerId}&partition_id={request.PartitionId}");
@@ -151,48 +149,61 @@ public class HttpMessageStream : IMessageStream
         {
             return await response.Content.ReadFromJsonAsync<OffsetResponse>(_toSnakeCaseOptions);
         }
-        var errResponse = await response.Content.ReadFromJsonAsync<ErrorModel>(_toSnakeCaseOptions);
-        throw new InvalidResponseException(errResponse.Reason);
+        await HandleResponseAsync(response);
+        throw new Exception("Unknown error occurred.");
     }
-    public async Task<IEnumerable<GroupResponse>> GetGroupsAsync(int streamId, int topicId)
+    public async Task<IEnumerable<ConsumerGroupResponse>> GetConsumerGroupsAsync(int streamId, int topicId)
     {
         var response = await _httpClient.GetAsync($"/streams/{streamId}/topics/{topicId}/consumer_groups");
         
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<IEnumerable<GroupResponse>>(_toSnakeCaseOptions)
-                ?? Enumerable.Empty<GroupResponse>();
+            return await response.Content.ReadFromJsonAsync<IEnumerable<ConsumerGroupResponse>>(_toSnakeCaseOptions)
+                ?? Enumerable.Empty<ConsumerGroupResponse>();
         }
-        var errResponse = await response.Content.ReadFromJsonAsync<ErrorModel>(_toSnakeCaseOptions);
-        throw new InvalidResponseException(errResponse.Reason);
+        await HandleResponseAsync(response);
+        throw new Exception("Unknown error occurred.");
     }
-    
-    public async Task<GroupResponse> GetGroupByIdAsync(int streamId, int topicId, int groupId)
+    public async Task<ConsumerGroupResponse?> GetConsumerGroupByIdAsync(int streamId, int topicId, int groupId)
     {
         var response = await _httpClient.GetAsync($"/streams/{streamId}/topics/{topicId}/consumer_groups/{groupId}");
         
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<GroupResponse>(_toSnakeCaseOptions);
+            return await response.Content.ReadFromJsonAsync<ConsumerGroupResponse>(_toSnakeCaseOptions);
         }
-        var errResponse = await response.Content.ReadFromJsonAsync<ErrorModel>(_toSnakeCaseOptions);
-        throw new InvalidResponseException(errResponse.Reason);
+
+        await HandleResponseAsync(response);
+        throw new Exception("Unknown error occurred.");
     }
-    
-    public async Task CreateGroupAsync(int streamId, int topicId, CreateGroupRequest request)
+    public async Task CreateConsumerGroupAsync(int streamId, int topicId, CreateConsumerGroupRequest request)
     {
         var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
         
         var response = await _httpClient.PostAsync($"/streams/{streamId}/topics/{topicId}/consumer_groups", data);
         await HandleResponseAsync(response);
+        throw new Exception("Unknown error occurred.");
     }
-    public async Task DeleteGroupAsync(int streamId, int topicId, int groupId)
+    public async Task DeleteConsumerGroupAsync(int streamId, int topicId, int groupId)
     {
         var response = await _httpClient.DeleteAsync($"/streams/{streamId}/topics/{topicId}/consumer_groups/{groupId}");
         await HandleResponseAsync(response);
+        throw new Exception("Unknown error occurred.");
     }
-    
+
+    [Obsolete("This method is only supported in TCP protocol", true)]
+    public Task JoinConsumerGroupAsync(JoinConsumerGroupRequest request)
+    {
+        throw new FeatureUnavailableException();
+    }
+
+    [Obsolete("This method is only supported in TCP protocol", true)]
+    public Task LeaveConsumerGroupAsync(LeaveConsumerGroupRequest request)
+    {
+        throw new FeatureUnavailableException();
+    }
+
     private async Task HandleResponseAsync(HttpResponseMessage response)
     {
         if (response.StatusCode is HttpStatusCode.BadRequest or HttpStatusCode.NotFound)
@@ -203,10 +214,6 @@ public class HttpMessageStream : IMessageStream
         if (response.StatusCode == HttpStatusCode.InternalServerError)
         {
             throw new Exception("Internal server error");
-        }
-        else
-        {
-            throw new Exception("Unknown error occurred.");
         }
     }
     private static string CreateUrl(ref MessageRequestInterpolationHandler message)

@@ -323,7 +323,7 @@ public sealed class HttpMessageStream
 		_httpHandler.When($"/streams/{streamId}/topics/{topicId}/consumer_groups")
 			.Respond(HttpStatusCode.OK, "application/json", JsonSerializer.Serialize(response, _toSnakeCaseOptions));
 		
-		var result = await _sut.GetGroupsAsync(streamId , topicId);
+		var result = await _sut.GetConsumerGroupsAsync(streamId , topicId);
 		Assert.NotNull(result);
 		Assert.NotEmpty(result);
 	}
@@ -338,7 +338,7 @@ public sealed class HttpMessageStream
 		_httpHandler.When($"/streams/{streamId}/topics/{topicId}/consumer_groups")
 			.Respond(HttpStatusCode.NotFound, "application/json", JsonSerializer.Serialize(error, _toSnakeCaseOptions));
 
-		await Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.GetGroupsAsync(streamId, topicId));
+		await Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.GetConsumerGroupsAsync(streamId, topicId));
 		_httpHandler.Flush();
 		
 	}

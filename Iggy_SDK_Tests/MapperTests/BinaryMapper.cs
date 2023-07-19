@@ -223,18 +223,18 @@ public sealed class BinaryMapper
         payload2.CopyTo(combinedPayload.AsSpan(payload1.Length));
 
         // Act
-        List<GroupResponse> responses = Iggy_SDK.Mappers.BinaryMapper.MapConsumerGroups(combinedPayload);
+        List<ConsumerGroupResponse> responses = Iggy_SDK.Mappers.BinaryMapper.MapConsumerGroups(combinedPayload);
 
         // Assert
         Assert.NotNull(responses);
         Assert.Equal(2, responses.Count);
 
-        GroupResponse response1 = responses[0];
+        ConsumerGroupResponse response1 = responses[0];
         Assert.Equal(id1, response1.Id);
         Assert.Equal(membersCount1, response1.MembersCount);
         Assert.Equal(partitionsCount1, response1.PartitionsCount);
 
-        GroupResponse response2 = responses[1];
+        ConsumerGroupResponse response2 = responses[1];
         Assert.Equal(id2, response2.Id);
         Assert.Equal(membersCount2, response2.MembersCount);
         Assert.Equal(partitionsCount2, response2.PartitionsCount);
@@ -250,7 +250,7 @@ public sealed class BinaryMapper
         byte[] groupPayload = BinaryFactory.CreateGroupPayload(groupId, membersCount, partitionsCount);
 
         // Act
-        GroupResponse response = Iggy_SDK.Mappers.BinaryMapper.MapConsumerGroup(groupPayload);
+        ConsumerGroupResponse response = Iggy_SDK.Mappers.BinaryMapper.MapConsumerGroup(groupPayload);
 
         // Assert
         Assert.NotNull(response);

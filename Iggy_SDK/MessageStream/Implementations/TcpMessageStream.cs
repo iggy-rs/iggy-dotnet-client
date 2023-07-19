@@ -15,7 +15,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	private readonly TcpClient _client;
 	private readonly NetworkStream _stream;
 
-	public TcpMessageStream(TcpClient client)
+	internal TcpMessageStream(TcpClient client)
 	{
 		_client = client;
 		_stream = client.GetStream();
@@ -37,7 +37,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			throw new InvalidResponseException($"Invalid response status code: {status}");
 		}
 	}
-	public async Task<StreamResponse> GetStreamByIdAsync(int streamId)
+
+	public async Task<StreamResponse?> GetStreamByIdAsync(int streamId)
 	{
 		var message = BitConverter.GetBytes(streamId);
 		var payload = CreatePayload(message, CommandCodes.GET_STREAM_CODE);
@@ -49,13 +50,18 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 
 		var response = GetResponseLengthAndStatus(buffer);
 		var responseBuffer = new byte[response.Length];
-		
-		if(response.Status != 0)
+
+		if (response.Status != 0)
 		{
 			throw new InvalidResponseException($"Invalid response status code: {response.Status}");
 		}
-		
-		await _stream.ReadExactlyAsync(responseBuffer);
+
+		if (response.Length <= 1)
+		{
+			return null;	
+		}
+
+	await _stream.ReadExactlyAsync(responseBuffer);
 		return BinaryMapper.MapStream(responseBuffer);
 	}
 
@@ -75,6 +81,11 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		if (response.Status != 0)
 		{
 			throw new InvalidResponseException($"Invalid response status code: {response.Status}");
+		}
+
+		if (response.Length <= 1)
+		{
+			return Enumerable.Empty<StreamResponse>();
 		}
 		
 		await _stream.ReadExactlyAsync(responseBuffer);
@@ -115,13 +126,18 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		{
 			throw new InvalidResponseException($"Invalid response status code: {response.Status}");
 		}
+
+		if (response.Length <= 1)
+		{
+			return Enumerable.Empty<TopicResponse>();
+		}
 		
 		var responseBuffer = new byte[response.Length];
 		await _stream.ReadExactlyAsync(responseBuffer);
 		return BinaryMapper.MapTopics(responseBuffer);
 	}
 
-	public async Task<TopicResponse> GetTopicByIdAsync(int streamId, int topicId)
+	public async Task<TopicResponse?> GetTopicByIdAsync(int streamId, int topicId)
 	{
 		var message = TcpContracts.GetTopicById(streamId, topicId);
 		var payload = CreatePayload(message, CommandCodes.GET_TOPIC_CODE);
@@ -136,6 +152,11 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		if (response.Status != 0)
 		{
 			throw new InvalidResponseException($"Invalid response status code: {response.Status}");
+		}
+
+		if (response.Length <= 1)
+		{
+			return null;
 		}
 		
 		var responseBuffer = new byte[response.Length];
@@ -243,7 +264,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 	}
 
-	public async Task<OffsetResponse> GetOffsetAsync(OffsetRequest request)
+	public async Task<OffsetResponse?> GetOffsetAsync(OffsetRequest request)
 	{
 		var message = TcpContracts.GetOffset(request);
 		var payload = CreatePayload(message, CommandCodes.GET_OFFSET_CODE);
@@ -260,12 +281,17 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			throw new InvalidResponseException($"Invalid response status code: {response.Status}");
 		}
 
+		if (response.Length <= 1)
+		{
+			return null;
+		}
+
 		var responseBuffer = new byte[response.Length];
 		await _stream.ReadExactlyAsync(responseBuffer);
 		return BinaryMapper.MapOffsets(responseBuffer);
 	}
 
-	public async Task<IEnumerable<GroupResponse>> GetGroupsAsync(int streamId, int topicId)
+	public async Task<IEnumerable<ConsumerGroupResponse>> GetConsumerGroupsAsync(int streamId, int topicId)
 	{
 		var message = TcpContracts.GetGroups(streamId, topicId);
 		var payload = CreatePayload(message, CommandCodes.GET_GROUPS_CODE);
@@ -282,12 +308,17 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			throw new InvalidResponseException($"Invalid response status code: {response.Status}");
 		}
 
+		if (response.Length <= 1)
+		{
+			return Enumerable.Empty<ConsumerGroupResponse>();
+		}
+
 		var responseBuffer = new byte[response.Length];
 		await _stream.ReadExactlyAsync(responseBuffer);
 		return BinaryMapper.MapConsumerGroups(responseBuffer);
 	}
 
-	public async Task<GroupResponse> GetGroupByIdAsync(int streamId, int topicId, int groupId)
+	public async Task<ConsumerGroupResponse?> GetConsumerGroupByIdAsync(int streamId, int topicId, int groupId)
 	{
 		var message = TcpContracts.GetGroup(streamId, topicId, groupId);
 		var payload = CreatePayload(message, CommandCodes.GET_GROUP_CODE);
@@ -304,12 +335,17 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			throw new InvalidResponseException($"Invalid response status code: {response.Status}");
 		}
 
+		if (response.Length <= 1)
+		{
+			return null;
+		}
+
 		var responseBuffer = new byte[response.Length];
 		await _stream.ReadExactlyAsync(responseBuffer);
 		return BinaryMapper.MapConsumerGroup(responseBuffer);
 	}
 
-	public async Task CreateGroupAsync(int streamId, int topicId, CreateGroupRequest request)
+	public async Task CreateConsumerGroupAsync(int streamId, int topicId, CreateConsumerGroupRequest request)
 	{
 		var message = TcpContracts.CreateGroup(streamId, topicId, request);
 		var payload = CreatePayload(message, CommandCodes.CREATE_GROUP_CODE);
@@ -327,7 +363,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 	}
 
-	public async Task DeleteGroupAsync(int streamId, int topicId, int groupId)
+	public async Task DeleteConsumerGroupAsync(int streamId, int topicId, int groupId)
 	{
 		var message = TcpContracts.DeleteGroup(streamId, topicId, groupId);
 		var payload = CreatePayload(message, CommandCodes.DELETE_GROUP_CODE);
@@ -344,20 +380,48 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			throw new InvalidResponseException($"Invalid response status code: {status}");
 		}
 	}
+
+	public async Task JoinConsumerGroupAsync(JoinConsumerGroupRequest request)
+	{
+		var message = TcpContracts.JoinGroup(request);
+		var payload = CreatePayload(message, CommandCodes.JOIN_GROUP_CODE);
+
+		await _stream.WriteAsync(payload, 0, payload.Length);
+
+		var buffer = new byte[ExpectedResponseSize];
+		await _stream.ReadExactlyAsync(buffer);
+
+		var status = GetResponseStatus(buffer);
+
+		if (status != 0)
+		{
+			throw new InvalidResponseException($"Invalid response status code: {status}");
+		}
+	}
+
+	public async Task LeaveConsumerGroupAsync(LeaveConsumerGroupRequest request)
+	{
+		var message = TcpContracts.LeaveGroup(request);
+		var payload = CreatePayload(message, CommandCodes.LEAVE_GROUP_CODE);
+
+		await _stream.WriteAsync(payload, 0, payload.Length);
+
+		var buffer = new byte[ExpectedResponseSize];
+		await _stream.ReadExactlyAsync(buffer);
+
+		var status = GetResponseStatus(buffer);
+
+		if (status != 0)
+		{
+			throw new InvalidResponseException($"Invalid response status code: {status}");
+		}
+	}
+
 	private static (int Status, int Length) GetResponseLengthAndStatus(Span<byte> buffer)
 	{
 		var status = GetResponseStatus(buffer);
 		var length = BinaryPrimitives.ReadInt32LittleEndian(buffer[4..]);
-		if (status != 0)
-		{
-			throw new TcpInvalidResponseException();
-		}
-
-		if (length <= 1)
-		{
-			throw new InvalidResponseException("Invalid response length");
-		}
-
+		
 		return (status, length);
 	}
 

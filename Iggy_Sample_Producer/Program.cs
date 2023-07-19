@@ -27,39 +27,22 @@ try
 catch
 {
     Console.WriteLine($"Creating stream with id:{streamId}");
-    try
+    await bus.CreateStreamAsync(new StreamRequest
     {
-        await bus.CreateStreamAsync(new StreamRequest
-        {
-            StreamId = streamId,
-            Name = "Test Producer Stream",
-        });
-    }
-    catch (Exception e)
-    {
-        Console.WriteLine($"Failed to Create stream: {streamId}");
-        throw;
-    }
+        StreamId = streamId,
+        Name = "Test Producer Stream",
+    });
 
     Console.WriteLine($"Creating topic with id:{topicId}");
-    try
+    await bus.CreateTopicAsync(streamId, new TopicRequest
     {
-        await bus.CreateTopicAsync(streamId, new TopicRequest
-        {
-            Name = "Test Topic From Producer Sample",
-            PartitionsCount = 3,
-            TopicId = topicId,
-        });
-    }
-    catch (Exception e)
-    {
-        Console.WriteLine($"Failed to create topic: {e.Message}");
-        throw;
-    }
+        Name = "Test Topic From Producer Sample",
+        PartitionsCount = 3,
+        TopicId = topicId,
+    });
 }
-
 var actualStream = await bus.GetStreamByIdAsync(streamId);
-var actualTopic = await bus.GetTopicByIdAsync(streamId, topicId);
+var actualTopic = await bus.GetTopicByIdAsync(streamId, topicId); 
 
 await ProduceMessages(bus, actualStream, actualTopic);
 

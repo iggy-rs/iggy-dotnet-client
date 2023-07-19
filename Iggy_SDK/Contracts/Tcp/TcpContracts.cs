@@ -68,7 +68,7 @@ internal static class TcpContracts
         return bytes.ToArray();
     }
 
-    internal static byte[] CreateGroup(int streamId, int topicId, CreateGroupRequest request)
+    internal static byte[] CreateGroup(int streamId, int topicId, CreateConsumerGroupRequest request)
     {
         Span<byte> bytes = stackalloc byte[sizeof(int) * 3];
         BinaryPrimitives.WriteInt32LittleEndian(bytes[..4], streamId);
@@ -77,6 +77,22 @@ internal static class TcpContracts
         return bytes.ToArray();
     }
 
+    internal static byte[] JoinGroup(JoinConsumerGroupRequest request)
+    {
+        Span<byte> bytes = stackalloc byte[sizeof(int) * 3];
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[..4], request.StreamId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[4..8], request.TopicId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[8..12], request.ConsumerGroupId);
+        return bytes.ToArray();
+    }
+    internal static byte[] LeaveGroup(LeaveConsumerGroupRequest request)
+    {
+        Span<byte> bytes = stackalloc byte[sizeof(int) * 3];
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[..4], request.StreamId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[4..8], request.TopicId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[8..12], request.ConsumerGroupId);
+        return bytes.ToArray();
+    }
     internal static byte[] DeleteGroup(int streamId, int topicId, int groupId)
     {
         Span<byte> bytes = stackalloc byte[sizeof(int) * 3];

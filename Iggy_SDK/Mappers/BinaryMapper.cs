@@ -191,14 +191,14 @@ internal static class BinaryMapper
         return (new PartitionContract { Id = id, SegmentsCount = segmentsCount, CurrentOffset = currentOffset, SizeBytes = sizeBytes }, readBytes);
     }
 
-   internal static List<GroupResponse> MapConsumerGroups(ReadOnlySpan<byte> payload)
+   internal static List<ConsumerGroupResponse> MapConsumerGroups(ReadOnlySpan<byte> payload)
     {
-        List<GroupResponse> consumerGroups = new();
+        List<ConsumerGroupResponse> consumerGroups = new();
         int length = payload.Length;
         int position = 0;
         while (position < length)
         {
-            (GroupResponse consumerGroup, int readBytes) = MapToConsumerGroup(payload, position);
+            (ConsumerGroupResponse consumerGroup, int readBytes) = MapToConsumerGroup(payload, position);
             consumerGroups.Add(consumerGroup);
             position += readBytes;
         }
@@ -206,19 +206,19 @@ internal static class BinaryMapper
         return consumerGroups;
     }
 
-    internal static GroupResponse MapConsumerGroup(ReadOnlySpan<byte> payload)
+    internal static ConsumerGroupResponse MapConsumerGroup(ReadOnlySpan<byte> payload)
     {
-        (GroupResponse consumerGroup, int position) = MapToConsumerGroup(payload, 0);
+        (ConsumerGroupResponse consumerGroup, int position) = MapToConsumerGroup(payload, 0);
         
         return consumerGroup;
     }
-    private static (GroupResponse consumerGroup, int readBytes) MapToConsumerGroup(ReadOnlySpan<byte> payload,
+    private static (ConsumerGroupResponse consumerGroup, int readBytes) MapToConsumerGroup(ReadOnlySpan<byte> payload,
         int position)
     {
         int id = BinaryPrimitives.ReadInt32LittleEndian(payload[position..(position + 4)]);
         int membersCount = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 4)..(position + 8)]);
         int partitionsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 8)..(position + 12)]);
         
-        return (new GroupResponse { Id = id, MembersCount = membersCount, PartitionsCount = partitionsCount}, 12);
+        return (new ConsumerGroupResponse { Id = id, MembersCount = membersCount, PartitionsCount = partitionsCount}, 12);
     }
 }

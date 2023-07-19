@@ -5,9 +5,9 @@ namespace Iggy_SDK_Tests.Utils.Groups;
 
 internal static class GroupFactory
 {
-	internal static GroupResponse CreateGroupResponse()
+	internal static ConsumerGroupResponse CreateGroupResponse()
 	{
-		return new GroupResponse
+		return new ConsumerGroupResponse
 		{
 			Id = Random.Shared.Next(1, 10),
 			MembersCount = Random.Shared.Next(1, 10),
@@ -15,23 +15,23 @@ internal static class GroupFactory
 		};
 	}
 
-	internal static CreateGroupRequest CreateGroupRequest()
+	internal static CreateConsumerGroupRequest CreateGroupRequest()
 	{
-		return new CreateGroupRequest
+		return new CreateConsumerGroupRequest
 		{
 			ConsumerGroupId = Random.Shared.Next(1, 10),
 		};
 	}
 
-	internal static IEnumerable<GroupResponse> CreateGroupsResponse(int count)
+	internal static IEnumerable<ConsumerGroupResponse> CreateGroupsResponse(int count)
 	{
 		return Enumerable.Range(1, count)
-			.Select(x => new GroupResponse
+			.Select(x => new ConsumerGroupResponse
 				{ Id = Random.Shared.Next(1, 10), MembersCount = Random.Shared.Next(1, 10), PartitionsCount = Random.Shared.Next(1, 10) });
 	}
 
-	internal static IEnumerable<GroupResponse> Empty()
+	internal static IEnumerable<ConsumerGroupResponse> Empty()
 	{
-		return Enumerable.Empty<GroupResponse>();
+		return Enumerable.Empty<ConsumerGroupResponse>();
 	}
 }
