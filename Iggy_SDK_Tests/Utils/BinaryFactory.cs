@@ -13,11 +13,10 @@ internal sealed class BinaryFactory
         return payload;
     }
 
-    internal static byte[] CreateMessagePayload(ulong offset, ulong timestamp, Guid id, string payload)
+    internal static byte[] CreateMessagePayload(ulong offset, ulong timestamp, Guid id, byte[] payload)
     {
         int messageLength = payload.Length;
-        var payloadBytes = Encoding.UTF8.GetBytes(payload);
-        var totalSize = 36 + payloadBytes.Length;
+        var totalSize = 36 + payload.Length;
         var payloadBuffer = new byte[totalSize];
         
         
@@ -29,7 +28,7 @@ internal sealed class BinaryFactory
             payloadBuffer[i] = idBytes[i - 16];
         }
         BinaryPrimitives.WriteUInt32LittleEndian(payloadBuffer.AsSpan(32), (uint)messageLength);
-        payloadBytes.CopyTo(payloadBuffer.AsSpan(36));
+        payload.CopyTo(payloadBuffer.AsSpan(36));
         return payloadBuffer;
     }
 

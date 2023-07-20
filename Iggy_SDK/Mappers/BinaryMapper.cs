@@ -39,7 +39,6 @@ internal static class BinaryMapper
             }
 
             var payloadSlice = payload[payloadRangeStart..payloadRangeEnd];
-            var payloadStringify = Encoding.UTF8.GetString(payloadSlice);
 
             int totalSize = propertiesSize + (int)messageLength;
             position += totalSize;
@@ -49,7 +48,7 @@ internal static class BinaryMapper
                 Offset = offset,
                 Timestamp = timestamp,
                 Id = id,
-                Payload = payloadStringify
+                Payload = payloadSlice.ToArray()
             });
 
             if (position + propertiesSize >= length)

@@ -18,7 +18,7 @@ internal sealed class MessageResponseConverter : JsonConverter<IEnumerable<Messa
 			var offset = element.GetProperty(nameof(MessageResponse.Offset).ToSnakeCase()).GetUInt64();
 			var timestamp = element.GetProperty(nameof(MessageResponse.Timestamp).ToSnakeCase()).GetUInt64();
 			var id = element.GetProperty(nameof(MessageResponse.Id).ToSnakeCase()).GetUInt128();
-			var payload = element.GetProperty(nameof(MessageResponse.Payload).ToSnakeCase()).GetString();
+			var payload = element.GetProperty(nameof(MessageResponse.Payload).ToSnakeCase()).GetBytesFromBase64();
 
 			messageResponses.Add(new MessageResponse
 			{

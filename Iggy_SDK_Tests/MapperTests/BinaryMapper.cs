@@ -1,3 +1,4 @@
+using System.Text;
 using Iggy_SDK_Tests.Utils;
 using Iggy_SDK.Contracts.Http;
 
@@ -30,15 +31,15 @@ public sealed class BinaryMapper
         ulong offset1 = 12;
         ulong timestamp1 = 69;
         var id1 = Guid.NewGuid();
-        string payloadString1 = "Test1";
-        byte[] payload1 = BinaryFactory.CreateMessagePayload(offset1, timestamp1, id1, payloadString1);
+        var payloadBytes1 = "Test1"u8.ToArray();
+        byte[] payload1 = BinaryFactory.CreateMessagePayload(offset1, timestamp1, id1, payloadBytes1);
         
         ulong offset2 = 234;
         ulong timestamp2 = 987654321;
         var id2 = Guid.NewGuid();
         int messageLength2 = 8;
-        string payloadString2 = "Test 2";
-        byte[] payload2 = BinaryFactory.CreateMessagePayload(offset2, timestamp2, id2, payloadString2);
+        var payloadBytes2 = "Test 2"u8.ToArray();
+        byte[] payload2 = BinaryFactory.CreateMessagePayload(offset2, timestamp2, id2, payloadBytes2);
 
 
         byte[] combinedPayload = new byte[4 + payload1.Length + payload2.Length];
@@ -64,13 +65,13 @@ public sealed class BinaryMapper
         Assert.Equal(offset1, response1.Offset);
         Assert.Equal((ulong)timestamp1, response1.Timestamp);
         Assert.Equal(id1, response1.Id);
-        Assert.Equal(payloadString1, response1.Payload);
+        Assert.Equal(payloadBytes1, response1.Payload);
 
         MessageResponse response2 = responses.ElementAt(1);
         Assert.Equal(offset2, response2.Offset);
         Assert.Equal((ulong)timestamp2, response2.Timestamp);
         Assert.Equal(id2, response2.Id);
-        Assert.Equal(payloadString2, response2.Payload);
+        Assert.Equal(payloadBytes2, response2.Payload);
     }
 
     [Fact]

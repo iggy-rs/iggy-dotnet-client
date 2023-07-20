@@ -9,10 +9,10 @@ using Shared;
 var jsonOptions = new JsonSerializerOptions();
 jsonOptions.PropertyNamingPolicy = new ToSnakeCaseNamingPolicy();
 jsonOptions.WriteIndented = true;
-var protocol = Protocol.Http;
+var protocol = Protocol.Tcp;
 var bus = MessageStreamFactory.CreateMessageStream(options =>
 {
-    options.BaseAdress = "http://127.0.0.1:3000";
+    options.BaseAdress = "127.0.0.1:8090";
     options.Protocol = protocol;
 });
 
@@ -67,17 +67,17 @@ async Task ConsumeMessages()
         }
     }
 }
-
 async Task HandleMessage(MessageResponse messageResponse)
 {
     //this is giga inefficient, but its only a sample so who cares
     var length = (messageResponse.Payload.Length * 3) / 4;
     var bytes = new byte[length];
-    var isBase64 = Convert.TryFromBase64Chars(messageResponse.Payload, bytes, out _);
+    var str = Encoding.UTF8.GetString(messageResponse.Payload);
+    var isBase64 = Convert.TryFromBase64Chars(str, bytes, out _);
     Envelope message = new Envelope();
     if (isBase64)
     {
-        bytes = Convert.FromBase64String(messageResponse.Payload);
+        bytes = Convert.FromBase64String(str);
         var json = Encoding.UTF8.GetString(bytes);
         message = JsonSerializer.Deserialize<Envelope>(json);
     }
