@@ -10,8 +10,8 @@ using Iggy_SDK_Tests.Utils.Streams;
 using Iggy_SDK_Tests.Utils.Topics;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Exceptions;
+using Iggy_SDK.JsonConfiguration;
 using Iggy_SDK.MessageStream;
-using Iggy_SDK.SerializationConfiguration;
 using RichardSzalay.MockHttp;
 
 namespace Iggy_SDK_Tests.MessageStreamTests;
@@ -30,7 +30,7 @@ public sealed class HttpMessageStream
 		_toSnakeCaseOptions = new();
 		_toSnakeCaseOptions.PropertyNamingPolicy = new ToSnakeCaseNamingPolicy();
 		_toSnakeCaseOptions.WriteIndented = true;
-        _toSnakeCaseOptions.Converters.Add(new UInt128Conveter());
+        _toSnakeCaseOptions.Converters.Add(new UInt128Converter());
         _toSnakeCaseOptions.Converters.Add(new JsonStringEnumConverter(new ToSnakeCaseNamingPolicy()));
         _httpHandler = new MockHttpMessageHandler();
         

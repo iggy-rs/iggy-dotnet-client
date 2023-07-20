@@ -1,6 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Iggy_SDK.SerializationConfiguration;
+using Iggy_SDK.JsonConfiguration;
 
 namespace Shared;
 

@@ -1,7 +1,6 @@
 using System.Text;
 using System.Text.Json;
 using Iggy_SDK_Tests.Utils.DummyObj;
-using Iggy_SDK.Contracts;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Messages;
@@ -32,7 +31,6 @@ internal static class MessageFactory
 			}
 		};
 	}
-
 	internal static MessageFetchRequest CreateMessageFetchRequest()
 	{
 		return new MessageFetchRequest
@@ -55,11 +53,17 @@ internal static class MessageFactory
 			Offset = (ulong)Random.Shared.Next(1, 10),
 			Payload = Convert.ToBase64String(Encoding.UTF8.GetBytes("TROLOLO")),
 			Timestamp = 12371237821L,
-			Id = 123123123123
+			Id = new UInt128(69,420)
 		};
 	}
 }
-
+internal class MessageResponseHttp
+{
+	public required ulong Offset { get; init; }
+	public required ulong Timestamp { get; init; }
+	public UInt128 Id { get; init; }
+	public required string Payload { get; init; }
+}
 internal class DummyObject
 {
 	public int Id { get; set; }

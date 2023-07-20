@@ -6,10 +6,10 @@ using Iggy_SDK.Messages;
 using Iggy_SDK.MessageStream;
 using Shared;
 
-var protocol = Protocol.Tcp;
+var protocol = Protocol.Http;
 var bus = MessageStreamFactory.CreateMessageStream(options =>
 {
-    options.BaseAdress = "127.0.0.1:8090";
+    options.BaseAdress = "http://127.0.0.1:3000";
     options.Protocol = protocol;
 });
 

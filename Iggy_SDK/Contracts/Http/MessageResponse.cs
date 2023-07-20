@@ -1,3 +1,6 @@
+using System.Text.Json.Serialization;
+using Iggy_SDK.JsonConfiguration;
+
 namespace Iggy_SDK.Contracts.Http;
 
 public sealed class MessageResponse

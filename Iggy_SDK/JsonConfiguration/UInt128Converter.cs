@@ -1,11 +1,10 @@
-using System.ComponentModel;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Iggy_SDK.SerializationConfiguration;
+namespace Iggy_SDK.JsonConfiguration;
 
-internal sealed class UInt128Conveter : JsonConverter<UInt128>
+internal sealed class UInt128Converter : JsonConverter<UInt128>
 {
 	public override UInt128 Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 	{

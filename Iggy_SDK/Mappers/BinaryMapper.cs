@@ -1,6 +1,5 @@
 using System.Buffers.Binary;
 using System.Text;
-using Iggy_SDK.Contracts;
 using Iggy_SDK.Contracts.Http;
 
 namespace Iggy_SDK.Mappers;

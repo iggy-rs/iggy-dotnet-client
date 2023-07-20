@@ -50,7 +50,7 @@ internal static class TcpContracts
         foreach (var message in request.Messages)
         {
 
-            var id = message.Id.ToByteArray();
+            Span<byte> id = message.Id.ToByteArray();
             for (int i = position; i < position + 16; i++)
             {
                 bytes[i] = id[i - position];

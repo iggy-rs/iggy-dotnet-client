@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Iggy_SDK.Extensions;
 
-namespace Iggy_SDK.SerializationConfiguration;
+namespace Iggy_SDK.JsonConfiguration;
 
 public sealed class ToSnakeCaseNamingPolicy : JsonNamingPolicy
 {

@@ -1,19 +1,18 @@
 ﻿using System.Text;
 using System.Text.Json;
-using Iggy_SDK.Contracts;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
-using Iggy_SDK.SerializationConfiguration;
+using Iggy_SDK.JsonConfiguration;
 using Shared;
 
 var jsonOptions = new JsonSerializerOptions();
 jsonOptions.PropertyNamingPolicy = new ToSnakeCaseNamingPolicy();
 jsonOptions.WriteIndented = true;
-var protocol = Protocol.Tcp;
+var protocol = Protocol.Http;
 var bus = MessageStreamFactory.CreateMessageStream(options =>
 {
-    options.BaseAdress = "127.0.0.1:8090";
+    options.BaseAdress = "http://127.0.0.1:3000";
     options.Protocol = protocol;
 });
 

@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Iggy_SDK.Messages;
 
 public struct Message

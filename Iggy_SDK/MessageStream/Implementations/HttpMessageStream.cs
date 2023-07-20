@@ -1,15 +1,11 @@
-﻿using System.Buffers.Binary;
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Json;
-using System.Numerics;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Exceptions;
-using Iggy_SDK.Extensions;
-using Iggy_SDK.Messages;
-using Iggy_SDK.SerializationConfiguration;
+using Iggy_SDK.JsonConfiguration;
 using Iggy_SDK.StringHandlers;
 using Iggy_SDK.Utils;
 
@@ -29,7 +25,7 @@ public class HttpMessageStream : IMessageStream
         _toSnakeCaseOptions.PropertyNamingPolicy = new ToSnakeCaseNamingPolicy();
         _toSnakeCaseOptions.WriteIndented = true;
         
-        _toSnakeCaseOptions.Converters.Add(new UInt128Conveter());
+        _toSnakeCaseOptions.Converters.Add(new UInt128Converter());
         _toSnakeCaseOptions.Converters.Add(new JsonStringEnumConverter(new ToSnakeCaseNamingPolicy()));
     }
     public async Task CreateStreamAsync(StreamRequest request)
@@ -119,23 +115,10 @@ public class HttpMessageStream : IMessageStream
     }
     public async Task SendMessagesAsync(int streamId, int topicId, MessageSendRequest request)
     {
-        var msgList = new List<HttpMessage>();
-        foreach (var message in request.Messages)
-        {
-            var base64 = Convert.ToBase64String(message.Payload);
-            var id = message.Id.ToByteArray();
-            msgList.Add(new HttpMessage
-            {
-                Id = message.Id.ToUInt128(),
-                Payload = base64
-            });
-        }
-        
-        var json = JsonSerializer.Serialize(new {request.KeyKind, request.KeyValue, Messages = msgList}, _toSnakeCaseOptions);
+        var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
         
         var response = await _httpClient.PostAsync($"/streams/{streamId}/topics/{topicId}/messages", data);
-        var xd = await response.Content.ReadAsStringAsync();
         if (!response.IsSuccessStatusCode)
         {
             await HandleResponseAsync(response);
@@ -150,13 +133,9 @@ public class HttpMessageStream : IMessageStream
         var response =  await _httpClient.GetAsync(url);
         if (response.IsSuccessStatusCode)
         {
-            var resp =  await response.Content.ReadFromJsonAsync<IEnumerable<MessageResponseHttp>>(_toSnakeCaseOptions);
-            return resp?.Select(x => new MessageResponse
+            return await response.Content.ReadFromJsonAsync<IEnumerable<MessageResponse>>(new JsonSerializerOptions
                    {
-                       Offset = x.Offset,
-                       Payload = x.Payload,
-                       Timestamp = x.Timestamp,
-                       Id = new Guid(x.Id.GetBytesFromUInt128())
+                       Converters = { new MessageResponseConverter() }
                    })
                    ?? Enumerable.Empty<MessageResponse>();
         }

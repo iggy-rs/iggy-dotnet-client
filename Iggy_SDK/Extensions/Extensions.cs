@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 
 namespace Iggy_SDK.Extensions;
 
@@ -46,6 +47,11 @@ internal static class Extensions
 		   result[i] = span[i];
 	   }
 	   return result.ToArray();
+   }
+
+   internal static UInt128 GetUInt128(this JsonElement jsonElement)
+   {
+	   return UInt128.Parse(jsonElement.ToString());
    }
 
    private static int CountUppercaseLetters(string input)
