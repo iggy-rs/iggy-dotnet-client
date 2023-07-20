@@ -55,7 +55,7 @@ The `Message` struct has two fields `Id` and `Payload`
 ```c#
 struct Message
 {
-    public ulong Id { get; set; }
+    public Guid Id { get; set; }
     public byte[] Payload { get; set; }
 }
 ```
