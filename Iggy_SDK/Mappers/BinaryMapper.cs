@@ -94,7 +94,9 @@ internal static class BinaryMapper
             Id = stream.Id,
             TopicsCount = stream.TopicsCount,
             Name = stream.Name,
-            Topics = topics
+            Topics = topics,
+            MessagesCount = stream.MessagesCount,
+            SizeBytes = stream.SizeBytes
         };
     }
     
@@ -102,27 +104,37 @@ internal static class BinaryMapper
     {
         int id = BinaryPrimitives.ReadInt32LittleEndian(payload[position..(position + 4)]);
         int topicsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 4)..(position + 8)]);
-        int nameLength = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 8)..(position + 12)]);
+        ulong sizeBytes = BinaryPrimitives.ReadUInt64LittleEndian(payload[(position + 8)..(position + 16)]);
+        ulong messagesCount = BinaryPrimitives.ReadUInt64LittleEndian(payload[(position + 16)..(position + 24)]);
+        int nameLength = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 24)..(position + 28)]);
 
-        string name = Encoding.UTF8.GetString(payload[(position + 12)..(position + 12 + nameLength)]);
-        int readBytes = 4 + 4 + 4 + nameLength;
+        string name = Encoding.UTF8.GetString(payload[(position + 28)..(position + 28 + nameLength)]);
+        int readBytes = 4 + 4 + 8 + 8 + 4 + nameLength;
 
-        return (new StreamResponse { Id = id, TopicsCount = topicsCount, Name = name }, readBytes);
+        return (
+            new StreamResponse
+            {
+                Id = id, TopicsCount = topicsCount, Name = name, SizeBytes = sizeBytes, MessagesCount = messagesCount
+            }, readBytes);
     }
 
     private static (StreamResponse stream, int readBytes) MapToStreams(ReadOnlySpan<byte> payload, int position)
     {
         int id = BinaryPrimitives.ReadInt32LittleEndian(payload[position..(position + 4)]);
         int topicsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 4)..(position + 8)]);
-        int nameLength = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 8)..(position + 12)]);
-        string name = Encoding.UTF8.GetString(payload[(position + 12)..(position + 12 + nameLength)]);
-        int readBytes = 4 + 4 + 4 + nameLength;
+        ulong sizeBytes = BinaryPrimitives.ReadUInt64LittleEndian(payload[(position + 8)..(position + 16)]); 
+        ulong messagesCount = BinaryPrimitives.ReadUInt64LittleEndian(payload[(position + 16)..(position + 24)]);
+        int nameLength = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 24)..(position + 28)]);
+        string name = Encoding.UTF8.GetString(payload[(position + 28)..(position + 28 + nameLength)]);
+        int readBytes = 4 + 4 + 8 + 8 + 4 + nameLength;
 
         var stream = new StreamResponse
         {
             Id = id,
             TopicsCount = topicsCount,
-            Name = name
+            Name = name,
+            MessagesCount = messagesCount,
+            SizeBytes = sizeBytes
         };
 
         return (stream, readBytes);
@@ -162,7 +174,9 @@ internal static class BinaryMapper
             Id = topic.Id,
             Name = topic.Name,
             PartitionsCount = partitions.Count,
-            Partitions = partitions
+            Partitions = partitions,
+            MessagesCount = topic.MessagesCount,
+            SizeBytes = topic.SizeBytes
         };
     }
 
@@ -170,11 +184,18 @@ internal static class BinaryMapper
     {
         int id = BinaryPrimitives.ReadInt32LittleEndian(payload[position..(position + 4)]);
         int partitionsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 4)..(position + 8)]);
-        int nameLength = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 8)..(position + 12)]);
-        string name = Encoding.UTF8.GetString(payload[(position + 12)..(position + 12 + nameLength)]);
-        int readBytes = 4 + 4 + 4 + nameLength;
+        ulong sizeBytes = BinaryPrimitives.ReadUInt64LittleEndian(payload[(position + 8)..(position + 16)]); 
+        ulong messagesCount = BinaryPrimitives.ReadUInt64LittleEndian(payload[(position + 16)..(position + 24)]);
+        int nameLength = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 24)..(position + 28)]);
+        string name = Encoding.UTF8.GetString(payload[(position + 28)..(position + 28 + nameLength)]);
+        int readBytes = 4 + 4 + 8 + 8 + 4 + nameLength;
         
-        return (new TopicResponse { Id = id, PartitionsCount = partitionsCount, Name = name }, readBytes);
+        return (
+            new TopicResponse
+            {
+                Id = id, PartitionsCount = partitionsCount, Name = name, MessagesCount = messagesCount,
+                SizeBytes = sizeBytes
+            }, readBytes);
     }
 
     private static (PartitionContract partition, int readBytes) MapToPartition(ReadOnlySpan<byte>
@@ -184,9 +205,15 @@ internal static class BinaryMapper
         int segmentsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 4)..(position + 8)]);
         int currentOffset = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 8)..(position + 12)]);
         int sizeBytes = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 12)..(position + 16)]);
-        int readBytes = 4 + 4 + 8 + 8;
+        ulong messagesCount = BinaryPrimitives.ReadUInt64LittleEndian(payload[(position + 16)..(position + 24)]); 
+        int readBytes = 4 + 4 + 8 + 8 + 8;
         
-        return (new PartitionContract { Id = id, SegmentsCount = segmentsCount, CurrentOffset = currentOffset, SizeBytes = sizeBytes }, readBytes);
+        return (
+            new PartitionContract
+            {
+                Id = id, SegmentsCount = segmentsCount, CurrentOffset = currentOffset, SizeBytes = sizeBytes,
+                MessagesCount = messagesCount
+            }, readBytes);
     }
 
    internal static List<ConsumerGroupResponse> MapConsumerGroups(ReadOnlySpan<byte> payload)

@@ -10,8 +10,12 @@ internal static class TcpContracts
     internal static byte[] GetMessages(MessageFetchRequest request)
     {
         Span<byte> bytes = stackalloc byte[31];
-        bytes[0] = 0;
 
+        bytes[0] = request.ConsumerType switch
+        {
+            ConsumerType.Consumer => 0,
+            ConsumerType.ConsumerGroup => 1,
+        };
         BinaryPrimitives.WriteInt32LittleEndian(bytes[1..5], request.ConsumerId);
         BinaryPrimitives.WriteInt32LittleEndian(bytes[5..9], request.StreamId);
         BinaryPrimitives.WriteInt32LittleEndian(bytes[9..13], request.TopicId);
@@ -59,7 +63,7 @@ internal static class TcpContracts
             var payloadBytes = message.Payload.AsSpan();
             var slice = bytes[(position + 16 + 4)..];
             payloadBytes.CopyTo(slice);
-            position += payloadBytes.Length + 16 + sizeof(int);
+            position += payloadBytes.Length + 16 + 4;
         }
         
         return bytes.ToArray();

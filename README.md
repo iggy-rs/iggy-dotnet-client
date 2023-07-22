@@ -68,6 +68,7 @@ var messages = await bus.PollMessagesAsync(new MessageFetchRequest
     ConsumerId = 1,
     PartitionId = 1,
     PollingStrategy = MessagePolling.Next,
+    ConsumerType = ConsumerType.Consumer,
     Value = 0,
     AutoCommit = true
 });
