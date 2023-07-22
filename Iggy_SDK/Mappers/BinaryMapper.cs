@@ -173,7 +173,7 @@ internal static class BinaryMapper
         {
             Id = topic.Id,
             Name = topic.Name,
-            PartitionsCount = partitions.Count,
+            PartitionsCount = topic.PartitionsCount,
             Partitions = partitions,
             MessagesCount = topic.MessagesCount,
             SizeBytes = topic.SizeBytes
@@ -203,9 +203,9 @@ internal static class BinaryMapper
     {
         int id = BinaryPrimitives.ReadInt32LittleEndian(payload[position..(position + 4)]);
         int segmentsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 4)..(position + 8)]);
-        int currentOffset = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 8)..(position + 12)]);
-        int sizeBytes = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 12)..(position + 16)]);
-        ulong messagesCount = BinaryPrimitives.ReadUInt64LittleEndian(payload[(position + 16)..(position + 24)]); 
+        ulong currentOffset = BinaryPrimitives.ReadUInt64LittleEndian(payload[(position + 8)..(position + 16)]);
+        ulong sizeBytes = BinaryPrimitives.ReadUInt64LittleEndian(payload[(position + 16)..(position + 24)]);
+        ulong messagesCount = BinaryPrimitives.ReadUInt64LittleEndian(payload[(position + 24)..(position + 32)]); 
         int readBytes = 4 + 4 + 8 + 8 + 8;
         
         return (

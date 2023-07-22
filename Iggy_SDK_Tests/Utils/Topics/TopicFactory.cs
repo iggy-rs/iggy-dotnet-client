@@ -19,17 +19,21 @@ internal static class TopicFactory
 	{
 		return new TopicResponse
 		{
+			
 			Id = Random.Shared.Next(1, 10),
 			Name = "Test Topic" + Random.Shared.Next(1, 69),
+			MessagesCount = (ulong)Random.Shared.Next(1, 10),
 			PartitionsCount = Random.Shared.Next(1, 10),
+			SizeBytes = (ulong)Random.Shared.Next(1, 10),
 			Partitions = new List<PartitionContract>
 			{
 				new PartitionContract
 				{
+					MessagesCount = (ulong)Random.Shared.Next(1, 10),
 					Id = Random.Shared.Next(1, 10),
-					CurrentOffset = Random.Shared.Next(1, 10),
+					CurrentOffset = (ulong)Random.Shared.Next(1, 10),
 					SegmentsCount = Random.Shared.Next(1, 10),
-					SizeBytes = Random.Shared.Next(1, 10),
+					SizeBytes = (ulong)Random.Shared.Next(1, 10),
 				}
 			}
 

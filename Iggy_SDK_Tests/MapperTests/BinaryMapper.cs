@@ -80,13 +80,17 @@ public sealed class BinaryMapper
         // Arrange
         int id1 = 123;
         int topicsCount1 = 3;
+        ulong sizeBytes = 69420;
+        ulong messagesCount = 3;
         string name1 = "Stream 1";
-        byte[] payload1 = BinaryFactory.CreateStreamPayload(id1, topicsCount1, name1);
+        byte[] payload1 = BinaryFactory.CreateStreamPayload(id1, topicsCount1, name1, sizeBytes, messagesCount);
 
         int id2 = 456;
         int topicsCount2 = 2;
+        ulong sizeBytes2 = 69420;
+        ulong messagesCount2 = 3;
         string name2 = "Stream 2";
-        byte[] payload2 = BinaryFactory.CreateStreamPayload(id2, topicsCount2, name2);
+        byte[] payload2 = BinaryFactory.CreateStreamPayload(id2, topicsCount2, name2, sizeBytes2, messagesCount2);
 
         byte[] combinedPayload = new byte[payload1.Length + payload2.Length];
         payload1.CopyTo(combinedPayload.AsSpan());
@@ -102,11 +106,15 @@ public sealed class BinaryMapper
         var response1 = responses.ElementAt(0);
         Assert.Equal(id1, response1.Id);
         Assert.Equal(topicsCount1, response1.TopicsCount);
+        Assert.Equal(sizeBytes , response1.SizeBytes);
+        Assert.Equal(messagesCount, response1.MessagesCount);
         Assert.Equal(name1, response1.Name);
 
         var response2 = responses.ElementAt(1);
         Assert.Equal(id2, response2.Id);
         Assert.Equal(topicsCount2, response2.TopicsCount);
+        Assert.Equal(sizeBytes2, response2.SizeBytes);
+        Assert.Equal(messagesCount2, response2.MessagesCount);
         Assert.Equal(name2, response2.Name);
     }
 
@@ -117,12 +125,16 @@ public sealed class BinaryMapper
         int streamId = 123;
         int topicsCount = 2;
         string streamName = "Stream 1";
-        byte[] streamPayload = BinaryFactory.CreateStreamPayload(streamId, topicsCount, streamName);
+        ulong sizeBytes = 69420;
+        ulong messagesCount = 3;
+        byte[] streamPayload = BinaryFactory.CreateStreamPayload(streamId, topicsCount, streamName, sizeBytes, messagesCount);
 
         int topicId1 = 456;
         int partitionsCount1 = 3;
         string topicName1 = "Topic 1";
-        byte[] topicPayload1 = BinaryFactory.CreateTopicPayload(topicId1, partitionsCount1, topicName1);
+        ulong sizeBytesTopic1 = 69420;
+        ulong messagesCountTopic1 = 3;
+        byte[] topicPayload1 = BinaryFactory.CreateTopicPayload(topicId1, partitionsCount1, topicName1, sizeBytesTopic1 , messagesCountTopic1);
 
         byte[] topicCombinedPayload = new byte[topicPayload1.Length ];
         topicPayload1.CopyTo(topicCombinedPayload.AsSpan());
@@ -139,12 +151,15 @@ public sealed class BinaryMapper
         Assert.Equal(streamId, response.Id);
         Assert.Equal(topicsCount, response.TopicsCount);
         Assert.Equal(streamName, response.Name);
+        Assert.Equal(sizeBytesTopic1, response.SizeBytes);
+        Assert.Equal(messagesCountTopic1, response.MessagesCount);
         Assert.NotNull(response.Topics);
         Assert.Equal(1, response.Topics.ToList().Count);
 
         var topicResponse = response.Topics.First();
         Assert.Equal(topicId1, topicResponse.Id);
         Assert.Equal(partitionsCount1, topicResponse.PartitionsCount);
+        Assert.Equal(messagesCountTopic1, response.MessagesCount);
         Assert.Equal(topicName1, topicResponse.Name);
     }
 
@@ -155,12 +170,16 @@ public sealed class BinaryMapper
         int id1 = 123;
         int partitionsCount1 = 2;
         string name1 = "Topic 1";
-        byte[] payload1 = BinaryFactory.CreateTopicPayload(id1, partitionsCount1, name1);
+        ulong sizeBytesTopic1 = 69420;
+        ulong messagesCountTopic1 = 30;
+        byte[] payload1 = BinaryFactory.CreateTopicPayload(id1, partitionsCount1, name1, sizeBytesTopic1, messagesCountTopic1);
 
         int id2 = 456;
         int partitionsCount2 = 3;
         string name2 = "Topic 2";
-        byte[] payload2 = BinaryFactory.CreateTopicPayload(id2, partitionsCount2, name2);
+        ulong sizeBytesTopic2 = 69420;
+        ulong messagesCountTopic2 = 30;
+        byte[] payload2 = BinaryFactory.CreateTopicPayload(id2, partitionsCount2, name2, sizeBytesTopic2, messagesCountTopic2 );
 
         byte[] combinedPayload = new byte[payload1.Length + payload2.Length];
         payload1.CopyTo(combinedPayload.AsSpan());
@@ -176,10 +195,14 @@ public sealed class BinaryMapper
         var response1 = responses.ElementAt(0);
         Assert.Equal(id1, response1.Id);
         Assert.Equal(partitionsCount1, response1.PartitionsCount);
+        Assert.Equal(sizeBytesTopic1, response1.SizeBytes);
+        Assert.Equal(messagesCountTopic1, response1.MessagesCount);
         Assert.Equal(name1, response1.Name);
 
         var response2 = responses.ElementAt(1);
         Assert.Equal(id2, response2.Id);
+        Assert.Equal(sizeBytesTopic2, response2.SizeBytes);
+        Assert.Equal(messagesCountTopic2, response2.MessagesCount);
         Assert.Equal(partitionsCount2, response2.PartitionsCount);
         Assert.Equal(name2, response2.Name);
     }
@@ -191,7 +214,9 @@ public sealed class BinaryMapper
         int topicId = 123;
         int partitionsCount = 3;
         string topicName = "Topic 1";
-        byte[] topicPayload = BinaryFactory.CreateTopicPayload(topicId, partitionsCount, topicName);
+        ulong sizeBytes = 69420;
+        ulong messagesCount = 3;
+        byte[] topicPayload = BinaryFactory.CreateTopicPayload(topicId, partitionsCount, topicName, sizeBytes, messagesCount);
 
         byte[] combinedPayload = new byte[topicPayload.Length];
         topicPayload.CopyTo(combinedPayload.AsSpan());
@@ -201,6 +226,9 @@ public sealed class BinaryMapper
 
         // Assert
         Assert.NotNull(response);
+        Assert.Equal(messagesCount, response.MessagesCount);
+        Assert.Equal(partitionsCount, response.PartitionsCount);
+        Assert.Equal(sizeBytes, response.SizeBytes);
         Assert.Equal(topicId, response.Id);
         Assert.Equal(topicName, response.Name);
     }

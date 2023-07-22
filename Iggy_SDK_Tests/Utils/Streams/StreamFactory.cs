@@ -23,6 +23,8 @@ internal static class StreamFactory
 		return new StreamResponse
 		{
 			Id = Random.Shared.Next(1, 10),
+			SizeBytes = (ulong)Random.Shared.Next(1, 10),
+			MessagesCount = (ulong)Random.Shared.Next(1, 10),
 			Name = "Test Topic" + Random.Shared.Next(1, 69),
 			TopicsCount = Random.Shared.Next(1, 10),
 			Topics = responses
@@ -33,6 +35,8 @@ internal static class StreamFactory
 		return new StreamResponse
 		{
 			Id = Random.Shared.Next(1, 10),
+			SizeBytes = (ulong)Random.Shared.Next(1, 10),
+			MessagesCount = (ulong)Random.Shared.Next(1, 10),
 			Name = "Test Topic" + Random.Shared.Next(1, 69),
 			TopicsCount = Random.Shared.Next(1, 10),
 		};

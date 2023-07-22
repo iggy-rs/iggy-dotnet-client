@@ -32,37 +32,42 @@ internal sealed class BinaryFactory
         return payloadBuffer;
     }
 
-    internal static byte[] CreateStreamPayload(int id, int topicsCount, string name)
+    internal static byte[] CreateStreamPayload(int id, int topicsCount, string name, ulong sizeBytes, ulong messagesCount)
     {
         var nameBytes = Encoding.UTF8.GetBytes(name);
-        var totalSize = 12 + nameBytes.Length;
+        var totalSize = 4 + 4 + 8 + 8 + 4 + nameBytes.Length;
         var payload = new byte[totalSize];
         BinaryPrimitives.WriteInt32LittleEndian(payload, id);
         BinaryPrimitives.WriteInt32LittleEndian(payload.AsSpan(4), topicsCount);
-        BinaryPrimitives.WriteInt32LittleEndian(payload.AsSpan(8), nameBytes.Length);
-        nameBytes.CopyTo(payload.AsSpan(12));
+        BinaryPrimitives.WriteUInt64LittleEndian(payload.AsSpan(8), sizeBytes);
+        BinaryPrimitives.WriteUInt64LittleEndian(payload.AsSpan(16), messagesCount);
+        BinaryPrimitives.WriteInt32LittleEndian(payload.AsSpan(24), nameBytes.Length);
+        nameBytes.CopyTo(payload.AsSpan(28));
         return payload;
     }
 
-    internal static byte[] CreateTopicPayload(int id, int partitionsCount, string name)
+    internal static byte[] CreateTopicPayload(int id, int partitionsCount, string name, ulong sizeBytes, ulong messagesCount)
     {
         var nameBytes = Encoding.UTF8.GetBytes(name);
-        var totalSize = 12 + nameBytes.Length;
+        var totalSize = 4 + 4 + 8 + 8 + 4 + nameBytes.Length;
         var payload = new byte[totalSize];
         BinaryPrimitives.WriteInt32LittleEndian(payload, id);
         BinaryPrimitives.WriteInt32LittleEndian(payload.AsSpan(4), partitionsCount);
-        BinaryPrimitives.WriteInt32LittleEndian(payload.AsSpan(8), nameBytes.Length);
-        nameBytes.CopyTo(payload.AsSpan(12));
+        BinaryPrimitives.WriteUInt64LittleEndian(payload.AsSpan(8), sizeBytes);
+        BinaryPrimitives.WriteUInt64LittleEndian(payload.AsSpan(16), messagesCount);
+        BinaryPrimitives.WriteInt32LittleEndian(payload.AsSpan(24), nameBytes.Length);
+        nameBytes.CopyTo(payload.AsSpan(28));
         return payload;
     }
 
-    internal static byte[] CreatePartitionPayload(int id, int segmentsCount, int currentOffset, int sizeBytes)
+    internal static byte[] CreatePartitionPayload(int id, int segmentsCount, int currentOffset, ulong sizeBytes, ulong messagesCount)
     {
         var payload = new byte[16];
         BinaryPrimitives.WriteInt32LittleEndian(payload, id);
         BinaryPrimitives.WriteInt32LittleEndian(payload.AsSpan(4), segmentsCount);
         BinaryPrimitives.WriteInt32LittleEndian(payload.AsSpan(8), currentOffset);
-        BinaryPrimitives.WriteInt32LittleEndian(payload.AsSpan(12), sizeBytes);
+        BinaryPrimitives.WriteUInt64LittleEndian(payload.AsSpan(12), sizeBytes);
+        BinaryPrimitives.WriteUInt64LittleEndian(payload.AsSpan(16), messagesCount);
         return payload;
     }
 

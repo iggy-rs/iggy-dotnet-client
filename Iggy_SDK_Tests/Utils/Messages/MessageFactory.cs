@@ -38,6 +38,7 @@ internal static class MessageFactory
 			Count = Random.Shared.Next(1, 10),
 			Value = Random.Shared.Next(1, 10),
 			AutoCommit = true,
+			ConsumerType = ConsumerType.Consumer,
 			ConsumerId = Random.Shared.Next(1, 10),
 			PartitionId = Random.Shared.Next(1, 10),
 			PollingStrategy = MessagePolling.Offset,

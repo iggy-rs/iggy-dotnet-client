@@ -7,7 +7,7 @@ public sealed class PartitionContract
 
 	public required int SegmentsCount { get; init; }
 
-	public required int CurrentOffset { get; init; }
+	public required ulong CurrentOffset { get; init; }
 
-	public required int SizeBytes { get; init; }
+	public required ulong SizeBytes { get; init; }
 }
