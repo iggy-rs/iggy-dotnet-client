@@ -1,6 +1,6 @@
 <div align="center">
   
-[![.NET](https://github.com/numinnex/Iggy_SDK/actions/workflows/dotnet.yml/badge.svg)](https://github.com/numinnex/Iggy_SDK/actions/workflows/dotnet.yml)
+[![.NET](https://github.com/iggy-rs/iggy-dotnet-client/actions/workflows/dotnet.yml/badge.svg)](https://github.com/iggy-rs/iggy-dotnet-client/actions/workflows/dotnet.yml)
 
 </div>
 
