@@ -1,10 +1,11 @@
 using System.Text;
 using Iggy_SDK_Tests.Utils;
+using Iggy_SDK_Tests.Utils.Stats;
 using Iggy_SDK.Contracts.Http;
 
 namespace Iggy_SDK_Tests.MapperTests;
 
-//#TODO - those tests could be cleaned-up, the Arrange part in particular
+//#TODO - those tests could be cleaned-up, the Arrange/Assert part in particular
 public sealed class BinaryMapper
 {
 	[Fact]
@@ -286,5 +287,41 @@ public sealed class BinaryMapper
         Assert.Equal(groupId, response.Id);
         Assert.Equal(membersCount, response.MembersCount);
         Assert.Equal(partitionsCount, response.PartitionsCount);
+    }
+
+    [Fact]
+    public void MapStats_ReturnsValidStatsResponse()
+    {
+        //Arrange
+        var stats = StatsFactory.CreateFakeStatsObject();
+        var payload = BinaryFactory.CreateStatsPayload(stats);
+        
+        //Act
+        var response = Iggy_SDK.Mappers.BinaryMapper.MapStats(payload);
+        
+        //Assert
+        Assert.Equal(stats.ProcessId, response.ProcessId);
+        Assert.Equal(stats.MessagesCount, response.MessagesCount);
+        Assert.Equal(stats.ConsumerGroupsCount, response.ConsumerGroupsCount);
+        Assert.Equal(stats.TopicsCount, response.TopicsCount);
+        Assert.Equal(stats.StreamsCount, response.StreamsCount);
+        Assert.Equal(stats.PartitionsCount, response.PartitionsCount);
+        Assert.Equal(stats.SegmentsCount, response.SegmentsCount);
+        Assert.Equal(stats.MessagesSizeBytes, response.MessagesSizeBytes);
+        Assert.Equal(stats.CpuUsage, response.CpuUsage);
+        Assert.Equal(stats.TotalMemory, response.TotalMemory);
+        Assert.Equal(stats.AvailableMemory, response.AvailableMemory);
+        Assert.Equal(stats.MemoryUsage, response.MemoryUsage);
+        Assert.Equal(stats.RunTime, response.RunTime);
+        Assert.Equal(stats.StartTime, response.StartTime);
+        Assert.Equal(stats.ReadBytes, response.ReadBytes);
+        Assert.Equal(stats.WrittenBytes, stats.WrittenBytes);
+        Assert.Equal(stats.ClientsCount, response.ClientsCount);
+        Assert.Equal(stats.ConsumerGroupsCount, response.ConsumerGroupsCount);
+        Assert.Equal(stats.Hostname, response.Hostname);
+        Assert.Equal(stats.OsName, response.OsName);
+        Assert.Equal(stats.OsVersion, stats.OsVersion);
+        Assert.Equal(stats.KernelVersion, response.KernelVersion);
+    
     }
 }

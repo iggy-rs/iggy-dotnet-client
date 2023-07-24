@@ -208,6 +208,17 @@ public class HttpMessageStream : IMessageStream
         var response = await _httpClient.DeleteAsync($"/streams/{streamId}/topics/{topicId}/consumer_groups/{groupId}");
         await HandleResponseAsync(response);
     }
+    public async Task<Stats?> GetStatsAsync()
+    {
+        var response = await _httpClient.GetAsync($"/stats");
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<StatsResponse>(_toSnakeCaseOptions);
+            return result?.ToStats();
+        }
+        await HandleResponseAsync(response);
+        throw new Exception("Unknown error occurred.");
+    }
 
     [Obsolete("This method is only supported in TCP protocol", true)]
     public Task JoinConsumerGroupAsync(JoinConsumerGroupRequest request)
@@ -237,4 +248,5 @@ public class HttpMessageStream : IMessageStream
     {
         return message.ToString();
     }
+
 }

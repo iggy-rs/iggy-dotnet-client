@@ -230,6 +230,64 @@ internal static class BinaryMapper
         
         return consumerGroups;
     }
+   internal static Stats MapStats(ReadOnlySpan<byte> payload)
+   {
+       int processId = BinaryPrimitives.ReadInt32LittleEndian(payload[0..4]);
+       float cpuUsage = BitConverter.ToSingle(payload[4..8]);
+       ulong memoryUsage = BinaryPrimitives.ReadUInt64LittleEndian(payload[8..16]);
+       ulong totalMemory = BinaryPrimitives.ReadUInt64LittleEndian(payload[16..24]);
+       ulong availableMemory = BinaryPrimitives.ReadUInt64LittleEndian(payload[24..32]);
+       ulong runTime = BinaryPrimitives.ReadUInt64LittleEndian(payload[32..40]);
+       ulong startTime = BinaryPrimitives.ReadUInt64LittleEndian(payload[40..48]);
+       ulong readBytes = BinaryPrimitives.ReadUInt64LittleEndian(payload[48..56]);
+       ulong writtenBytes = BinaryPrimitives.ReadUInt64LittleEndian(payload[56..64]);
+       ulong totalSizeBytes = BinaryPrimitives.ReadUInt64LittleEndian(payload[64..72]);
+       int streamsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[72..76]);
+       int topicsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[76..80]);
+       int partitionsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[80..84]);
+       int segmentsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[84..88]);
+       ulong messagesCount = BinaryPrimitives.ReadUInt64LittleEndian(payload[88..96]); 
+       int clientsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[96..100]);
+       int consumerGroupsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[100..104]);
+       int position = 104;
+       int hostnameLength = BinaryPrimitives.ReadInt32LittleEndian(payload[position..(position + 4)]);
+       string hostname = Encoding.UTF8.GetString(payload[(position + 4)..(position + 4 + hostnameLength)]);
+       position += 4 + hostnameLength; 
+       int osNameLength = BinaryPrimitives.ReadInt32LittleEndian(payload[position..(position + 4)]);
+       string osName = Encoding.UTF8.GetString(payload[(position + 4)..(position + 4 + osNameLength)]);
+       position += 4 + osNameLength;
+       int osVersionLength = BinaryPrimitives.ReadInt32LittleEndian(payload[position..(position + 4)]);
+       string osVersion = Encoding.UTF8.GetString(payload[(position + 4)..(position + 4 + osVersionLength)]);
+       position += 4 + osVersionLength;
+       int kernelVersionLength = BinaryPrimitives.ReadInt32LittleEndian(payload[position..(position + 4)]);
+       string kernelVersion = Encoding.UTF8.GetString(payload[(position + 4)..(position + 4 + kernelVersionLength)]);
+       position += 4 + kernelVersionLength;
+
+       return new Stats
+       {
+           ProcessId = processId,
+           Hostname = hostname,
+           ClientsCount = clientsCount,
+           CpuUsage = cpuUsage,
+           MemoryUsage = memoryUsage,
+           TotalMemory = totalMemory,
+           AvailableMemory = availableMemory,
+           RunTime = runTime,
+           StartTime = DateTimeOffset.FromUnixTimeSeconds((long)startTime),
+           ReadBytes = readBytes,
+           WrittenBytes = writtenBytes,
+           StreamsCount = streamsCount,
+           KernelVersion = kernelVersion,
+           MessagesCount = messagesCount,
+           TopicsCount = topicsCount,
+           PartitionsCount = partitionsCount,
+           SegmentsCount = segmentsCount,
+           OsName = osName,
+           OsVersion = osVersion,
+           ConsumerGroupsCount = consumerGroupsCount,
+           MessagesSizeBytes = totalSizeBytes
+       };
+   }
 
     internal static ConsumerGroupResponse MapConsumerGroup(ReadOnlySpan<byte> payload)
     {

@@ -416,6 +416,33 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			throw new InvalidResponseException($"Invalid response status code: {status}");
 		}
 	}
+	public async Task<Stats?> GetStatsAsync()
+	{
+		var message = Array.Empty<byte>();
+		var payload = CreatePayload(message, CommandCodes.GET_STATS_CODE);
+
+		await _stream.WriteAsync(payload, 0, payload.Length);
+
+		var buffer = new byte[ExpectedResponseSize];
+		await _stream.ReadExactlyAsync(buffer);
+
+		var response = GetResponseLengthAndStatus(buffer);
+
+		if (response.Status != 0)
+		{
+			throw new InvalidResponseException($"Invalid response status code: {response.Status}");
+		}
+		
+		if (response.Length <= 1)
+		{
+			return null;
+		}
+
+		var responseBuffer = new byte[response.Length];
+		await _stream.ReadExactlyAsync(responseBuffer);
+
+		return BinaryMapper.MapStats(responseBuffer);
+	}
 
 	private static (int Status, int Length) GetResponseLengthAndStatus(Span<byte> buffer)
 	{

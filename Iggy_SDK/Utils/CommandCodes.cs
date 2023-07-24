@@ -4,7 +4,7 @@ internal static class CommandCodes
 {
 	internal const int KILL_CODE = 0;
 	internal const int PING_CODE = 1;
-	internal const int GET_CLIENTS_CODE = 2;
+	internal const int GET_STATS_CODE = 2;
 	internal const int SEND_MESSAGES_CODE = 10;
 	internal const int POLL_MESSAGES_CODE = 11;
 	internal const int STORE_OFFSET_CODE = 12;

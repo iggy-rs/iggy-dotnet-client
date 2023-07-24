@@ -344,4 +344,15 @@ public sealed class HttpMessageStream
 		_httpHandler.Flush();
 		
 	}
+
+	[Fact]
+	public async Task GetStats_ThrowsErrorResponseException_OnFailure()
+	{
+		var error = ErrorModelFactory.CreateErrorModelBadRequest();
+
+		_httpHandler.When($"/stats")
+			.Respond(HttpStatusCode.BadRequest, "application/json", JsonSerializer.Serialize(error, _toSnakeCaseOptions));
+		
+		await Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.GetStatsAsync());
+	}
 }
