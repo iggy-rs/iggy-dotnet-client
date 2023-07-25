@@ -1,11 +1,13 @@
-using System.Text;
 using Iggy_SDK_Tests.Utils;
+using Iggy_SDK_Tests.Utils.Groups;
+using Iggy_SDK_Tests.Utils.Messages;
 using Iggy_SDK_Tests.Utils.Stats;
+using Iggy_SDK_Tests.Utils.Topics;
 using Iggy_SDK.Contracts.Http;
+using StreamFactory = Iggy_SDK_Tests.Utils.Streams.StreamFactory;
 
 namespace Iggy_SDK_Tests.MapperTests;
 
-//#TODO - those tests could be cleaned-up, the Arrange/Assert part in particular
 public sealed class BinaryMapper
 {
 	[Fact]
@@ -29,32 +31,23 @@ public sealed class BinaryMapper
     public void MapMessages_ReturnsValidMessageResponses()
     {
         // Arrange
-        ulong offset1 = 12;
-        ulong timestamp1 = 69;
-        var id1 = Guid.NewGuid();
-        var payloadBytes1 = "Test1"u8.ToArray();
-        byte[] payload1 = BinaryFactory.CreateMessagePayload(offset1, timestamp1, id1, payloadBytes1);
-        
-        ulong offset2 = 234;
-        ulong timestamp2 = 987654321;
-        var id2 = Guid.NewGuid();
-        int messageLength2 = 8;
-        var payloadBytes2 = "Test 2"u8.ToArray();
-        byte[] payload2 = BinaryFactory.CreateMessagePayload(offset2, timestamp2, id2, payloadBytes2);
+        var (offset, timestamp, guid, payload) = MessageFactory.CreateMessageResponseFields();
+        byte[] msgOnePayload = BinaryFactory.CreateMessagePayload(offset, timestamp,
+            guid, payload);
+        var (offset1, timestamp1, guid1, payload1) = MessageFactory.CreateMessageResponseFields();
+        byte[] msgTwoPayload = BinaryFactory.CreateMessagePayload(offset1, timestamp1,
+            guid1, payload1);
 
-
-        byte[] combinedPayload = new byte[4 + payload1.Length + payload2.Length];
-        for (int i = 4; i < payload1.Length + 4; i++)
+        byte[] combinedPayload = new byte[4 + msgOnePayload.Length + msgTwoPayload.Length];
+        for (int i = 4; i < msgOnePayload.Length + 4; i++)
         {
-            combinedPayload[i] = payload1[i - 4];
+            combinedPayload[i] = msgOnePayload[i - 4];
         }
-
-        for (int i = 0; i < payload2.Length; i++)
+        for (int i = 0; i < msgTwoPayload.Length; i++)
         {
-            combinedPayload[4 + payload1.Length + i] = payload2[i];
+            combinedPayload[4 + msgOnePayload.Length + i] = msgTwoPayload[i];
         }
         
-
         // Act
         IEnumerable<MessageResponse> responses = Iggy_SDK.Mappers.BinaryMapper.MapMessages(combinedPayload).ToList();
 
@@ -63,34 +56,25 @@ public sealed class BinaryMapper
         Assert.Equal(2, responses.Count());
 
         MessageResponse response1 = responses.ElementAt(0);
-        Assert.Equal(offset1, response1.Offset);
-        Assert.Equal((ulong)timestamp1, response1.Timestamp);
-        Assert.Equal(id1, response1.Id);
-        Assert.Equal(payloadBytes1, response1.Payload);
+        Assert.Equal(offset, response1.Offset);
+        Assert.Equal(timestamp, response1.Timestamp);
+        Assert.Equal(guid, response1.Id);
+        Assert.Equal(payload, response1.Payload);
 
         MessageResponse response2 = responses.ElementAt(1);
-        Assert.Equal(offset2, response2.Offset);
-        Assert.Equal((ulong)timestamp2, response2.Timestamp);
-        Assert.Equal(id2, response2.Id);
-        Assert.Equal(payloadBytes2, response2.Payload);
+        Assert.Equal(offset1, response2.Offset);
+        Assert.Equal(timestamp1, response2.Timestamp);
+        Assert.Equal(guid1, response2.Id);
+        Assert.Equal(payload1, response2.Payload);
     }
 
     [Fact]
     public void MapStreams_ReturnsValidStreamsResponses()
     {
         // Arrange
-        int id1 = 123;
-        int topicsCount1 = 3;
-        ulong sizeBytes = 69420;
-        ulong messagesCount = 3;
-        string name1 = "Stream 1";
+        var (id1, topicsCount1, sizeBytes, messagesCount, name1) = StreamFactory.CreateStreamsResponseFields();
         byte[] payload1 = BinaryFactory.CreateStreamPayload(id1, topicsCount1, name1, sizeBytes, messagesCount);
-
-        int id2 = 456;
-        int topicsCount2 = 2;
-        ulong sizeBytes2 = 69420;
-        ulong messagesCount2 = 3;
-        string name2 = "Stream 2";
+        var (id2, topicsCount2, sizeBytes2, messagesCount2, name2) = StreamFactory.CreateStreamsResponseFields();
         byte[] payload2 = BinaryFactory.CreateStreamPayload(id2, topicsCount2, name2, sizeBytes2, messagesCount2);
 
         byte[] combinedPayload = new byte[payload1.Length + payload2.Length];
@@ -122,20 +106,17 @@ public sealed class BinaryMapper
     [Fact]
     public void MapStream_ReturnsValidStreamResponse()
     {
-        // Arrange
-        int streamId = 123;
-        int topicsCount = 2;
-        string streamName = "Stream 1";
-        ulong sizeBytes = 69420;
-        ulong messagesCount = 3;
-        byte[] streamPayload = BinaryFactory.CreateStreamPayload(streamId, topicsCount, streamName, sizeBytes, messagesCount);
 
-        int topicId1 = 456;
-        int partitionsCount1 = 3;
-        string topicName1 = "Topic 1";
-        ulong sizeBytesTopic1 = 69420;
-        ulong messagesCountTopic1 = 3;
-        byte[] topicPayload1 = BinaryFactory.CreateTopicPayload(topicId1, partitionsCount1, topicName1, sizeBytesTopic1 , messagesCountTopic1);
+        // Arrange
+        var ( id, topicsCount, sizeBytes, messagesCount, name) = StreamFactory.CreateStreamsResponseFields();
+        byte[] streamPayload = BinaryFactory.CreateStreamPayload(id, topicsCount, name, sizeBytes, messagesCount);
+        var (topicId1, partitionsCount1, topicName1, topicSizeBytes1 ,messagesCountTopic1) =
+            TopicFactory.CreateTopicResponseFields();
+        byte[] topicPayload1 = BinaryFactory.CreateTopicPayload(topicId1,
+            partitionsCount1,
+            topicName1,
+            topicSizeBytes1,
+            messagesCountTopic1);
 
         byte[] topicCombinedPayload = new byte[topicPayload1.Length ];
         topicPayload1.CopyTo(topicCombinedPayload.AsSpan());
@@ -149,18 +130,18 @@ public sealed class BinaryMapper
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(streamId, response.Id);
+        Assert.Equal(id, response.Id);
         Assert.Equal(topicsCount, response.TopicsCount);
-        Assert.Equal(streamName, response.Name);
-        Assert.Equal(sizeBytesTopic1, response.SizeBytes);
-        Assert.Equal(messagesCountTopic1, response.MessagesCount);
+        Assert.Equal(name, response.Name);
+        Assert.Equal(sizeBytes, response.SizeBytes);
+        Assert.Equal(messagesCount, response.MessagesCount);
         Assert.NotNull(response.Topics);
-        Assert.Equal(1, response.Topics.ToList().Count);
+        Assert.Single(response.Topics.ToList());
 
         var topicResponse = response.Topics.First();
         Assert.Equal(topicId1, topicResponse.Id);
         Assert.Equal(partitionsCount1, topicResponse.PartitionsCount);
-        Assert.Equal(messagesCountTopic1, response.MessagesCount);
+        Assert.Equal(messagesCountTopic1, topicResponse.MessagesCount);
         Assert.Equal(topicName1, topicResponse.Name);
     }
 
@@ -168,18 +149,11 @@ public sealed class BinaryMapper
     public void MapTopics_ReturnsValidTopicsResponses()
     {
         // Arrange
-        int id1 = 123;
-        int partitionsCount1 = 2;
-        string name1 = "Topic 1";
-        ulong sizeBytesTopic1 = 69420;
-        ulong messagesCountTopic1 = 30;
+        var (id1, partitionsCount1, name1, sizeBytesTopic1, messagesCountTopic1) =
+            TopicFactory.CreateTopicResponseFields();
         byte[] payload1 = BinaryFactory.CreateTopicPayload(id1, partitionsCount1, name1, sizeBytesTopic1, messagesCountTopic1);
-
-        int id2 = 456;
-        int partitionsCount2 = 3;
-        string name2 = "Topic 2";
-        ulong sizeBytesTopic2 = 69420;
-        ulong messagesCountTopic2 = 30;
+        var (id2, partitionsCount2, name2, sizeBytesTopic2, messagesCountTopic2) =
+            TopicFactory.CreateTopicResponseFields();
         byte[] payload2 = BinaryFactory.CreateTopicPayload(id2, partitionsCount2, name2, sizeBytesTopic2, messagesCountTopic2 );
 
         byte[] combinedPayload = new byte[payload1.Length + payload2.Length];
@@ -212,11 +186,7 @@ public sealed class BinaryMapper
     public void MapTopic_ReturnsValidTopicResponse()
     {
         // Arrange
-        int topicId = 123;
-        int partitionsCount = 3;
-        string topicName = "Topic 1";
-        ulong sizeBytes = 69420;
-        ulong messagesCount = 3;
+        var (topicId, partitionsCount, topicName, sizeBytes, messagesCount) = TopicFactory.CreateTopicResponseFields();
         byte[] topicPayload = BinaryFactory.CreateTopicPayload(topicId, partitionsCount, topicName, sizeBytes, messagesCount);
 
         byte[] combinedPayload = new byte[topicPayload.Length];
@@ -238,14 +208,9 @@ public sealed class BinaryMapper
     public void MapConsumerGroups_ReturnsValidConsumerGroupsResponses()
     {
         // Arrange
-        int id1 = 123;
-        int membersCount1 = 2;
-        int partitionsCount1 = 4;
+        var(id1, membersCount1, partitionsCount1) = GroupFactory.CreateConsumerGroupResponseFields();
         byte[] payload1 = BinaryFactory.CreateGroupPayload(id1, membersCount1, partitionsCount1);
-
-        int id2 = 456;
-        int membersCount2 = 3;
-        int partitionsCount2 = 2;
+        var(id2, membersCount2, partitionsCount2) = GroupFactory.CreateConsumerGroupResponseFields();
         byte[] payload2 = BinaryFactory.CreateGroupPayload(id2, membersCount2, partitionsCount2);
 
         byte[] combinedPayload = new byte[payload1.Length + payload2.Length];
@@ -274,9 +239,7 @@ public sealed class BinaryMapper
     public void MapConsumerGroup_ReturnsValidConsumerGroupResponse()
     {
         // Arrange
-        int groupId = 123;
-        int membersCount = 2;
-        int partitionsCount = 4;
+        var (groupId, membersCount, partitionsCount) = GroupFactory.CreateConsumerGroupResponseFields();
         byte[] groupPayload = BinaryFactory.CreateGroupPayload(groupId, membersCount, partitionsCount);
 
         // Act

@@ -18,6 +18,67 @@ public sealed class TcpContract
 	}
 
     [Fact]
+    public void TcpContracts_MessageFetchRequest_HasCorrectBytes()
+    {
+        // Arrange
+        var request = MessageFactory.CreateMessageFetchRequest();
+        
+        // Act
+        var result = TcpContracts.GetMessages(request).AsSpan();
+        
+        // Assert
+        Assert.Equal(result[0] switch { 0 => ConsumerType.Consumer , 1 => ConsumerType.ConsumerGroup} , request.ConsumerType);
+        Assert.Equal(request.ConsumerId, BitConverter.ToInt32(result[1..5]));
+        Assert.Equal(request.StreamId, BitConverter.ToInt32(result[5..9]));
+        Assert.Equal(request.TopicId, BitConverter.ToInt32(result[9..13]));
+        Assert.Equal(request.PartitionId, BitConverter.ToInt32(result[13..17]));
+        Assert.Equal(
+            result[17] switch
+            {
+                0 => MessagePolling.Offset, 1 => MessagePolling.Timestamp, 2 => MessagePolling.First,
+                3 => MessagePolling.Last, 4 => MessagePolling.Next
+            }, request.PollingStrategy);
+        Assert.Equal(request.Value, BitConverter.ToUInt64(result[18..26]));
+        Assert.Equal(request.Count, BitConverter.ToInt32(result[26..30]));
+        Assert.Equal(request.AutoCommit, result[30] switch { 0 => false, 1 => true });
+    }
+
+    [Fact]
+    public void TcpContracts_MessageSendRequest_HasCorrectBytes()
+    {
+        // Arrange
+        int streamId = 1;
+        int topicId = 1;
+        var request = MessageFactory.CreateMessageSendRequest();
+
+        // Act
+        var result = TcpContracts.CreateMessage(streamId, topicId, request).AsSpan();
+        
+        //Assert
+        Assert.Equal(streamId, BitConverter.ToInt32(result[0..4]));
+        Assert.Equal(topicId, BitConverter.ToInt32(result[4..8]));
+        Assert.Equal(request.KeyKind, result[8] switch { 0 => Keykind.PartitionId, 1 => Keykind.EntityId });
+        Assert.Equal(request.KeyValue, BitConverter.ToInt32(result[9..13]));
+        Assert.Equal(request.Messages.Count(), BitConverter.ToInt32(result[13..17]));
+        int currentIndex = 17;
+        foreach (var message in request.Messages)
+        {
+            // Assert
+            Assert.Equal(message.Id, new Guid(result[currentIndex..(currentIndex + 16)]));
+            currentIndex += 16;
+
+            int payloadLength = BitConverter.ToInt32(result[currentIndex..(currentIndex + 4)]);
+            currentIndex += 4;
+
+            byte[] payload = result[currentIndex..(currentIndex + payloadLength)].ToArray();
+            currentIndex += payloadLength;
+
+            Assert.Equal(message.Payload.Length, payload.Length);
+            Assert.Equal(message.Payload, payload);
+        }
+    }
+
+    [Fact]
     public void TcpContracts_CreateStream_HasCorrectBytes()
     {
         // Arrange
@@ -90,6 +151,41 @@ public sealed class TcpContract
         Assert.Equal(expectedBytesLength, result.Length);
         Assert.Equal(streamId, BitConverter.ToInt32(result[..4]));
         Assert.Equal(topicId, BitConverter.ToInt32(result[4..8]));
+    }
+    [Fact]
+    public void TcpContracts_JoinGroup_HasCorrectBytes()
+    {
+        // Arrange
+        var request = GroupFactory.CreateJoinGroupRequest();
+
+        // Act
+        var result = TcpContracts.JoinGroup(request).AsSpan();
+
+        // Assert
+        int expectedBytesLength = sizeof(int) * 3;
+
+        Assert.Equal(expectedBytesLength, result.Length);
+        Assert.Equal(request.StreamId, BitConverter.ToInt32(result[..4]));
+        Assert.Equal(request.TopicId, BitConverter.ToInt32(result[4..8]));
+        Assert.Equal(request.ConsumerGroupId, BitConverter.ToInt32(result[8..12]));
+    }
+
+    [Fact]
+    public void TcpContracts_LeaveGroup_HasCorrectBytes()
+    {
+        // Arrange
+        var request = GroupFactory.CreateLeaveGroupRequest();
+
+        // Act
+        var result = TcpContracts.LeaveGroup(request).AsSpan();
+
+        // Assert
+        int expectedBytesLength = sizeof(int) * 3;
+
+        Assert.Equal(expectedBytesLength, result.Length);
+        Assert.Equal(request.StreamId, BitConverter.ToInt32(result[..4]));
+        Assert.Equal(request.TopicId, BitConverter.ToInt32(result[4..8]));
+        Assert.Equal(request.ConsumerGroupId, BitConverter.ToInt32(result[8..12]));
     }
 
     [Fact]

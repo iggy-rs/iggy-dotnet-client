@@ -71,7 +71,7 @@ var messages = await bus.PollMessagesAsync(new MessageFetchRequest
 ```
 It is worth noting that every method will throw an `InvalidResponseException` when encountering an error.<br><br>
 If you register `IMessageStream` in a dependency injection container, you will have access to interfaces
-that encapsulate smaller parts of the system `IStreamClient` `ITopicClient` `IMessageClient` `IOffsetClient` `IConsumerGroupClient`
+that encapsulate smaller parts of the system `IStreamClient` `ITopicClient` `IMessageClient` `IOffsetClient` `IConsumerGroupClient` `IUtilsClient`
 
 For more information about how Iggy works check its [documentation](https://docs.iggy.rs/)
 

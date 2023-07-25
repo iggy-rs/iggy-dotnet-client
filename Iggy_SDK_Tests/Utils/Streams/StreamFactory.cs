@@ -6,6 +6,17 @@ namespace Iggy_SDK_Tests.Utils.Streams;
 
 internal static class StreamFactory
 {
+	
+	internal static (int id, int topicsCount, ulong sizeBytes, ulong messagesCount, string name)
+		CreateStreamsResponseFields()
+	{
+		int id = Random.Shared.Next(1,69);
+		var topicsCount = Random.Shared.Next(1,69);
+		var sizeBytes = (ulong)Random.Shared.Next(69, 42069);
+		var messageCount = (ulong)Random.Shared.Next(2,3);
+		var name = "Stream "+Random.Shared.Next(1,4);
+		return (id, topicsCount, sizeBytes, messageCount, name);
+	}
 	internal static StreamRequest CreateStreamRequest()
 	{
 		return new StreamRequest

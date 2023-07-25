@@ -5,6 +5,14 @@ namespace Iggy_SDK_Tests.Utils.Groups;
 
 internal static class GroupFactory
 {
+
+	internal static (int id, int membersCount, int partitionsCount) CreateConsumerGroupResponseFields()
+	{
+        int id1 = Random.Shared.Next(1, 10);
+        int membersCount1 = Random.Shared.Next(1, 10);
+        int partitionsCount1 = Random.Shared.Next(1, 10);
+		return (id1, membersCount1, partitionsCount1);
+	}
 	internal static ConsumerGroupResponse CreateGroupResponse()
 	{
 		return new ConsumerGroupResponse
@@ -33,5 +41,25 @@ internal static class GroupFactory
 	internal static IEnumerable<ConsumerGroupResponse> Empty()
 	{
 		return Enumerable.Empty<ConsumerGroupResponse>();
+	}
+
+	internal static JoinConsumerGroupRequest CreateJoinGroupRequest()
+	{
+		return new JoinConsumerGroupRequest
+		{
+			StreamId = Random.Shared.Next(1, 10),
+			ConsumerGroupId = Random.Shared.Next(1, 10),
+			TopicId = Random.Shared.Next(1, 10),
+		};
+	}
+
+	internal static LeaveConsumerGroupRequest CreateLeaveGroupRequest()
+	{
+		return new LeaveConsumerGroupRequest
+		{
+			StreamId = Random.Shared.Next(1, 10),
+			ConsumerGroupId = Random.Shared.Next(1, 10),
+			TopicId = Random.Shared.Next(1, 10),
+		};
 	}
 }

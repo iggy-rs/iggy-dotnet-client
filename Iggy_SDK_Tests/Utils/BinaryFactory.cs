@@ -1,6 +1,5 @@
 using System.Buffers.Binary;
 using System.Text;
-using Iggy_SDK.Contracts.Http;
 
 namespace Iggy_SDK_Tests.Utils;
 
@@ -14,8 +13,9 @@ internal sealed class BinaryFactory
         return payload;
     }
 
-    internal static byte[] CreateMessagePayload(ulong offset, ulong timestamp, Guid id, byte[] payload)
+    internal static byte[] CreateMessagePayload(ulong offset, ulong timestamp, Guid guid, ReadOnlySpan<byte> payload)
     {
+        
         int messageLength = payload.Length;
         var totalSize = 36 + payload.Length;
         var payloadBuffer = new byte[totalSize];
@@ -23,7 +23,7 @@ internal sealed class BinaryFactory
         
         BinaryPrimitives.WriteUInt64LittleEndian(payloadBuffer, (ulong)offset);
         BinaryPrimitives.WriteUInt64LittleEndian(payloadBuffer.AsSpan(8), (ulong)timestamp);
-        var idBytes = id.ToByteArray();
+        var idBytes = guid.ToByteArray();
         for (int i = 16; i < 32; i++)
         {
             payloadBuffer[i] = idBytes[i - 16];

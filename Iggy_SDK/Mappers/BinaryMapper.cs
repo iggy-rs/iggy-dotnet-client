@@ -250,6 +250,7 @@ internal static class BinaryMapper
        int clientsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[96..100]);
        int consumerGroupsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[100..104]);
        int position = 104;
+       
        int hostnameLength = BinaryPrimitives.ReadInt32LittleEndian(payload[position..(position + 4)]);
        string hostname = Encoding.UTF8.GetString(payload[(position + 4)..(position + 4 + hostnameLength)]);
        position += 4 + hostnameLength; 
@@ -261,7 +262,6 @@ internal static class BinaryMapper
        position += 4 + osVersionLength;
        int kernelVersionLength = BinaryPrimitives.ReadInt32LittleEndian(payload[position..(position + 4)]);
        string kernelVersion = Encoding.UTF8.GetString(payload[(position + 4)..(position + 4 + kernelVersionLength)]);
-       position += 4 + kernelVersionLength;
 
        return new Stats
        {

@@ -5,6 +5,16 @@ namespace Iggy_SDK_Tests.Utils.Topics;
 
 internal static class TopicFactory
 {
+	internal static (int topicId, int partitionsCount, string topicName, ulong sizeBytes, ulong messagesCount)
+		CreateTopicResponseFields()
+	{
+		int topicId = Random.Shared.Next(1,69);
+		int partitionsCount = Random.Shared.Next(1,69);
+		string topicName = "Topic "+Random.Shared.Next(1,69);
+		ulong sizeBytes = (ulong)Random.Shared.Next(1, 69);
+		ulong messagesCount = (ulong)Random.Shared.Next(69, 42069);
+		return (topicId, partitionsCount, topicName, sizeBytes, messagesCount);
+	}
 	internal static TopicRequest CreateTopicRequest()
 	{
 		return new TopicRequest

@@ -28,7 +28,7 @@ internal static class TcpContracts
             MessagePolling.Last => 3,
             MessagePolling.Next => 4,
         };
-        BinaryPrimitives.WriteUInt64LittleEndian(bytes[18..26], (ulong)request.Value);
+        BinaryPrimitives.WriteUInt64LittleEndian(bytes[18..26], request.Value);
         BinaryPrimitives.WriteInt32LittleEndian(bytes[26..30], request.Count);
         
         bytes[30] = request.AutoCommit ? (byte)1 : (byte)0;
@@ -161,7 +161,7 @@ internal static class TcpContracts
         BinaryPrimitives.WriteInt32LittleEndian(bytes[5..9], topicId);
         BinaryPrimitives.WriteInt32LittleEndian(bytes[9..13], contract.ConsumerId);
         BinaryPrimitives.WriteInt32LittleEndian(bytes[13..17], contract.PartitionId);
-        BinaryPrimitives.WriteUInt64LittleEndian(bytes[17..25], (ulong)contract.Offset);
+        BinaryPrimitives.WriteUInt64LittleEndian(bytes[17..25], contract.Offset);
         return bytes.ToArray();
     }
 
