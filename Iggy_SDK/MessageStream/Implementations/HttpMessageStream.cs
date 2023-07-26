@@ -116,9 +116,11 @@ public class HttpMessageStream : IMessageStream
     public async Task SendMessagesAsync(int streamId, int topicId, MessageSendRequest request)
     {
         var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
+        var dd = json.ToString();
         var data = new StringContent(json, Encoding.UTF8, "application/json");
         
         var response = await _httpClient.PostAsync($"/streams/{streamId}/topics/{topicId}/messages", data);
+        var xd = await response.Content.ReadAsStringAsync();
         if (!response.IsSuccessStatusCode)
         {
             await HandleResponseAsync(response);

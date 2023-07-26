@@ -57,10 +57,12 @@ public sealed class TcpContract
         //Assert
         Assert.Equal(streamId, BitConverter.ToInt32(result[0..4]));
         Assert.Equal(topicId, BitConverter.ToInt32(result[4..8]));
-        Assert.Equal(request.KeyKind, result[8] switch { 0 => Keykind.PartitionId, 1 => Keykind.EntityId });
-        Assert.Equal(request.KeyValue, BitConverter.ToInt32(result[9..13]));
-        Assert.Equal(request.Messages.Count(), BitConverter.ToInt32(result[13..17]));
-        int currentIndex = 17;
+        Assert.Equal(request.Key.Kind, result[8] switch { 0 => KeyKind.None, 1 => KeyKind.PartitionId, 2 => KeyKind.EntityId  });
+        Assert.Equal(request.Key.Length, (int)result[9]);
+        Assert.Equal(request.Key.Value.Length, result[10..(10 + request.Key.Length)].Length);
+        Assert.Equal(request.Messages.Count(), BitConverter.ToInt32(result[(10 + request.Key.Length)..(10 + request.Key.Length + 4)]));
+        
+        int currentIndex = 10 + request.Key.Length + 4;
         foreach (var message in request.Messages)
         {
             // Assert

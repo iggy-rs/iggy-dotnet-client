@@ -1,3 +1,4 @@
+using System.Buffers.Binary;
 using System.Text;
 using System.Text.Json;
 using Iggy_SDK_Tests.Utils.DummyObj;
@@ -20,10 +21,17 @@ internal static class MessageFactory
 
 	internal static MessageSendRequest CreateMessageSendRequest()
 	{
+		var valBytes = new byte[4];
+		BinaryPrimitives.WriteInt32LittleEndian(valBytes, Random.Shared.Next(1,69));
 		return new MessageSendRequest
 		{
-			KeyKind = Keykind.PartitionId,
-			KeyValue = Random.Shared.Next(1, 10),
+			
+			Key = new Key
+			{
+				Kind = KeyKind.PartitionId,
+				Length = 4,
+				Value = valBytes,
+			},
 			Messages = new List<Message>
 			{
 				new()

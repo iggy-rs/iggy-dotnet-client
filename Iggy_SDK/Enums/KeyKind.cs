@@ -1,8 +1,9 @@
 
 namespace Iggy_SDK.Enums;
 
-public enum Keykind
+public enum KeyKind
 {
+	None,
 	PartitionId,
 	EntityId
 }

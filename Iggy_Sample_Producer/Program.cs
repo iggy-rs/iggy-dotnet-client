@@ -1,4 +1,5 @@
-﻿using Iggy_Sample_Producer;
+﻿using System.Buffers.Binary;
+using Iggy_Sample_Producer;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
@@ -71,11 +72,17 @@ async Task ProduceMessages(IMessageClient bus, StreamResponse? stream, TopicResp
 
         try
         {
+            var valBytes = new byte[4];
+            BinaryPrimitives.WriteUInt32LittleEndian(valBytes, 3);
             await bus.SendMessagesAsync(streamId,topicId, new MessageSendRequest
             {
                 Messages = messages,
-                KeyKind = Keykind.PartitionId,
-                KeyValue = topic.PartitionsCount,
+                Key = new Key
+                {
+                    Kind = KeyKind.PartitionId,
+                    Length = 4,
+                    Value = valBytes,
+                }
             });
         }
         catch (Exception e)

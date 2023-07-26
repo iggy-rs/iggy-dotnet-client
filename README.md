@@ -43,8 +43,12 @@ var messages = new List<Message>();
 await bus.SendMessagesAsync(streamId, topicId, new MessageSendRequest
 {
     Messages = messages,
-    KeyKind = Keykind.PartitionId,
-    KeyValue = 1,
+    Key = new Key
+    {
+        Kind = KeyKind.PartitionId,
+        Length = 4,
+        Value = BitConverter.GetBytes(partitionId),
+    }
 });
 ```
 The `Message` struct has two fields `Id` and `Payload`

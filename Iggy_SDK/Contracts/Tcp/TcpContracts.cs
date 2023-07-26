@@ -39,21 +39,22 @@ internal static class TcpContracts
     {
         int messageBytesCount = request.Messages.Sum(message => 16 + 4 + message.Payload.Length);
 
-        Span<byte> bytes = stackalloc byte[17 + messageBytesCount];
+        Span<byte> bytes = stackalloc byte[14 + request.Key.Length + messageBytesCount];
         BinaryPrimitives.WriteInt32LittleEndian(bytes[0..4], streamId);
         BinaryPrimitives.WriteInt32LittleEndian(bytes[4..8], topicId);
-        bytes[sizeof(int) * 2] = request.KeyKind switch
+        bytes[sizeof(int) * 2] = request.Key.Kind switch
         {
-            Keykind.PartitionId => 0,
-            Keykind.EntityId => 1
+            KeyKind.None => 0,
+            KeyKind.PartitionId => 1,
+            KeyKind.EntityId => 2,
         };
-        BinaryPrimitives.WriteInt32LittleEndian(bytes[9..13], request.KeyValue);
-        BinaryPrimitives.WriteInt32LittleEndian(bytes[13..17], request.Messages.Count());
+        bytes[9] = (byte)request.Key.Length;
+        request.Key.Value.CopyTo(bytes[10..(10 + request.Key.Length)]);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[(10 + request.Key.Length)..(10 + request.Key.Length + 4)], request.Messages.Count());
 
-        int position = 17;
+        int position = 10 + request.Key.Length + 4;
         foreach (var message in request.Messages)
         {
-
             Span<byte> id = message.Id.ToByteArray();
             for (int i = position; i < position + 16; i++)
             {
@@ -65,7 +66,6 @@ internal static class TcpContracts
             payloadBytes.CopyTo(slice);
             position += payloadBytes.Length + 16 + 4;
         }
-        
         return bytes.ToArray();
     }
     internal static byte[] CreateStream(StreamRequest request)

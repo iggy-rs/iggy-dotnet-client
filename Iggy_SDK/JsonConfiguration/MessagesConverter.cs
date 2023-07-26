@@ -27,7 +27,6 @@ internal sealed class MessagesConverter : JsonConverter<MessageSendRequest>
 			foreach (var message in value.Messages)
 			{
 				var base64 = Convert.ToBase64String(message.Payload);
-				var id = message.Id.ToByteArray();
 				msgList.Add(new HttpMessage
 				{
 					Id = message.Id.ToUInt128(),
@@ -36,15 +35,25 @@ internal sealed class MessagesConverter : JsonConverter<MessageSendRequest>
 			}
 
 			writer.WriteStartObject();
-			writer.WriteString(nameof(MessageSendRequest.KeyKind).ToSnakeCase(), value: value.KeyKind switch
+			writer.WriteStartObject("key");
+			
+			writer.WriteString(nameof(MessageSendRequest.Key.Kind).ToSnakeCase(), value: value.Key.Kind switch
 			{
-				Keykind.EntityId => "entity_id",
-				Keykind.PartitionId => "partition_id",
+				KeyKind.None => "none",
+				KeyKind.EntityId => "entity_id",
+				KeyKind.PartitionId => "partition_id",
 				_ => throw new InvalidEnumArgumentException()
 			});
-			writer.WriteNumber(nameof(MessageSendRequest.KeyValue).ToSnakeCase(), value.KeyValue);
-			writer.WritePropertyName(nameof(MessageSendRequest.Messages).ToSnakeCase());
-			JsonSerializer.Serialize(writer, msgList, options);
+			writer.WriteBase64String(nameof(MessageSendRequest.Key.Value).ToSnakeCase(), value.Key.Value);
+			writer.WriteEndObject();
+			
+			writer.WriteStartArray("messages");
+			foreach (var msg in msgList)
+			{
+				JsonSerializer.Serialize(writer, msg, options);
+			}
+			writer.WriteEndArray();
+			
 			writer.WriteEndObject();
 		}
 	}

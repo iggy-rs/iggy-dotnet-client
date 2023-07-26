@@ -106,7 +106,6 @@ public sealed class BinaryMapper
     [Fact]
     public void MapStream_ReturnsValidStreamResponse()
     {
-
         // Arrange
         var ( id, topicsCount, sizeBytes, messagesCount, name) = StreamFactory.CreateStreamsResponseFields();
         byte[] streamPayload = BinaryFactory.CreateStreamPayload(id, topicsCount, name, sizeBytes, messagesCount);
