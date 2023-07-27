@@ -282,9 +282,9 @@ public sealed class TcpContract
 
         Assert.Equal(expectedBytesLength, result.Length);
         Assert.Equal(0, result[0]);
-        Assert.Equal(streamId, BitConverter.ToInt32(result[1..5]));
-        Assert.Equal(topicId, BitConverter.ToInt32(result[5..9]));
-        Assert.Equal(contract.ConsumerId, BitConverter.ToInt32(result[9..13]));
+        Assert.Equal(contract.ConsumerId, BitConverter.ToInt32(result[1..5]));
+        Assert.Equal(streamId, BitConverter.ToInt32(result[5..9]));
+        Assert.Equal(topicId, BitConverter.ToInt32(result[9..13]));
         Assert.Equal(contract.PartitionId, BitConverter.ToInt32(result[13..17]));
         Assert.Equal((ulong)contract.Offset, BitConverter.ToUInt64(result[17..25]));
     }
@@ -303,9 +303,9 @@ public sealed class TcpContract
 
         Assert.Equal(expectedBytesLength, result.Length);
         Assert.Equal(0, result[0]);
-        Assert.Equal(request.StreamId, BitConverter.ToInt32(result[1..5]));
-        Assert.Equal(request.TopicId, BitConverter.ToInt32(result[5..9]));
-        Assert.Equal(request.ConsumerId, BitConverter.ToInt32(result[9..13]));
+        Assert.Equal(request.ConsumerId, BitConverter.ToInt32(result[1..5]));
+        Assert.Equal(request.StreamId, BitConverter.ToInt32(result[5..9]));
+        Assert.Equal(request.TopicId, BitConverter.ToInt32(result[9..13]));
         Assert.Equal(request.PartitionId, BitConverter.ToInt32(result[13..17]));
     }
 		

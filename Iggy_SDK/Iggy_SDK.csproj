@@ -10,13 +10,19 @@
     <PropertyGroup>
         <Description>C# SDK for Iggy</Description>
         <Authors>NUMINEX</Authors>
+        <IsPackable>true</IsPackable>
         <PackageTags>SDK Iggy Messaging</PackageTags>
+        <RepositoryUrl>https://github.com/iggy-rs/iggy-dotnet-client</RepositoryUrl>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
-    
-    <Target Name="IncludeFilesInNuGetPackage" AfterTargets="Pack">
-        <ItemGroup>
-            <None Include="../README.md" Pack="true" PackagePath="" />
-            <None Include="../LICENSE" Pack="true" PackagePath="" />
-        </ItemGroup>
-    </Target>
+
+    <ItemGroup>
+        <None Include="../README.md" Pack="true" PackagePath="">
+            <Link>Properties/README.md</Link>
+        </None>
+        <None Include="../LICENSE" Pack="true" PackagePath="">
+            <Link>Properties/LICENSE</Link>
+        </None>
+    </ItemGroup>
 </Project>
