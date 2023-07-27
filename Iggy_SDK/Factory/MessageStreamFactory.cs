@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Quic;
 using System.Net.Security;
 using System.Net.Sockets;
@@ -22,29 +23,39 @@ public static class MessageStreamFactory
 
         return config.Protocol switch
         {
-            Protocol.Http => CreateHttpMessageStream(config.BaseAdress),
-            Protocol.Tcp => CreateTcpMessageStream(config.BaseAdress),
+            Protocol.Http => CreateHttpMessageStream(config),
+            Protocol.Tcp => CreateTcpMessageStream(config),
             _ => throw new InvalidEnumArgumentException()
         };
     }
 
    
 
-    private static TcpMessageStream CreateTcpMessageStream(string configBaseAdress)
+    private static TcpMessageStream CreateTcpMessageStream(IMessageStreamConfigurator options)
     {
-        var urlPortSplitter = configBaseAdress.Split(":");
+        var urlPortSplitter = options.BaseAdress.Split(":");
         if (urlPortSplitter.Length > 2)
         {
             throw new InvalidBaseAdressException();
         }
         var client = new TcpClient(urlPortSplitter[0], int.Parse(urlPortSplitter[1]));
+        client.SendBufferSize = options.SendBufferSize;
+        options.ReceiveBufferSize = options.ReceiveBufferSize;
         return new TcpMessageStream(client);
     }
 
-    private static HttpMessageStream CreateHttpMessageStream(string baseAdress)
+    private static HttpMessageStream CreateHttpMessageStream(IMessageStreamConfigurator options)
     {
         var client = new HttpClient();
-        client.BaseAddress = new Uri(baseAdress);
+        client.BaseAddress = new Uri(options.BaseAdress);
+        if (options.Headers is not null)
+        {
+            foreach (var header in options.Headers)
+            {
+                client.DefaultRequestHeaders.Add(header.Name, header.Values);
+            }
+        }
+        
         return new HttpMessageStream(client);
     }
 }

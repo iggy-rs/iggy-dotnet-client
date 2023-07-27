@@ -236,10 +236,10 @@ public class HttpMessageStream : IMessageStream
 
     private async Task HandleResponseAsync(HttpResponseMessage response)
     {
-        if (response.StatusCode is HttpStatusCode.BadRequest or HttpStatusCode.NotFound)
+        if ((int)response.StatusCode > 300 && (int)response.StatusCode < 500)
         {
-            var err = await response.Content.ReadFromJsonAsync<ErrorModel>(_toSnakeCaseOptions);
-            throw new InvalidResponseException(err.Reason);
+            var err = await response.Content.ReadAsStringAsync();
+            throw new InvalidResponseException(err);
         }
         if (response.StatusCode == HttpStatusCode.InternalServerError)
         {
