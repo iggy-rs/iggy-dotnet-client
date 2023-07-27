@@ -156,7 +156,11 @@ internal static class TcpContracts
     internal static byte[] UpdateOffset(int streamId, int topicId, OffsetContract contract)
     {
         Span<byte> bytes = stackalloc byte[sizeof(int) * 4 + sizeof(ulong) + 1];
-        bytes[0] = 0;
+        bytes[0] = contract.ConsumerType switch
+        {
+            ConsumerType.Consumer => 0,
+            ConsumerType.ConsumerGroup => 1,
+        };
         BinaryPrimitives.WriteInt32LittleEndian(bytes[1..5], contract.ConsumerId);
         BinaryPrimitives.WriteInt32LittleEndian(bytes[5..9], streamId);
         BinaryPrimitives.WriteInt32LittleEndian(bytes[9..13], topicId);
@@ -168,7 +172,11 @@ internal static class TcpContracts
     internal static byte[] GetOffset(OffsetRequest request)
     {
         Span<byte> bytes = stackalloc byte[sizeof(int) * 4 + 1];
-        bytes[0] = 0;
+        bytes[0] = request.ConsumerType switch
+        {
+            ConsumerType.Consumer => 0,
+            ConsumerType.ConsumerGroup => 1,
+        };
         BinaryPrimitives.WriteInt32LittleEndian(bytes[1..5], request.ConsumerId);
         BinaryPrimitives.WriteInt32LittleEndian(bytes[5..9], request.StreamId);
         BinaryPrimitives.WriteInt32LittleEndian(bytes[9..13], request.TopicId);

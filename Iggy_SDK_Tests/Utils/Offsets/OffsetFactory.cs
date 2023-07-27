@@ -1,5 +1,6 @@
 using Iggy_SDK.Contracts;
 using Iggy_SDK.Contracts.Http;
+using Iggy_SDK.Enums;
 
 namespace Iggy_SDK_Tests.Utils.Offset;
 
@@ -9,6 +10,7 @@ internal static class OffsetFactory
 	{
 		return new OffsetRequest
 		{
+			ConsumerType = ConsumerType.Consumer,
 			TopicId = Random.Shared.Next(1, 10),
 			PartitionId = Random.Shared.Next(1, 10),
 			ConsumerId = Random.Shared.Next(1, 10),
@@ -29,6 +31,7 @@ internal static class OffsetFactory
 	{
 		return new OffsetContract
 		{
+			ConsumerType = ConsumerType.Consumer,
 			Offset = (ulong)Random.Shared.Next(1, 10),
 			ConsumerId = Random.Shared.Next(1, 10),
 			PartitionId = Random.Shared.Next(1, 10),
