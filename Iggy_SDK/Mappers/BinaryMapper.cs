@@ -299,8 +299,8 @@ internal static class BinaryMapper
         int position)
     {
         int id = BinaryPrimitives.ReadInt32LittleEndian(payload[position..(position + 4)]);
-        int membersCount = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 4)..(position + 8)]);
-        int partitionsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 8)..(position + 12)]);
+        int partitionsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 4)..(position + 8)]);
+        int membersCount = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 8)..(position + 12)]);
         
         return (new ConsumerGroupResponse { Id = id, MembersCount = membersCount, PartitionsCount = partitionsCount}, 12);
     }
