@@ -157,9 +157,9 @@ internal static class TcpContracts
     {
         Span<byte> bytes = stackalloc byte[sizeof(int) * 4 + sizeof(ulong) + 1];
         bytes[0] = 0;
-        BinaryPrimitives.WriteInt32LittleEndian(bytes[1..5], streamId);
-        BinaryPrimitives.WriteInt32LittleEndian(bytes[5..9], topicId);
-        BinaryPrimitives.WriteInt32LittleEndian(bytes[9..13], contract.ConsumerId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[1..5], contract.ConsumerId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[5..9], streamId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[9..13], topicId);
         BinaryPrimitives.WriteInt32LittleEndian(bytes[13..17], contract.PartitionId);
         BinaryPrimitives.WriteUInt64LittleEndian(bytes[17..25], contract.Offset);
         return bytes.ToArray();
@@ -169,9 +169,9 @@ internal static class TcpContracts
     {
         Span<byte> bytes = stackalloc byte[sizeof(int) * 4 + 1];
         bytes[0] = 0;
-        BinaryPrimitives.WriteInt32LittleEndian(bytes[1..5], request.StreamId);
-        BinaryPrimitives.WriteInt32LittleEndian(bytes[5..9], request.TopicId);
-        BinaryPrimitives.WriteInt32LittleEndian(bytes[9..13], request.ConsumerId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[1..5], request.ConsumerId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[5..9], request.StreamId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[9..13], request.TopicId);
         BinaryPrimitives.WriteInt32LittleEndian(bytes[13..17], request.PartitionId);
         return bytes.ToArray();
     }
