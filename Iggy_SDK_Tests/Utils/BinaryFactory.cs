@@ -76,8 +76,8 @@ internal sealed class BinaryFactory
     {
         var payload = new byte[12];
         BinaryPrimitives.WriteInt32LittleEndian(payload, id);
-        BinaryPrimitives.WriteInt32LittleEndian(payload.AsSpan(4), membersCount);
-        BinaryPrimitives.WriteInt32LittleEndian(payload.AsSpan(8), partitionsCount);
+        BinaryPrimitives.WriteInt32LittleEndian(payload.AsSpan(4), partitionsCount);
+        BinaryPrimitives.WriteInt32LittleEndian(payload.AsSpan(8), membersCount);
         return payload;
     }
 
