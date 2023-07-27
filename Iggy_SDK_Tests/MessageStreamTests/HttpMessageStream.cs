@@ -43,7 +43,6 @@ public sealed class HttpMessageStream
 	[Fact]
 	public async Task CreateStreamAsync_ThrowsErrorResponseException_OnFailure()
 	{
-		var streamId = 1;
 		var content = StreamFactory.CreateStreamRequest();
 		var json = JsonSerializer.Serialize(content, _toSnakeCaseOptions);
 		var error = JsonSerializer.Serialize(ErrorModelFactory.CreateErrorModelBadRequest(), _toSnakeCaseOptions);
@@ -104,7 +103,6 @@ public sealed class HttpMessageStream
 	[Fact]
 	public async Task GetStreamsAsync_ThrowsErrorResponseException_OnFailure()
 	{
-		var response = new List<StreamResponse>();
 		var content = JsonSerializer.Serialize(ErrorModelFactory.CreateErrorModelNotFound(), _toSnakeCaseOptions);
 
 		_httpHandler.When(HttpMethod.Get, $"/streams")
@@ -184,7 +182,7 @@ public sealed class HttpMessageStream
 	{
 		int streamId = 1;
 		int topicId = 1;
-		TopicResponse? topic = TopicFactory.CreateTopicsResponse();
+		TopicResponse topic = TopicFactory.CreateTopicsResponse();
 		var content = JsonSerializer.Serialize(topic, _toSnakeCaseOptions);
 
 		_httpHandler.When(HttpMethod.Get, $"/streams/{streamId}/topics/{topicId}")
@@ -230,7 +228,7 @@ public sealed class HttpMessageStream
 			})
 			.Respond(HttpStatusCode.BadRequest, "application/json", error);
 		
-		Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.SendMessagesAsync(streamId, topicId, request));
+		await Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.SendMessagesAsync(streamId, topicId, request));
 		_httpHandler.Flush();
 	}
 

@@ -13,11 +13,10 @@ public sealed class Envelope
 		_jsonSerializerOptions.PropertyNamingPolicy = new ToSnakeCaseNamingPolicy();
 		_jsonSerializerOptions.WriteIndented = true;
 		}
-	[JsonPropertyName("message_type")]
-	public string MessageType { get; set; }
-	
-	[JsonPropertyName("payload")]
-	public string Payload { get; set; }
+
+	[JsonPropertyName("message_type")] public string MessageType { get; set; } = "";
+
+	[JsonPropertyName("payload")] public string Payload { get; set; } = "";
 
 	public Envelope New<T>(string messageType, T payload) where T : ISerializableMessage
 	{

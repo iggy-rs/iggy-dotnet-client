@@ -11,12 +11,12 @@ public class OrderCreated : ISerializableMessage
 		_jsonSerializerOptions = new();
 		_jsonSerializerOptions.WriteIndented = true;
 	}
-	public int Id { get; init; }
-	public string CurrencyPair { get; init; }
-	public double Price { get; init; }
-	public double Quantity { get; init; }
-	public string Side { get; init; }
-	public ulong Timestamp { get; init; }
+	public required int Id { get; init; }
+	public required string CurrencyPair { get; init; }
+	public required double Price { get; init; }
+	public required double Quantity { get; init; }
+	public required string Side { get; init; }
+	public required ulong Timestamp { get; init; }
 
 	private string ToJsonPrint()
 	{
@@ -26,14 +26,14 @@ public class OrderCreated : ISerializableMessage
 	public string ToJson()
 	{
 		var envelope = new Envelope();
-		var env = envelope.New<OrderCreated>("order_created", this);
+		var env = envelope.New("order_created", this);
 		return JsonSerializer.Serialize(env, _jsonSerializerOptions);
 	}
 
 	public byte[] ToBytes()
 	{
 		var envelope = new Envelope();
-		var env = envelope.New<OrderCreated>("order_created", this);
+		var env = envelope.New("order_created", this);
 		var json = JsonSerializer.Serialize(env, _jsonSerializerOptions);
 		return Encoding.UTF8.GetBytes(json);
 	}
@@ -54,20 +54,20 @@ public class OrderConfirmed : ISerializableMessage
 		_jsonSerializerOptions = new();
 		_jsonSerializerOptions.WriteIndented = true;
 	}
-	public int Id { get; init; }
-	public double Price { get; init; }
-	public ulong Timestamp { get; init; }
+	public required int Id { get; init; }
+	public required double Price { get; init; }
+	public required ulong Timestamp { get; init; }
 	public string ToJson()
 	{
 		var envelope = new Envelope();
-		var env = envelope.New<OrderConfirmed>("order_confirmed", this);
+		var env = envelope.New("order_confirmed", this);
 		return JsonSerializer.Serialize(env, _jsonSerializerOptions);
 	}
 
 	public byte[] ToBytes()
 	{
 		var envelope = new Envelope();
-		var env = envelope.New<OrderConfirmed>("order_confirmed", this);
+		var env = envelope.New("order_confirmed", this);
 		var json = JsonSerializer.Serialize(env, _jsonSerializerOptions);
 		return Encoding.UTF8.GetBytes(json);
 	}
@@ -91,20 +91,20 @@ public class OrderRejected : ISerializableMessage
 		_jsonSerializerOptions = new();
 		_jsonSerializerOptions.WriteIndented = true;
 	}
-	public int Id { get; init; }
-	public ulong Timestamp	{ get; init; }
-	public string Reason { get; init; }
+	public required int Id { get; init; }
+	public required ulong Timestamp	{ get; init; }
+	public required string Reason { get; init; }
 	public string ToJson()
 	{
 		var envelope = new Envelope();
-		var env = envelope.New<OrderRejected>("order_rejected", this);
+		var env = envelope.New("order_rejected", this);
 		return JsonSerializer.Serialize(env, _jsonSerializerOptions);
 	}
 
 	public byte[] ToBytes()
 	{
 		var envelope = new Envelope();
-		var env = envelope.New<OrderRejected>("order_rejected", this);
+		var env = envelope.New("order_rejected", this);
 		var json = JsonSerializer.Serialize(env, _jsonSerializerOptions);
 		return Encoding.UTF8.GetBytes(json);
 	}

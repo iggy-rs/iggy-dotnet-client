@@ -1,4 +1,3 @@
-using System.Net.Http.Headers;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 
@@ -6,7 +5,7 @@ namespace Iggy_SDK.Configuration;
 
 public sealed class MessageStreamConfigurator : IMessageStreamConfigurator
 {
-    public string BaseAdress { get; set; }
+    public string BaseAdress { get; set; } = "http://127.0.0.1:3000";
     public Protocol Protocol { get; set; } = Protocol.Http;
     public IEnumerable<HttpRequestHeaderContract>? Headers { get; set; } = null;
     public int ReceiveBufferSize { get; set; } = 8192;

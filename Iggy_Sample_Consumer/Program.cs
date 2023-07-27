@@ -64,7 +64,7 @@ async Task ConsumeMessages()
 
             foreach (var message in messages)
             {
-                await HandleMessage(message);
+                HandleMessage(message);
             }
 
             await Task.Delay(intervalInMs);
@@ -76,14 +76,14 @@ async Task ConsumeMessages()
         }
     }
 }
-async Task HandleMessage(MessageResponse messageResponse)
+void HandleMessage(MessageResponse messageResponse)
 {
     //this is giga inefficient, but its only a sample so who cares
     var length = (messageResponse.Payload.Length * 3) / 4;
     var bytes = new byte[length];
     var str = Encoding.UTF8.GetString(messageResponse.Payload);
     var isBase64 = Convert.TryFromBase64Chars(str, bytes, out _);
-    Envelope message = new Envelope();
+    Envelope? message;
     if (isBase64)
     {
         bytes = Convert.FromBase64String(str);
@@ -129,7 +129,7 @@ async Task ValidateSystem(int streamId, int topicId, int partitionId)
         var result = await bus.GetStreamByIdAsync(streamId);
         Console.WriteLine($"Validating if topic exists.. {topicId}");
         var topicResult = await bus.GetTopicByIdAsync(streamId, topicId);
-        if (topicResult.PartitionsCount < partitionId)
+        if (topicResult!.PartitionsCount < partitionId)
         {
             throw new SystemException(
                 $"Topic {topicId} has only {topicResult.PartitionsCount} partitions, but partition {partitionId} was requested");
@@ -152,7 +152,7 @@ async Task ValidateSystem(int streamId, int topicId, int partitionId)
             TopicId = topicId
         });
         var topicRes = await bus.GetTopicByIdAsync(streamId, topicId);
-        if (topicRes.PartitionsCount < partitionId)
+        if (topicRes!.PartitionsCount < partitionId)
         {
             throw new SystemException(
                 $"Topic {topicId} has only {topicRes.PartitionsCount} partitions, but partition {partitionId} was requested");

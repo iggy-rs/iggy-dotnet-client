@@ -1,4 +1,3 @@
-using System.Buffers.Binary;
 using System.Text;
 using Iggy_SDK_Tests.Utils.Groups;
 using Iggy_SDK_Tests.Utils.Messages;
@@ -27,7 +26,9 @@ public sealed class TcpContract
         var result = TcpContracts.GetMessages(request).AsSpan();
         
         // Assert
-        Assert.Equal(result[0] switch { 0 => ConsumerType.Consumer , 1 => ConsumerType.ConsumerGroup} , request.ConsumerType);
+        Assert.Equal(result[0] switch { 0 => ConsumerType.Consumer , 1 => ConsumerType.ConsumerGroup,
+            _ => throw new ArgumentOutOfRangeException()
+        } , request.ConsumerType);
         Assert.Equal(request.ConsumerId, BitConverter.ToInt32(result[1..5]));
         Assert.Equal(request.StreamId, BitConverter.ToInt32(result[5..9]));
         Assert.Equal(request.TopicId, BitConverter.ToInt32(result[9..13]));
@@ -36,11 +37,14 @@ public sealed class TcpContract
             result[17] switch
             {
                 0 => MessagePolling.Offset, 1 => MessagePolling.Timestamp, 2 => MessagePolling.First,
-                3 => MessagePolling.Last, 4 => MessagePolling.Next
+                3 => MessagePolling.Last, 4 => MessagePolling.Next,
+                _ => throw new ArgumentOutOfRangeException()
             }, request.PollingStrategy);
         Assert.Equal(request.Value, BitConverter.ToUInt64(result[18..26]));
         Assert.Equal(request.Count, BitConverter.ToInt32(result[26..30]));
-        Assert.Equal(request.AutoCommit, result[30] switch { 0 => false, 1 => true });
+        Assert.Equal(request.AutoCommit, result[30] switch { 0 => false, 1 => true,
+            _ => throw new ArgumentOutOfRangeException()
+        });
     }
 
     [Fact]
@@ -57,8 +61,10 @@ public sealed class TcpContract
         //Assert
         Assert.Equal(streamId, BitConverter.ToInt32(result[0..4]));
         Assert.Equal(topicId, BitConverter.ToInt32(result[4..8]));
-        Assert.Equal(request.Key.Kind, result[8] switch { 0 => KeyKind.None, 1 => KeyKind.PartitionId, 2 => KeyKind.EntityId  });
-        Assert.Equal(request.Key.Length, (int)result[9]);
+        Assert.Equal(request.Key.Kind, result[8] switch { 0 => KeyKind.None, 1 => KeyKind.PartitionId, 2 => KeyKind.EntityId,
+            _ => throw new ArgumentOutOfRangeException()
+        });
+        Assert.Equal(request.Key.Length, result[9]);
         Assert.Equal(request.Key.Value.Length, result[10..(10 + request.Key.Length)].Length);
         Assert.Equal(request.Messages.Count(), BitConverter.ToInt32(result[(10 + request.Key.Length)..(10 + request.Key.Length + 4)]));
         
@@ -286,7 +292,7 @@ public sealed class TcpContract
         Assert.Equal(streamId, BitConverter.ToInt32(result[5..9]));
         Assert.Equal(topicId, BitConverter.ToInt32(result[9..13]));
         Assert.Equal(contract.PartitionId, BitConverter.ToInt32(result[13..17]));
-        Assert.Equal((ulong)contract.Offset, BitConverter.ToUInt64(result[17..25]));
+        Assert.Equal(contract.Offset, BitConverter.ToUInt64(result[17..25]));
     }
 
     [Fact]

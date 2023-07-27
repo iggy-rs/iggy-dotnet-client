@@ -15,6 +15,7 @@ internal static class TcpContracts
         {
             ConsumerType.Consumer => 0,
             ConsumerType.ConsumerGroup => 1,
+            _ => throw new ArgumentOutOfRangeException()
         };
         BinaryPrimitives.WriteInt32LittleEndian(bytes[1..5], request.ConsumerId);
         BinaryPrimitives.WriteInt32LittleEndian(bytes[5..9], request.StreamId);
@@ -27,6 +28,7 @@ internal static class TcpContracts
             MessagePolling.First => 2,
             MessagePolling.Last => 3,
             MessagePolling.Next => 4,
+            _ => throw new ArgumentOutOfRangeException()
         };
         BinaryPrimitives.WriteUInt64LittleEndian(bytes[18..26], request.Value);
         BinaryPrimitives.WriteInt32LittleEndian(bytes[26..30], request.Count);
@@ -47,6 +49,7 @@ internal static class TcpContracts
             KeyKind.None => 0,
             KeyKind.PartitionId => 1,
             KeyKind.EntityId => 2,
+            _ => throw new ArgumentOutOfRangeException()
         };
         bytes[9] = (byte)request.Key.Length;
         request.Key.Value.CopyTo(bytes[10..(10 + request.Key.Length)]);
@@ -160,6 +163,7 @@ internal static class TcpContracts
         {
             ConsumerType.Consumer => 0,
             ConsumerType.ConsumerGroup => 1,
+            _ => throw new ArgumentOutOfRangeException()
         };
         BinaryPrimitives.WriteInt32LittleEndian(bytes[1..5], contract.ConsumerId);
         BinaryPrimitives.WriteInt32LittleEndian(bytes[5..9], streamId);
@@ -176,6 +180,7 @@ internal static class TcpContracts
         {
             ConsumerType.Consumer => 0,
             ConsumerType.ConsumerGroup => 1,
+            _ => throw new ArgumentOutOfRangeException()
         };
         BinaryPrimitives.WriteInt32LittleEndian(bytes[1..5], request.ConsumerId);
         BinaryPrimitives.WriteInt32LittleEndian(bytes[5..9], request.StreamId);

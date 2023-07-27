@@ -1,3 +1,5 @@
+using Iggy_SDK.Errors;
+
 namespace Iggy_SDK.Utils;
 
 public sealed class Result

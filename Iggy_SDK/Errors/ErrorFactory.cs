@@ -1,4 +1,4 @@
-namespace Iggy_SDK.Utils;
+namespace Iggy_SDK.Errors;
 
 internal static class ErrorFactory
 {

@@ -90,6 +90,6 @@ internal class MessageResponseHttp
 }
 internal class DummyObject
 {
-	public int Id { get; set; }
-	public string Text { get; set; }
+	public required int Id { get; set; }
+	public required string Text { get; set; }
 }
