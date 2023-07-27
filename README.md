@@ -1,7 +1,7 @@
 <div align="center">
     
 [![.NET](https://github.com/iggy-rs/iggy-dotnet-client/actions/workflows/dotnet.yml/badge.svg)](https://github.com/iggy-rs/iggy-dotnet-client/actions/workflows/dotnet.yml)
-![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/Iggy)
+[![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/Iggy)](https://www.nuget.org/packages/Iggy)
 
 </div>
 
