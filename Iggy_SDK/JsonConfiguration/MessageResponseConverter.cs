@@ -24,7 +24,7 @@ internal sealed class MessageResponseConverter : JsonConverter<IEnumerable<Messa
 			{
 				Offset = offset,
 				Timestamp = timestamp,
-				Id = new Guid(id.GetBytesFromUInt128()), // Assumes the "Id" is Base64 encoded
+				Id = new Guid(id.GetBytesFromUInt128()), 
 				Payload = payload
 			});
 		}

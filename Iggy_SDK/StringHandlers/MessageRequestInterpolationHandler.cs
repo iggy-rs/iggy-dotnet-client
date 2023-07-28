@@ -29,7 +29,7 @@ internal ref struct MessageRequestInterpolationHandler
 					MessagePolling.First => "first",
 					MessagePolling.Last => "last",
 					MessagePolling.Next => "next",
-					_ => "offset"
+					_ => throw new ArgumentOutOfRangeException()
 				};
 				_innerHandler.AppendFormatted(str);
 				break;

@@ -1,4 +1,3 @@
-using System.Net.Http.Headers;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 

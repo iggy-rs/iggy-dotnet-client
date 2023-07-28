@@ -17,11 +17,7 @@ internal sealed class MessagesConverter : JsonConverter<MessageSendRequest>
 
 	public override void Write(Utf8JsonWriter writer, MessageSendRequest value, JsonSerializerOptions options)
 	{
-		if (!value.Messages.Any())
-		{
-			writer.WriteStringValue("");
-		}
-		else
+		if (value.Messages.Any())
 		{
 			var msgList = new List<HttpMessage>();
 			foreach (var message in value.Messages)
@@ -55,6 +51,8 @@ internal sealed class MessagesConverter : JsonConverter<MessageSendRequest>
 			writer.WriteEndArray();
 			
 			writer.WriteEndObject();
+			return;
 		}
+		writer.WriteStringValue("");
 	}
 }
