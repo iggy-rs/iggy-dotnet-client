@@ -19,11 +19,13 @@ public sealed class TcpContract
     [Fact]
     public void TcpContracts_MessageFetchRequest_HasCorrectBytes()
     {
+		const int messageBufferSize = 31;
         // Arrange
         var request = MessageFactory.CreateMessageFetchRequest();
+        var result = new byte[messageBufferSize];
         
         // Act
-        var result = TcpContracts.GetMessages(request).AsSpan();
+        TcpContracts.GetMessages(result, request);
         
         // Assert
         Assert.Equal(result[0] switch { 0 => ConsumerType.Consumer , 1 => ConsumerType.ConsumerGroup,
@@ -54,9 +56,13 @@ public sealed class TcpContract
         int streamId = 1;
         int topicId = 1;
         var request = MessageFactory.CreateMessageSendRequest();
+        var messageBufferSize = request.Messages.Sum(message => 16 + 4 + message.Payload.Length)
+	        + request.Key.Length + 14;
+        var result = new byte[messageBufferSize];
+        
 
         // Act
-        var result = TcpContracts.CreateMessage(streamId, topicId, request).AsSpan();
+        TcpContracts.CreateMessage(result, streamId, topicId, request);
         
         //Assert
         Assert.Equal(streamId, BitConverter.ToInt32(result[0..4]));
