@@ -1,3 +1,4 @@
+using System.Buffers.Binary;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text.Json;
@@ -32,9 +33,10 @@ internal static class Extensions
    
    internal static UInt128 ToUInt128(this Guid g)
    {
-	   var array = g.ToByteArray();
-	   var hi = BitConverter.ToUInt64(array, 8);
-	   var lo = BitConverter.ToUInt64(array, 0);
+	   Span<byte> array = stackalloc byte[16];
+	   MemoryMarshal.TryWrite(array, ref g);
+	   var hi = BinaryPrimitives.ReadUInt64LittleEndian(array[0..8]);
+	   var lo = BinaryPrimitives.ReadUInt64LittleEndian(array[8..16]);
 	   return new UInt128(hi, lo);
    }
    internal static byte[] GetBytesFromUInt128(this UInt128 value)

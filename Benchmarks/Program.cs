@@ -48,10 +48,24 @@ var valBytes = BitConverter.GetBytes(1);
 
 for (int i = 0; i < producerCount; i++)
 {
-	tasks.Add(SendMessage.Create(bus, i, producerCount, messagesBatch, messagesCount, messageSize, startingStreamId + i,
+	tasks.Add(SendMessage.Create(bus, i, producerCount, messagesBatch, messagesCount, messageSize,
+		startingStreamId + i,
 		topicId));
 }
 
 await Task.WhenAll(tasks);
+
+try
+{
+	for (int i = 0; i < producerCount; i++)
+	{
+		await bus.DeleteStreamAsync(startingStreamId + i);
+	}
+
+}
+catch
+{
+	Console.WriteLine("Failed to delete streams");
+}
 
 Console.ReadLine();

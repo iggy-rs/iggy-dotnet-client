@@ -1,7 +1,10 @@
 using System.Buffers.Binary;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
+using Iggy_SDK.Messages;
 
 namespace Iggy_SDK.Contracts.Tcp;
 
@@ -37,11 +40,14 @@ internal static class TcpContracts
         return bytes.ToArray();
         
     }
-    internal static byte[] CreateMessage(int streamId, int topicId, MessageSendRequest request)
+    internal static void CreateMessage(Span<byte> bytes, int streamId, int topicId, MessageSendRequest request)
     {
-        int messageBytesCount = request.Messages.Sum(message => 16 + 4 + message.Payload.Length);
-
-        Span<byte> bytes = stackalloc byte[14 + request.Key.Length + messageBytesCount];
+        var msgCountSuccess = request.Messages.TryGetNonEnumeratedCount(out var msgLength);
+        if (!msgCountSuccess)
+        {
+            msgLength = request.Messages.Count();
+        }
+        
         BinaryPrimitives.WriteInt32LittleEndian(bytes[0..4], streamId);
         BinaryPrimitives.WriteInt32LittleEndian(bytes[4..8], topicId);
         bytes[sizeof(int) * 2] = request.Key.Kind switch
@@ -53,23 +59,91 @@ internal static class TcpContracts
         };
         bytes[9] = (byte)request.Key.Length;
         request.Key.Value.CopyTo(bytes[10..(10 + request.Key.Length)]);
-        BinaryPrimitives.WriteInt32LittleEndian(bytes[(10 + request.Key.Length)..(10 + request.Key.Length + 4)], request.Messages.Count());
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[(10 + request.Key.Length)..(10 + request.Key.Length + 4)], msgLength);
 
-        int position = 10 + request.Key.Length + 4;
-        foreach (var message in request.Messages)
+
+        var position = 10 + request.Key.Length + 4;
+        var result = request.Messages switch
         {
-            Span<byte> id = message.Id.ToByteArray();
+            Message[] messagesArray => HandleMessagesArray(position, messagesArray, bytes),
+            List<Message> messagesList => HandleMessagesList(position, messagesList, bytes),
+            _ => HandleMessageEnumerable(position, request.Messages, bytes),
+        };
+        bytes = result;
+    }
+    private static Span<byte> HandleMessageEnumerable(int position, IEnumerable<Message> messages, Span<byte> bytes)
+    {
+        Span<byte> id = stackalloc byte[16];
+        foreach (var message in messages)
+        {
+            var guid = message.Id;
+            MemoryMarshal.TryWrite(id, ref guid);
             for (int i = position; i < position + 16; i++)
             {
                 bytes[i] = id[i - position];
             }
+
             BinaryPrimitives.WriteInt32LittleEndian(bytes[(position + 16)..(position + 20)], message.Payload.Length);
             var payloadBytes = message.Payload.AsSpan();
             var slice = bytes[(position + 16 + 4)..];
             payloadBytes.CopyTo(slice);
             position += payloadBytes.Length + 16 + 4;
         }
-        return bytes.ToArray();
+
+        return bytes;
+    }
+    private static Span<byte> HandleMessagesArray(int position, Message[] messages, Span<byte> bytes)
+    {
+        Span<byte> id = stackalloc byte[16];
+        ref var start = ref MemoryMarshal.GetArrayDataReference(messages);
+        ref var end = ref Unsafe.Add(ref start, messages.Length);
+        while (Unsafe.IsAddressLessThan(ref start, ref end))
+        {
+            var guid = start.Id;
+            MemoryMarshal.TryWrite(id, ref guid);
+            
+            for (int j = position; j < position + 16; j++)
+            {
+                bytes[j] = id[j - position];
+            }
+
+            BinaryPrimitives.WriteInt32LittleEndian(bytes[(position + 16)..(position + 20)], start.Payload.Length);
+            var payloadBytes = start.Payload.AsSpan();
+            var slice = bytes[(position + 16 + 4)..];
+            payloadBytes.CopyTo(slice);
+            position += payloadBytes.Length + 16 + 4;
+
+            start = ref Unsafe.Add(ref start, 1);
+        }
+
+        return bytes;
+    }
+    private static Span<byte> HandleMessagesList(int position, List<Message> messages, Span<byte> bytes)
+    {
+        Span<byte> id = stackalloc byte[16];
+        Span<Message> listAsSpan = CollectionsMarshal.AsSpan(messages);
+        ref var start = ref MemoryMarshal.GetReference(listAsSpan);
+        ref var end = ref Unsafe.Add(ref start, listAsSpan.Length);
+        while (Unsafe.IsAddressLessThan(ref start, ref end))
+        {
+            var guid = start.Id;
+            MemoryMarshal.TryWrite(id, ref guid);
+            
+            for (int j = position; j < position + 16; j++)
+            {
+                bytes[j] = id[j - position];
+            }
+
+            BinaryPrimitives.WriteInt32LittleEndian(bytes[(position + 16)..(position + 20)], start.Payload.Length);
+            var payloadBytes = start.Payload.AsSpan();
+            var slice = bytes[(position + 16 + 4)..];
+            payloadBytes.CopyTo(slice);
+            position += payloadBytes.Length + 16 + 4;
+
+            start = ref Unsafe.Add(ref start, 1);
+        }
+
+        return bytes;
     }
     internal static byte[] CreateStream(StreamRequest request)
     {

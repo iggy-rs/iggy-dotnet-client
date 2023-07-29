@@ -16,7 +16,7 @@ public static class SendMessage
 		long totalMessagesBytes = totalMessages * messageSize;
 		Console.WriteLine(
 			$"Executing Send Messages command for producer {producerNumber}, stream id {streamId}, messages count {totalMessages}, with size {totalMessagesBytes}");
-		List<Message> messages = CreateMessages(messagesCount, messageSize);
+		Message[] messages = CreateMessages(messagesCount, messageSize);
 		List<TimeSpan> latencies = new();
 		var valBytes = BitConverter.GetBytes(1);
 
@@ -47,16 +47,16 @@ public static class SendMessage
 			$"Producer number: {producerNumber} send Messages: {messagesCount} in {messagesBatch} batches, with average throughput {avgThroughput} MB/s");
 	}
 
-private static List<Message> CreateMessages(int messagesCount, int messageSize)
+private static Message[] CreateMessages(int messagesCount, int messageSize)
 {
-	var messages = new List<Message>();
+	var messages = new Message[messagesCount];
 	for (int i = 0; i < messagesCount; i++)
 	{
-		messages.Add(new Message
+		messages[i] = new Message
 		{
 			Id = Guid.NewGuid(),
 			Payload = CreatePayload(messageSize)
-		});	
+		};
 	}
 
 	return messages;

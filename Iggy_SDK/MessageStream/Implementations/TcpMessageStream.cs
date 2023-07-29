@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Buffers.Binary;
 using System.Net.Sockets;
 using Iggy_SDK.Contracts.Http;
@@ -5,6 +6,8 @@ using Iggy_SDK.Contracts.Tcp;
 using Iggy_SDK.Exceptions;
 using Iggy_SDK.Mappers;
 using Iggy_SDK.Utils;
+using System;
+using System.Runtime.Intrinsics.Arm;
 
 namespace Iggy_SDK.MessageStream.Implementations;
 
@@ -203,15 +206,29 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 
 	public async Task SendMessagesAsync(int streamId, int topicId, MessageSendRequest request)
 	{
-		var message = TcpContracts.CreateMessage(streamId, topicId, request);
-		var payload = CreatePayload(message, CommandCodes.SEND_MESSAGES_CODE);
 
-		await _stream.WriteAsync(payload, 0, payload.Length);
+        var messageBufferSize = request.Messages.Sum(message => 16 + 4 + message.Payload.Length)
+	        + request.Key.Length + 14;
+        var payloadBufferSize = messageBufferSize + 4 + InitialBytesLength;
+        
+		var messagePool = MemoryPool<byte>.Shared.Rent(messageBufferSize);
+		var payloadPool = MemoryPool<byte>.Shared.Rent(payloadBufferSize);
+		
+		var message = messagePool.Memory;
+		TcpContracts.CreateMessage(message.Span[..messageBufferSize], streamId, topicId, request);
+		
+		var payload = payloadPool.Memory;
+		CreatePayloadOptimized(payload, message[..messageBufferSize], CommandCodes.SEND_MESSAGES_CODE);
+		
+		await _stream.WriteAsync(payload[..payloadBufferSize]);
+		payloadPool.Dispose();
 
-		var buffer = new byte[ExpectedResponseSize];
+		//re-use already rented buffer
+		var buffer = messagePool.Memory[..ExpectedResponseSize];
 		await _stream.ReadExactlyAsync(buffer);
 		
-		var status = GetResponseStatus(buffer);
+		var status = GetResponseStatus(buffer.Span);
+		messagePool.Dispose();
 		
 		if (status != 0)
 		{
@@ -463,6 +480,13 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		BinaryPrimitives.WriteInt32LittleEndian(messageBytes[4..8], command);
 		message.CopyTo(messageBytes[8..]);
 		return messageBytes.ToArray();
+	}
+	private static void CreatePayloadOptimized(Memory<byte> result, Memory<byte> message, int command)
+	{
+		var messageLength = message.Length + 4;
+		BinaryPrimitives.WriteInt32LittleEndian(result.Span[..4], messageLength);
+		BinaryPrimitives.WriteInt32LittleEndian(result.Span[4..8], command);
+		message.CopyTo(result[8..]);
 	}
 	public void Dispose()
 	{
