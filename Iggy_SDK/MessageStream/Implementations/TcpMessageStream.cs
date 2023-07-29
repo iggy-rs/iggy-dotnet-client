@@ -211,56 +211,87 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	        + request.Key.Length + 14;
         var payloadBufferSize = messageBufferSize + 4 + InitialBytesLength;
         
-		var messagePool = MemoryPool<byte>.Shared.Rent(messageBufferSize);
-		var payloadPool = MemoryPool<byte>.Shared.Rent(payloadBufferSize);
-		
-		var message = messagePool.Memory;
-		TcpContracts.CreateMessage(message.Span[..messageBufferSize], streamId, topicId, request);
-		
-		var payload = payloadPool.Memory;
-		CreatePayloadOptimized(payload, message[..messageBufferSize], CommandCodes.SEND_MESSAGES_CODE);
-		
-		await _stream.WriteAsync(payload[..payloadBufferSize]);
-		payloadPool.Dispose();
-
-		//re-use already rented buffer
-		var buffer = messagePool.Memory[..ExpectedResponseSize];
-		await _stream.ReadExactlyAsync(buffer);
-		
-		var status = GetResponseStatus(buffer.Span);
-		messagePool.Dispose();
-		
-		if (status != 0)
+		var message = ArrayPool<byte>.Shared.Rent(messageBufferSize);
+		var payload = ArrayPool<byte>.Shared.Rent(payloadBufferSize);
+		try
 		{
-			throw new InvalidResponseException($"Invalid response status code: {status}");
+			TcpContracts.CreateMessage(message.AsSpan()[..messageBufferSize], streamId, topicId, request);
+			CreatePayloadOptimized(payload, message.AsSpan()[..messageBufferSize], CommandCodes.SEND_MESSAGES_CODE);
+
+			await _stream.WriteAsync(payload.AsMemory()[..payloadBufferSize]);
+			
+			//re-use already rented buffer
+			var buffer = message[..ExpectedResponseSize];
+			await _stream.ReadExactlyAsync(buffer);
+			
+			var status = GetResponseStatus(buffer);
+			if (status != 0)
+			{
+				throw new InvalidResponseException($"Invalid response status code: {status}");
+			}
 		}
+		finally
+		{
+			ArrayPool<byte>.Shared.Return(message);
+			ArrayPool<byte>.Shared.Return(payload);
+		}
+		
 	}
 
 	public async Task<IEnumerable<MessageResponse>> PollMessagesAsync(MessageFetchRequest request)
 	{
-		var message = TcpContracts.GetMessages(request);
-		var payload = CreatePayload(message, CommandCodes.POLL_MESSAGES_CODE);
-
-		await _stream.WriteAsync(payload, 0, payload.Length);
-
-		var buffer = new byte[ExpectedResponseSize];
-		await _stream.ReadExactlyAsync(buffer);
-
-		var status = BinaryPrimitives.ReadInt32LittleEndian(buffer.AsSpan()[..4]);
-		var length = BinaryPrimitives.ReadInt32LittleEndian(buffer.AsSpan()[4..]);
-		if (status != 0)
+		const int messageBufferSize = 31;
+		const int payloadBufferSize = 31 + 4 + InitialBytesLength;
+		var message = ArrayPool<byte>.Shared.Rent(messageBufferSize);
+		var payload = ArrayPool<byte>.Shared.Rent(payloadBufferSize);
+		
+		//I fucking hate exceptions
+		try
 		{
-			throw new TcpInvalidResponseException();
+			TcpContracts.GetMessages(message.AsSpan()[..messageBufferSize], request);
+			CreatePayloadOptimized(payload, message.AsSpan()[..messageBufferSize], CommandCodes.POLL_MESSAGES_CODE);
+
+			await _stream.WriteAsync(payload.AsMemory()[..payloadBufferSize]);
+		}
+		finally
+		{
+			ArrayPool<byte>.Shared.Return(message);
+			ArrayPool<byte>.Shared.Return(payload);
 		}
 
-		if (length <= 1)
+		var buffer = ArrayPool<byte>.Shared.Rent(ExpectedResponseSize);
+		try
 		{
-			return Enumerable.Empty<MessageResponse>();
-		}
+			await _stream.ReadExactlyAsync(buffer.AsMemory()[..ExpectedResponseSize]);
 
-		var responseBuffer = new byte[length];
-		await _stream.ReadExactlyAsync(responseBuffer);
-		return BinaryMapper.MapMessages(responseBuffer);
+			var response = GetResponseLengthAndStatus(buffer);
+			if (response.Status != 0)
+			{
+				throw new TcpInvalidResponseException();
+			}
+
+			if (response.Length <= 1)
+			{
+				return Enumerable.Empty<MessageResponse>();
+			}
+
+			var responseBuffer = ArrayPool<byte>.Shared.Rent(response.Length);
+			
+			try
+			{
+				await _stream.ReadExactlyAsync(responseBuffer.AsMemory()[..response.Length]);
+				var result = BinaryMapper.MapMessages(responseBuffer.AsSpan()[..response.Length]);
+				return result;
+			}
+			finally
+			{
+				ArrayPool<byte>.Shared.Return(responseBuffer);
+			}
+		}
+		finally
+		{
+			ArrayPool<byte>.Shared.Return(buffer);
+		}
 	}
 
 	public async Task StoreOffsetAsync(int streamId, int topicId, OffsetContract contract)
@@ -481,11 +512,12 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		message.CopyTo(messageBytes[8..]);
 		return messageBytes.ToArray();
 	}
-	private static void CreatePayloadOptimized(Memory<byte> result, Memory<byte> message, int command)
+	//TODO - Eventually make this main method for all of the payloads
+	private static void CreatePayloadOptimized(Span<byte> result, Span<byte> message, int command)
 	{
 		var messageLength = message.Length + 4;
-		BinaryPrimitives.WriteInt32LittleEndian(result.Span[..4], messageLength);
-		BinaryPrimitives.WriteInt32LittleEndian(result.Span[4..8], command);
+		BinaryPrimitives.WriteInt32LittleEndian(result[..4], messageLength);
+		BinaryPrimitives.WriteInt32LittleEndian(result[4..8], command);
 		message.CopyTo(result[8..]);
 	}
 	public void Dispose()

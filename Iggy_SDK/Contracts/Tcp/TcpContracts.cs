@@ -10,9 +10,8 @@ namespace Iggy_SDK.Contracts.Tcp;
 
 internal static class TcpContracts
 {
-    internal static byte[] GetMessages(MessageFetchRequest request)
+    internal static void GetMessages(Span<byte> bytes, MessageFetchRequest request)
     {
-        Span<byte> bytes = stackalloc byte[31];
 
         bytes[0] = request.ConsumerType switch
         {
@@ -37,8 +36,6 @@ internal static class TcpContracts
         BinaryPrimitives.WriteInt32LittleEndian(bytes[26..30], request.Count);
         
         bytes[30] = request.AutoCommit ? (byte)1 : (byte)0;
-        return bytes.ToArray();
-        
     }
     internal static void CreateMessage(Span<byte> bytes, int streamId, int topicId, MessageSendRequest request)
     {
@@ -63,13 +60,12 @@ internal static class TcpContracts
 
 
         var position = 10 + request.Key.Length + 4;
-        var result = request.Messages switch
+        bytes = request.Messages switch
         {
             Message[] messagesArray => HandleMessagesArray(position, messagesArray, bytes),
             List<Message> messagesList => HandleMessagesList(position, messagesList, bytes),
             _ => HandleMessageEnumerable(position, request.Messages, bytes),
         };
-        bytes = result;
     }
     private static Span<byte> HandleMessageEnumerable(int position, IEnumerable<Message> messages, Span<byte> bytes)
     {
