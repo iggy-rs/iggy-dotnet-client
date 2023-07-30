@@ -1,4 +1,5 @@
-﻿using Benchmarks;
+﻿using System.Diagnostics;
+using Benchmarks;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
@@ -9,9 +10,6 @@ const int messageSize = 69;
 const int producerCount = 7;
 const int startingStreamId = 100;
 const int topicId = 1;
-
-
-
 
 var bus = MessageStreamFactory.CreateMessageStream(options =>
 {

@@ -19,7 +19,7 @@ public static class SendMessage
 		Message[] messages = CreateMessages(messagesCount, messageSize);
 		List<TimeSpan> latencies = new();
 		var valBytes = BitConverter.GetBytes(1);
-
+		
 		for (int i = 0; i < messagesBatch; i++)
 		{
 			var startTime = Stopwatch.GetTimestamp();
@@ -38,11 +38,11 @@ public static class SendMessage
 		}
 
 		var totalLatencies = latencies.Sum(x => x.TotalSeconds);
-		var avgLatency = Math.Round((totalLatencies * 1000) / (producerCount * latencies.Count), 2);
+		var avgLatency =  Math.Round(latencies.Sum(x => x.TotalMilliseconds) / (producerCount * latencies.Count), 2);
 		var duration = totalLatencies / producerCount;
 		var avgThroughput = Math.Round(totalMessagesBytes / duration / 1024.0 / 1024.0, 2);
 
-		Console.WriteLine($"Total message bytes: {totalMessagesBytes}, average latency: {avgLatency} ms");
+		Console.WriteLine($"Total message bytes: {totalMessagesBytes}, average latency: {avgLatency} ms.");
 		Console.WriteLine(
 			$"Producer number: {producerNumber} send Messages: {messagesCount} in {messagesBatch} batches, with average throughput {avgThroughput} MB/s");
 	}
