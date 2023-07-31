@@ -373,6 +373,7 @@ public sealed class HttpMessageStream
 			})
 			.Respond(HttpStatusCode.BadRequest, "application/json", JsonSerializer.Serialize(error, _toSnakeCaseOptions));
 		
+		await Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.CreatePartitionsAsync(streamId, topicId, request));
 	}
 
 	[Fact]
@@ -387,5 +388,6 @@ public sealed class HttpMessageStream
 		_httpHandler.When(HttpMethod.Delete,
 				$"/streams/{streamId}/topics/{topicId}/partitions?stream_id={streamId}&topic_id={topicId}&partitions_count={request.PartitionsCount}")
 			.Respond(HttpStatusCode.BadRequest, "application/json", JsonSerializer.Serialize(error, _toSnakeCaseOptions));
+		await Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.DeletePartitionsAsync(streamId, topicId, request));
 	}
 }
