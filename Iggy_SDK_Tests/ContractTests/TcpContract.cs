@@ -2,6 +2,7 @@ using System.Text;
 using Iggy_SDK_Tests.Utils.Groups;
 using Iggy_SDK_Tests.Utils.Messages;
 using Iggy_SDK_Tests.Utils.Offset;
+using Iggy_SDK_Tests.Utils.Partitions;
 using Iggy_SDK_Tests.Utils.Streams;
 using Iggy_SDK_Tests.Utils.Topics;
 using Iggy_SDK.Contracts.Tcp;
@@ -320,5 +321,40 @@ public sealed class TcpContract
         Assert.Equal(request.TopicId, BitConverter.ToInt32(result[9..13]));
         Assert.Equal(request.PartitionId, BitConverter.ToInt32(result[13..17]));
     }
+
+    [Fact]
+    public void TcpContracts_CreatePartitions_HasCorrectBytes()
+    {
+        // Arrange
+        int streamId = 1;
+        int topicId = 1;
+        var request = PartitionFactory.CreatePartitionsRequest();
+        
+        // Act
+        var result = TcpContracts.CreatePartitions(streamId, topicId, request).AsSpan();
+        
+        // Assert
+        Assert.Equal(streamId, BitConverter.ToInt32(result[..4]));
+        Assert.Equal(topicId, BitConverter.ToInt32(result[4..8]));
+        Assert.Equal(request.PartitionsCount, BitConverter.ToInt32(result[8..12]));
+        
+    }
 		
+    [Fact]
+    public void TcpContracts_DeletePartitions_HasCorrectBytes()
+    {
+        // Arrange
+        int streamId = 1;
+        int topicId = 1;
+        var request = PartitionFactory.CreateDeletePartitionsRequest();
+        
+        // Act
+        var result = TcpContracts.DeletePartitions(streamId, topicId, request).AsSpan();
+        
+        // Assert
+        Assert.Equal(streamId, BitConverter.ToInt32(result[..4]));
+        Assert.Equal(topicId, BitConverter.ToInt32(result[4..8]));
+        Assert.Equal(request.PartitionsCount, BitConverter.ToInt32(result[8..12]));
+        
+    }
 }

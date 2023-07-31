@@ -6,8 +6,6 @@ using Iggy_SDK.Contracts.Tcp;
 using Iggy_SDK.Exceptions;
 using Iggy_SDK.Mappers;
 using Iggy_SDK.Utils;
-using System;
-using System.Runtime.Intrinsics.Arm;
 
 namespace Iggy_SDK.MessageStream.Implementations;
 
@@ -464,6 +462,41 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			throw new InvalidResponseException($"Invalid response status code: {status}");
 		}
 	}
+	public async Task DeletePartitionsAsync(int streamId, int topicId, DeletePartitionsRequest request)
+	{
+		var message = TcpContracts.DeletePartitions(streamId, topicId, request);
+		var payload = CreatePayload(message, CommandCodes.DELETE_PARTITIONS_CODE);
+		
+		await _stream.WriteAsync(payload, 0, payload.Length);
+
+		var buffer = new byte[ExpectedResponseSize];
+		await _stream.ReadExactlyAsync(buffer);
+
+		var status = GetResponseStatus(buffer);
+
+		if (status != 0)
+		{
+			throw new InvalidResponseException($"Invalid response status code: {status}");
+		}
+	}
+
+	public async Task CreatePartitionsAsync(int streamId, int topicId, CreatePartitionsRequest request)
+	{
+		var message = TcpContracts.CreatePartitions(streamId, topicId, request);
+		var payload = CreatePayload(message, CommandCodes.CREATE_PARTITIONS_CODE);
+		
+		await _stream.WriteAsync(payload, 0, payload.Length);
+
+		var buffer = new byte[ExpectedResponseSize];
+		await _stream.ReadExactlyAsync(buffer);
+
+		var status = GetResponseStatus(buffer);
+
+		if (status != 0)
+		{
+			throw new InvalidResponseException($"Invalid response status code: {status}");
+		}
+	}
 	public async Task<Stats?> GetStatsAsync()
 	{
 		var message = Array.Empty<byte>();
@@ -525,4 +558,5 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		_client.Dispose();
 		_stream.Dispose();
 	}
+
 }

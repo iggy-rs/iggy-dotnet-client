@@ -259,4 +259,21 @@ internal static class TcpContracts
         return bytes.ToArray();
     }
 
+    internal static byte[] CreatePartitions(int streamId, int topicId, CreatePartitionsRequest request)
+    {
+        Span<byte> bytes = stackalloc byte[sizeof(int) * 3];
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[..4], streamId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[4..8], topicId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[8..12], request.PartitionsCount);
+        return bytes.ToArray();
+    }
+    internal static byte[] DeletePartitions(int streamId, int topicId, DeletePartitionsRequest request)
+    {
+        Span<byte> bytes = stackalloc byte[sizeof(int) * 3];
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[..4], streamId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[4..8], topicId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[8..12], request.PartitionsCount);
+        return bytes.ToArray();
+    }
+
 }

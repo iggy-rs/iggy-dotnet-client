@@ -6,9 +6,11 @@ using Iggy_SDK_Tests.Utils.Errors;
 using Iggy_SDK_Tests.Utils.Groups;
 using Iggy_SDK_Tests.Utils.Messages;
 using Iggy_SDK_Tests.Utils.Offset;
+using Iggy_SDK_Tests.Utils.Partitions;
 using Iggy_SDK_Tests.Utils.Streams;
 using Iggy_SDK_Tests.Utils.Topics;
 using Iggy_SDK.Contracts.Http;
+using Iggy_SDK.Errors;
 using Iggy_SDK.Exceptions;
 using Iggy_SDK.JsonConfiguration;
 using Iggy_SDK.MessageStream;
@@ -230,8 +232,7 @@ public sealed class HttpMessageStream
 		
 		await Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.SendMessagesAsync(streamId, topicId, request));
 		_httpHandler.Flush();
-	}
-
+	} 
 	[Fact]
 	public async Task GetMessagesAsync_ReturnsMessages_WhenFound()
 	{
@@ -352,5 +353,39 @@ public sealed class HttpMessageStream
 			.Respond(HttpStatusCode.BadRequest, "application/json", JsonSerializer.Serialize(error, _toSnakeCaseOptions));
 		
 		await Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.GetStatsAsync());
+	}
+
+	[Fact]
+	public async Task CreatePartitions_ThrowsErrorResponseException_OnFailure()
+	{
+		int streamId = 1;
+		int topicId = 1;
+		var request = PartitionFactory.CreatePartitionsRequest();
+		var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions); 
+		
+		var error = ErrorModelFactory.CreateErrorModelBadRequest();
+		
+		_httpHandler.When(HttpMethod.Post, $"/streams/{streamId}/topics/{topicId}/partitions")
+			.With(message =>
+			{
+				message.Content = new StringContent(json, Encoding.UTF8, "application/json");
+				return true;
+			})
+			.Respond(HttpStatusCode.BadRequest, "application/json", JsonSerializer.Serialize(error, _toSnakeCaseOptions));
+		
+	}
+
+	[Fact]
+	public async Task DeletePartitions_ThrowsErrorResponseException_OnFailure()
+	{
+		int streamId = 1;
+		int topicId = 1;
+		var request = PartitionFactory.CreateDeletePartitionsRequest();
+		
+		var error = ErrorModelFactory.CreateErrorModelBadRequest();
+		
+		_httpHandler.When(HttpMethod.Delete,
+				$"/streams/{streamId}/topics/{topicId}/partitions?stream_id={streamId}&topic_id={topicId}&partitions_count={request.PartitionsCount}")
+			.Respond(HttpStatusCode.BadRequest, "application/json", JsonSerializer.Serialize(error, _toSnakeCaseOptions));
 	}
 }

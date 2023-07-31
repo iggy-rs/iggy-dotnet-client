@@ -234,6 +234,33 @@ public class HttpMessageStream : IMessageStream
         throw new FeatureUnavailableException();
     }
 
+    public async Task DeletePartitionsAsync(int streamId, int topicId, DeletePartitionsRequest request)
+    {
+        var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
+        var data = new StringContent(json, Encoding.UTF8, "application/json");
+        
+        var response = await _httpClient.DeleteAsync(
+            $"/streams/{streamId}/topics/{topicId}/partitions?stream_id={streamId}&topic_id={topicId}&partitions_count={request.PartitionsCount}");
+        if (!response.IsSuccessStatusCode)
+        {
+            await HandleResponseAsync(response);
+            throw new Exception("Unknown error occurred.");
+        }
+    }
+
+    public async Task CreatePartitionsAsync(int streamId, int topicId, CreatePartitionsRequest request)
+    {
+        var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
+        var data = new StringContent(json, Encoding.UTF8, "application/json");
+        
+        var response = await _httpClient.PostAsync($"/streams/{streamId}/topics/{topicId}/partitions", data);
+        if (!response.IsSuccessStatusCode)
+        {
+            await HandleResponseAsync(response);
+            throw new Exception("Unknown error occurred.");
+        }
+    }
+
     private async Task HandleResponseAsync(HttpResponseMessage response)
     {
         if ((int)response.StatusCode > 300 && (int)response.StatusCode < 500)
@@ -250,5 +277,4 @@ public class HttpMessageStream : IMessageStream
     {
         return message.ToString();
     }
-
 }
