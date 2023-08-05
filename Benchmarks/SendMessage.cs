@@ -8,11 +8,11 @@ using Iggy_SDK.MessageStream;
 
 namespace Benchmarks;
 
-/*
+
 public static class SendMessage
 {
 	public static async Task Create(IMessageStream bus, int producerNumber, int producerCount,
-		int messagesBatch, int messagesCount, int messageSize, int streamId, int topicId)
+		int messagesBatch, int messagesCount, int messageSize, Identifier streamId, Identifier topicId)
 	{
 		long totalMessages = messagesBatch * messagesCount;
 		long totalMessagesBytes = totalMessages * messageSize;
@@ -27,12 +27,6 @@ public static class SendMessage
 			var startTime = Stopwatch.GetTimestamp();
 			await bus.SendMessagesAsync(streamId, topicId, new MessageSendRequest
 			{
-				// Key = new Key
-				// {
-				// 	Kind = KeyKind.PartitionId,
-				// 	Length = 4,
-				// 	Value = valBytes
-				// },
 				Key = Key.PartitionId(1),
 				Messages = messages,
 			});
@@ -77,4 +71,4 @@ private static byte[] CreatePayload(int size)
 	string payloadString = payloadBuilder.ToString();
 	return Encoding.UTF8.GetBytes(payloadString);
 }
-}*/
+}
