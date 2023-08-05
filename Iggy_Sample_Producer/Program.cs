@@ -16,8 +16,10 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
 });
 
 Console.WriteLine("Using protocol : {0}", protocol.ToString());
-var streamId = 1;
-var topicId = 1;
+var streamIdVal = 1;
+var topicIdVal = 1;
+var streamId = Identifier.Numeric(streamIdVal);
+var topicId = Identifier.Numeric(topicIdVal);
 
 Console.WriteLine($"Producer has started, selected protocol {protocol.ToString()}");
 try
@@ -30,7 +32,7 @@ catch
     Console.WriteLine($"Creating stream with id:{streamId}");
     await bus.CreateStreamAsync(new StreamRequest
     {
-        StreamId = streamId,
+        StreamId = streamIdVal,
         Name = "Test Producer Stream",
     });
 
@@ -39,7 +41,7 @@ catch
     {
         Name = "Test Topic From Producer Sample",
         PartitionsCount = 3,
-        TopicId = topicId,
+        TopicId = topicIdVal
     });
 }
 var actualStream = await bus.GetStreamByIdAsync(streamId);

@@ -3,6 +3,7 @@ using System.Text.Json;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
+using Iggy_SDK.Identifiers;
 using Iggy_SDK.JsonConfiguration;
 using Shared;
 
@@ -24,8 +25,10 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
 
 Console.WriteLine("Using protocol : {0}", protocol.ToString());
 
-var streamId = 1;
-var topicId = 1;
+int streamIdVal = 1;
+int topicIdVal = 1;
+var streamId = Identifier.Numeric(streamIdVal);
+var topicId = Identifier.Numeric(topicIdVal);
 var partitionId = 3;
 var consumerId = 1;
 
@@ -121,7 +124,7 @@ void HandleMessage(MessageResponse messageResponse)
     }
 }
 
-async Task ValidateSystem(int streamId, int topicId, int partitionId)
+async Task ValidateSystem(Identifier streamId, Identifier topicId, int partitionId)
 {
     try
     {
@@ -141,7 +144,7 @@ async Task ValidateSystem(int streamId, int topicId, int partitionId)
         Console.WriteLine($"Creating stream with {streamId}");
         await bus.CreateStreamAsync(new StreamRequest
         {
-            StreamId = streamId,
+            StreamId = streamIdVal,
             Name = "Test Consumer Stream",
         });
         Console.WriteLine($"Creating topic with {topicId}");
@@ -149,7 +152,7 @@ async Task ValidateSystem(int streamId, int topicId, int partitionId)
         {
             Name = "Test Consumer Topic",
             PartitionsCount = 12,
-            TopicId = topicId
+            TopicId = topicIdVal
         });
         var topicRes = await bus.GetTopicByIdAsync(streamId, topicId);
         if (topicRes!.PartitionsCount < partitionId)
