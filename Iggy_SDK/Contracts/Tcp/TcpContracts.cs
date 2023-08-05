@@ -14,13 +14,13 @@ internal static class TcpContracts
     internal static void GetMessages(Span<byte> bytes, MessageFetchRequest request)
     {
 
-        bytes[0] = request.ConsumerType switch
+        bytes[0] = request.Consumer.Type switch
         {
             ConsumerType.Consumer => 1,
             ConsumerType.ConsumerGroup => 2,
             _ => throw new ArgumentOutOfRangeException()
         };
-        BinaryPrimitives.WriteInt32LittleEndian(bytes[1..5], request.ConsumerId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[1..5], request.Consumer.Id);
         WriteBytesFromStreamAndTopicIdToSpan(request.StreamId, request.TopicId, bytes, 5);
         var position = 5 + 2 + request.StreamId.Length + 2 + request.TopicId.Length;
         BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], request.PartitionId);
@@ -223,13 +223,13 @@ internal static class TcpContracts
     {
         Span<byte> bytes =
             stackalloc byte[2 + streamId.Length + 2 + topicId.Length + 17];
-        bytes[0] = contract.ConsumerType switch
+        bytes[0] = contract.Consumer.Type switch
         {
             ConsumerType.Consumer => 1,
             ConsumerType.ConsumerGroup => 2,
             _ => throw new ArgumentOutOfRangeException()
         };
-        BinaryPrimitives.WriteInt32LittleEndian(bytes[1..5], contract.ConsumerId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[1..5], contract.Consumer.Id);
         WriteBytesFromStreamAndTopicIdToSpan(streamId , topicId, bytes, 5);
         var position = 5 + 2 + streamId.Length + 2 + topicId.Length; 
         BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], contract.PartitionId);
@@ -241,13 +241,13 @@ internal static class TcpContracts
     {
         Span<byte> bytes =
             stackalloc byte[2 + request.StreamId.Length + 2 + request.TopicId.Length + sizeof(int) * 2 + 1];
-        bytes[0] = request.ConsumerType switch
+        bytes[0] = request.Consumer.Type switch
         {
             ConsumerType.Consumer => 1,
             ConsumerType.ConsumerGroup => 2,
             _ => throw new ArgumentOutOfRangeException()
         };
-        BinaryPrimitives.WriteInt32LittleEndian(bytes[1..5], request.ConsumerId);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[1..5], request.Consumer.Id);
         WriteBytesFromStreamAndTopicIdToSpan(request.StreamId , request.TopicId, bytes, 5);
         var position = 5 + 2 + request.StreamId.Length + 2 + request.TopicId.Length; 
         BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], request.PartitionId);

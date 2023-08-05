@@ -66,11 +66,10 @@ var messages = await bus.PollMessagesAsync(new MessageFetchRequest
 {
     StreamId = streamId,
     TopicId = topicId,
+    Consumer = Consumer.New(consumerId),
     Count = 1,
-    ConsumerId = 1,
     PartitionId = 1,
     PollingStrategy = MessagePolling.Next,
-    ConsumerType = ConsumerType.Consumer,
     Value = 0,
     AutoCommit = true
 });

@@ -11,10 +11,9 @@ internal static class OffsetFactory
 	{
 		return new OffsetRequest
 		{
-			ConsumerType = ConsumerType.Consumer,
+			Consumer = Consumer.New(1),
 			TopicId = Identifier.Numeric(Random.Shared.Next(1, 10)),
 			PartitionId = Random.Shared.Next(1, 10),
-			ConsumerId = Random.Shared.Next(1, 10),
 			StreamId = Identifier.Numeric(Random.Shared.Next(1, 10)),
 		};
 	}
@@ -32,9 +31,8 @@ internal static class OffsetFactory
 	{
 		return new OffsetContract
 		{
-			ConsumerType = ConsumerType.Consumer,
+			Consumer = Consumer.New(1),
 			Offset = (ulong)Random.Shared.Next(1, 10),
-			ConsumerId = Random.Shared.Next(1, 10),
 			PartitionId = Random.Shared.Next(1, 10),
 		};
 	}

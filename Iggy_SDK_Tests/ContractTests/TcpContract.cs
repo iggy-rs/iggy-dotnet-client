@@ -33,8 +33,8 @@ public sealed class TcpContract
         // Assert
         Assert.Equal(result[0] switch { 1 => ConsumerType.Consumer , 2 => ConsumerType.ConsumerGroup,
             _ => throw new ArgumentOutOfRangeException()
-        } , request.ConsumerType);
-        Assert.Equal(request.ConsumerId, BitConverter.ToInt32(result[1..5]));
+        } , request.Consumer.Type);
+        Assert.Equal(request.Consumer.Id, BitConverter.ToInt32(result[1..5]));
         Assert.Equal(request.StreamId.Value, BytesToIdentifierNumeric(result, 5).Value);
         Assert.Equal(request.TopicId.Value, BytesToIdentifierNumeric(result , 11).Value);
         Assert.Equal(request.StreamId.Kind, BytesToIdentifierNumeric(result, 5).Kind);
@@ -349,7 +349,7 @@ public sealed class TcpContract
 
         Assert.Equal(expectedBytesLength, result.Length);
         Assert.Equal(1, result[0]);
-        Assert.Equal(contract.ConsumerId, BitConverter.ToInt32(result[1..5]));
+        Assert.Equal(contract.Consumer.Id, BitConverter.ToInt32(result[1..5]));
         Assert.Equal(streamId.Value, BytesToIdentifierNumeric(result, 5).Value);
         Assert.Equal(streamId.Length, BytesToIdentifierNumeric(result, 5).Length);
         Assert.Equal(streamId.Kind, BytesToIdentifierNumeric(result, 5).Kind);
@@ -376,7 +376,7 @@ public sealed class TcpContract
 
         Assert.Equal(expectedBytesLength, result.Length);
         Assert.Equal(1, result[0]);
-        Assert.Equal(request.ConsumerId, BitConverter.ToInt32(result[1..5]));
+        Assert.Equal(request.Consumer.Id, BitConverter.ToInt32(result[1..5]));
         Assert.Equal(request.StreamId.Value, BytesToIdentifierNumeric(result, 5).Value);
         Assert.Equal(request.StreamId.Length, BytesToIdentifierNumeric(result, 5).Length);
         Assert.Equal(request.StreamId.Kind, BytesToIdentifierNumeric(result, 5).Kind);

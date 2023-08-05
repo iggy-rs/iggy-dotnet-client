@@ -47,15 +47,14 @@ async Task ConsumeMessages()
         {
             var messages = (await bus.PollMessagesAsync(new MessageFetchRequest
             {
+                Consumer = Consumer.New(1),
                 Count = 1,
                 TopicId = topicId,
                 StreamId = streamId,
-                ConsumerId = consumerId,
                 PartitionId = partitionId,
                 PollingStrategy = MessagePolling.Next,
                 Value = 0,
                 AutoCommit = true,
-                ConsumerType = ConsumerType.Consumer
             })).ToList();
             
             if (!messages.Any())

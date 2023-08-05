@@ -130,7 +130,7 @@ public class HttpMessageStream : IMessageStream
     }
     public async Task<IEnumerable<MessageResponse>> PollMessagesAsync(MessageFetchRequest request)
     {
-        var url = CreateUrl($"/streams/{request.StreamId}/topics/{request.TopicId}/messages?consumer_id={request.ConsumerId}" +
+        var url = CreateUrl($"/streams/{request.StreamId}/topics/{request.TopicId}/messages?consumer_id={request.Consumer.Id}" +
                             $"&partition_id={request.PartitionId}&kind={request.PollingStrategy}&value={request.Value}&count={request.Count}&auto_commit={request.AutoCommit}");
         
         var response =  await _httpClient.GetAsync(url);
@@ -162,7 +162,7 @@ public class HttpMessageStream : IMessageStream
     public async Task<OffsetResponse?> GetOffsetAsync(OffsetRequest request)
     {
         var response = await _httpClient.GetAsync($"/streams/{request.StreamId}/topics/{request.TopicId}/" +
-                       $"consumer-offsets?consumer_id={request.ConsumerId}&partition_id={request.PartitionId}");
+                       $"consumer-offsets?consumer_id={request.Consumer.Id}&partition_id={request.PartitionId}");
         if (response.IsSuccessStatusCode)
         {
             return await response.Content.ReadFromJsonAsync<OffsetResponse>(_toSnakeCaseOptions);

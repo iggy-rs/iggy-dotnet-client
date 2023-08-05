@@ -244,7 +244,7 @@ public sealed class HttpMessageStream
 		var content = JsonSerializer.Serialize(response, _toSnakeCaseOptions); 
 		
 		_httpHandler.When(HttpMethod.Get, 
-        $"/streams/{request.StreamId}/topics/{request.TopicId}/messages?consumer_id={request.ConsumerId}" +
+        $"/streams/{request.StreamId}/topics/{request.TopicId}/messages?consumer_id={request.Consumer.Id}" +
                             $"&partition_id={request.PartitionId}&kind=offset&value={request.Value}&count={request.Count}" +
 							$"&auto_commit={request.AutoCommit.ToString().ToLower()}")
 					.Respond(HttpStatusCode.OK, "application/json", content);
@@ -261,7 +261,7 @@ public sealed class HttpMessageStream
 		var content = JsonSerializer.Serialize(ErrorModelFactory.CreateErrorModelBadRequest(), _toSnakeCaseOptions);
 		
 		_httpHandler.When(HttpMethod.Get, 
-        $"/streams/{request.StreamId}/topics/{request.TopicId}/messages?consumer_id={request.ConsumerId}" +
+        $"/streams/{request.StreamId}/topics/{request.TopicId}/messages?consumer_id={request.Consumer.Id}" +
                             $"&partition_id={request.PartitionId}&kind=offset&value={request.Value}&count={request.Count}" +
 							$"&auto_commit={request.AutoCommit.ToString().ToLower()}")
 					.Respond(HttpStatusCode.BadRequest, "application/json", content);
@@ -294,7 +294,7 @@ public sealed class HttpMessageStream
 		var response = OffsetFactory.CreateOffsetResponse();
 		
         _httpHandler.When(HttpMethod.Get, $"/streams/{request.StreamId}/topics/{request.TopicId}/" +
-                       $"consumer-offsets?consumer_id={request.ConsumerId}&partition_id={request.PartitionId}")
+                       $"consumer-offsets?consumer_id={request.Consumer.Id}&partition_id={request.PartitionId}")
 					.Respond(HttpStatusCode.OK, "application/json", JsonSerializer.Serialize(response, _toSnakeCaseOptions));
         
 		var result = await _sut.GetOffsetAsync(request);
@@ -310,7 +310,7 @@ public sealed class HttpMessageStream
 		var response = ErrorModelFactory.CreateErrorModelNotFound();
 		
         _httpHandler.When(HttpMethod.Get, $"/streams/{request.StreamId}/topics/{request.TopicId}/" +
-                       $"consumer-offsets?consumer_id={request.ConsumerId}&partition_id={request.PartitionId}")
+                       $"consumer-offsets?consumer_id={request.Consumer.Id}&partition_id={request.PartitionId}")
 					.Respond(HttpStatusCode.NotFound, "application/json", JsonSerializer.Serialize(response, _toSnakeCaseOptions));
         
 		await Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.GetOffsetAsync(request));
