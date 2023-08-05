@@ -1,9 +1,10 @@
 using Iggy_SDK.Contracts.Http;
+using Iggy_SDK.Identifiers;
 
 namespace Iggy_SDK.MessageStream;
 
 public interface IPartitionClient
 {
-	public Task DeletePartitionsAsync(int streamId, int topicId, DeletePartitionsRequest request);
-	public Task CreatePartitionsAsync(int streamId, int topicId, CreatePartitionsRequest request);
+	public Task DeletePartitionsAsync(Identifier streamId, Identifier topicId, DeletePartitionsRequest request);
+	public Task CreatePartitionsAsync(Identifier streamId, Identifier topicId, CreatePartitionsRequest request);
 }

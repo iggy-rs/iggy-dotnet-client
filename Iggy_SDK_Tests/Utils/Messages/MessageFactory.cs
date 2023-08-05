@@ -4,6 +4,7 @@ using System.Text.Json;
 using Iggy_SDK_Tests.Utils.DummyObj;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
+using Iggy_SDK.Identifiers;
 using Iggy_SDK.Messages;
 
 namespace Iggy_SDK_Tests.Utils.Messages;
@@ -59,8 +60,8 @@ internal static class MessageFactory
 			ConsumerId = Random.Shared.Next(1, 10),
 			PartitionId = Random.Shared.Next(1, 10),
 			PollingStrategy = MessagePolling.Offset,
-			StreamId = Random.Shared.Next(1, 10),
-			TopicId = Random.Shared.Next(1, 10)
+			StreamId = Identifier.Numeric(Random.Shared.Next(1,10)),
+			TopicId = Identifier.Numeric(Random.Shared.Next(1,10))
 		};
 	}
 

@@ -3,7 +3,9 @@ using System.Buffers.Binary;
 using System.Net.Sockets;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Contracts.Tcp;
+using Iggy_SDK.Enums;
 using Iggy_SDK.Exceptions;
+using Iggy_SDK.Identifiers;
 using Iggy_SDK.Mappers;
 using Iggy_SDK.Utils;
 
@@ -39,9 +41,9 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 	}
 
-	public async Task<StreamResponse?> GetStreamByIdAsync(int streamId)
+	public async Task<StreamResponse?> GetStreamByIdAsync(Identifier streamId)
 	{
-		var message = BitConverter.GetBytes(streamId);
+		var message = GetBytesFromIdentifier(streamId);
 		var payload = CreatePayload(message, CommandCodes.GET_STREAM_CODE);
 
 		await _stream.WriteAsync(payload, 0, payload.Length);
@@ -62,7 +64,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			return null;	
 		}
 
-	await _stream.ReadExactlyAsync(responseBuffer);
+		await _stream.ReadExactlyAsync(responseBuffer);
 		return BinaryMapper.MapStream(responseBuffer);
 	}
 
@@ -93,9 +95,9 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		return BinaryMapper.MapStreams(responseBuffer);
 	}
 
-	public async Task DeleteStreamAsync(int streamId)
+	public async Task DeleteStreamAsync(Identifier streamId)
 	{
-		var message = BitConverter.GetBytes(streamId);
+		var message = GetBytesFromIdentifier(streamId);
 		var payload = CreatePayload(message, CommandCodes.DELETE_STREAM_CODE);
 
 		await _stream.WriteAsync(payload, 0, payload.Length);
@@ -111,9 +113,9 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 	}
 
-	public async Task<IEnumerable<TopicResponse>> GetTopicsAsync(int streamId)
+	public async Task<IEnumerable<TopicResponse>> GetTopicsAsync(Identifier streamId)
 	{
-		var message = BitConverter.GetBytes(streamId);
+		var message = GetBytesFromIdentifier(streamId);
 		var payload = CreatePayload(message, CommandCodes.GET_TOPICS_CODE);
 
 		await _stream.WriteAsync(payload, 0, payload.Length);
@@ -138,7 +140,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		return BinaryMapper.MapTopics(responseBuffer);
 	}
 
-	public async Task<TopicResponse?> GetTopicByIdAsync(int streamId, int topicId)
+	public async Task<TopicResponse?> GetTopicByIdAsync(Identifier streamId, Identifier topicId)
 	{
 		var message = TcpContracts.GetTopicById(streamId, topicId);
 		var payload = CreatePayload(message, CommandCodes.GET_TOPIC_CODE);
@@ -166,7 +168,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	}
 
 
-	public async Task CreateTopicAsync(int streamId, TopicRequest topic)
+	public async Task CreateTopicAsync(Identifier streamId, TopicRequest topic)
 	{
 		var message = TcpContracts.CreateTopic(streamId, topic);
 		var payload = CreatePayload(message, CommandCodes.CREATE_TOPIC_CODE);
@@ -184,7 +186,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 	}
 
-	public async Task DeleteTopicAsync(int streamId, int topicId)
+	public async Task DeleteTopicAsync(Identifier streamId, Identifier topicId)
 	{
 		var message = TcpContracts.DeleteTopic(streamId, topicId);
 		var payload = CreatePayload(message, CommandCodes.DELETE_TOPIC_CODE);
@@ -202,11 +204,11 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 	}
 
-	public async Task SendMessagesAsync(int streamId, int topicId, MessageSendRequest request)
+	public async Task SendMessagesAsync(Identifier streamId, Identifier topicId, MessageSendRequest request)
 	{
-
+		var streamTopicIdLength = 2 + streamId.Length + 2 + topicId.Length;
         var messageBufferSize = request.Messages.Sum(message => 16 + 4 + message.Payload.Length)
-	        + request.Key.Length + 14;
+	        + request.Key.Length + streamTopicIdLength + 2;
         var payloadBufferSize = messageBufferSize + 4 + InitialBytesLength;
         
 		var message = ArrayPool<byte>.Shared.Rent(messageBufferSize);
@@ -238,8 +240,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 
 	public async Task<IEnumerable<MessageResponse>> PollMessagesAsync(MessageFetchRequest request)
 	{
-		const int messageBufferSize = 31;
-		const int payloadBufferSize = 31 + 4 + InitialBytesLength;
+		int messageBufferSize = 18 + 5 + 2 + request.StreamId.Length + 2 + request.TopicId.Length;
+		int payloadBufferSize = messageBufferSize + 4 + InitialBytesLength;
 		var message = ArrayPool<byte>.Shared.Rent(messageBufferSize);
 		var payload = ArrayPool<byte>.Shared.Rent(payloadBufferSize);
 		
@@ -292,7 +294,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 	}
 
-	public async Task StoreOffsetAsync(int streamId, int topicId, OffsetContract contract)
+	public async Task StoreOffsetAsync(Identifier streamId, Identifier topicId, OffsetContract contract)
 	{
 		var message = TcpContracts.UpdateOffset(streamId, topicId, contract);
 		var payload = CreatePayload(message, CommandCodes.STORE_OFFSET_CODE);
@@ -337,7 +339,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		return BinaryMapper.MapOffsets(responseBuffer);
 	}
 
-	public async Task<IEnumerable<ConsumerGroupResponse>> GetConsumerGroupsAsync(int streamId, int topicId)
+	public async Task<IEnumerable<ConsumerGroupResponse>> GetConsumerGroupsAsync(Identifier streamId, Identifier topicId)
 	{
 		var message = TcpContracts.GetGroups(streamId, topicId);
 		var payload = CreatePayload(message, CommandCodes.GET_GROUPS_CODE);
@@ -364,7 +366,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		return BinaryMapper.MapConsumerGroups(responseBuffer);
 	}
 
-	public async Task<ConsumerGroupResponse?> GetConsumerGroupByIdAsync(int streamId, int topicId, int groupId)
+	public async Task<ConsumerGroupResponse?> GetConsumerGroupByIdAsync(Identifier streamId, Identifier topicId, int groupId)
 	{
 		var message = TcpContracts.GetGroup(streamId, topicId, groupId);
 		var payload = CreatePayload(message, CommandCodes.GET_GROUP_CODE);
@@ -391,7 +393,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		return BinaryMapper.MapConsumerGroup(responseBuffer);
 	}
 
-	public async Task CreateConsumerGroupAsync(int streamId, int topicId, CreateConsumerGroupRequest request)
+	public async Task CreateConsumerGroupAsync(Identifier streamId, Identifier topicId, CreateConsumerGroupRequest request)
 	{
 		var message = TcpContracts.CreateGroup(streamId, topicId, request);
 		var payload = CreatePayload(message, CommandCodes.CREATE_GROUP_CODE);
@@ -409,7 +411,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 	}
 
-	public async Task DeleteConsumerGroupAsync(int streamId, int topicId, int groupId)
+	public async Task DeleteConsumerGroupAsync(Identifier streamId, Identifier topicId, int groupId)
 	{
 		var message = TcpContracts.DeleteGroup(streamId, topicId, groupId);
 		var payload = CreatePayload(message, CommandCodes.DELETE_GROUP_CODE);
@@ -462,7 +464,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			throw new InvalidResponseException($"Invalid response status code: {status}");
 		}
 	}
-	public async Task DeletePartitionsAsync(int streamId, int topicId, DeletePartitionsRequest request)
+	public async Task DeletePartitionsAsync(Identifier streamId, Identifier topicId, DeletePartitionsRequest request)
 	{
 		var message = TcpContracts.DeletePartitions(streamId, topicId, request);
 		var payload = CreatePayload(message, CommandCodes.DELETE_PARTITIONS_CODE);
@@ -480,7 +482,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 	}
 
-	public async Task CreatePartitionsAsync(int streamId, int topicId, CreatePartitionsRequest request)
+	public async Task CreatePartitionsAsync(Identifier streamId, Identifier topicId, CreatePartitionsRequest request)
 	{
 		var message = TcpContracts.CreatePartitions(streamId, topicId, request);
 		var payload = CreatePayload(message, CommandCodes.CREATE_PARTITIONS_CODE);
@@ -523,6 +525,24 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		await _stream.ReadExactlyAsync(responseBuffer);
 
 		return BinaryMapper.MapStats(responseBuffer);
+	}
+
+	private static byte[] GetBytesFromIdentifier(Identifier identifier)
+	{
+        Span<byte> bytes = stackalloc byte[2 + identifier.Length];
+        bytes[0] = identifier.Kind switch
+        {
+            IdKind.Numeric => 1,
+            IdKind.String => 2,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+        bytes[1] = (byte)identifier.Length;
+        for (int i = 0; i < identifier.Length; i++)
+        {
+            bytes[i + 2] = identifier.Value[i];
+        }
+        
+        return bytes.ToArray();
 	}
 
 	private static (int Status, int Length) GetResponseLengthAndStatus(Span<byte> buffer)

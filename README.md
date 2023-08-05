@@ -48,12 +48,7 @@ var messages = new List<Message>();
 await bus.SendMessagesAsync(streamId, topicId, new MessageSendRequest
 {
     Messages = messages,
-    Key = new Key
-    {
-        Kind = KeyKind.PartitionId,
-        Length = 4,
-        Value = BitConverter.GetBytes(partitionId),
-    }
+    Key = Key.PartitionId(partitionId)
 });
 ```
 The `Message` struct has two fields `Id` and `Payload`
@@ -69,6 +64,8 @@ Polling messages is done with `PollMessagesAsync`
 ```c#
 var messages = await bus.PollMessagesAsync(new MessageFetchRequest
 {
+    StreamId = streamId,
+    TopicId = topicId,
     Count = 1,
     ConsumerId = 1,
     PartitionId = 1,

@@ -2,11 +2,13 @@ using System.Diagnostics;
 using System.Text;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
+using Iggy_SDK.Identifiers;
 using Iggy_SDK.Messages;
 using Iggy_SDK.MessageStream;
 
 namespace Benchmarks;
 
+/*
 public static class SendMessage
 {
 	public static async Task Create(IMessageStream bus, int producerNumber, int producerCount,
@@ -25,12 +27,13 @@ public static class SendMessage
 			var startTime = Stopwatch.GetTimestamp();
 			await bus.SendMessagesAsync(streamId, topicId, new MessageSendRequest
 			{
-				Key = new Key
-				{
-					Kind = KeyKind.PartitionId,
-					Length = 4,
-					Value = valBytes
-				},
+				// Key = new Key
+				// {
+				// 	Kind = KeyKind.PartitionId,
+				// 	Length = 4,
+				// 	Value = valBytes
+				// },
+				Key = Key.PartitionId(1),
 				Messages = messages,
 			});
 			var diff = Stopwatch.GetElapsedTime(startTime);
@@ -72,6 +75,6 @@ private static byte[] CreatePayload(int size)
 	}
 
 	string payloadString = payloadBuilder.ToString();
-	return Encoding.ASCII.GetBytes(payloadString);
+	return Encoding.UTF8.GetBytes(payloadString);
 }
-}
+}*/

@@ -11,6 +11,7 @@ using Iggy_SDK.Utils;
 
 namespace Iggy_SDK.MessageStream.Implementations;
 
+/*
 public class HttpMessageStream : IMessageStream
 {
     //TODO - replace the HttpClient with IHttpClientFactory, when implementing support for ASP.NET Core DI
@@ -277,4 +278,4 @@ public class HttpMessageStream : IMessageStream
     {
         return message.ToString();
     }
-}
+}*/

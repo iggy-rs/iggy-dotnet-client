@@ -23,7 +23,7 @@ public static class MessageStreamFactory
 
         return config.Protocol switch
         {
-            Protocol.Http => CreateHttpMessageStream(config),
+            //Protocol.Http => CreateHttpMessageStream(config),
             Protocol.Tcp => CreateTcpMessageStream(config),
             _ => throw new InvalidEnumArgumentException()
         };
@@ -44,6 +44,7 @@ public static class MessageStreamFactory
         return new TcpMessageStream(client);
     }
 
+    /*
     private static HttpMessageStream CreateHttpMessageStream(IMessageStreamConfigurator options)
     {
         var client = new HttpClient();
@@ -58,4 +59,5 @@ public static class MessageStreamFactory
         
         return new HttpMessageStream(client);
     }
+*/
 }

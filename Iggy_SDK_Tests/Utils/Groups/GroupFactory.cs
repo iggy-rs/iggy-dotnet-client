@@ -1,5 +1,6 @@
 using Iggy_SDK.Contracts;
 using Iggy_SDK.Contracts.Http;
+using Iggy_SDK.Identifiers;
 
 namespace Iggy_SDK_Tests.Utils.Groups;
 
@@ -47,9 +48,9 @@ internal static class GroupFactory
 	{
 		return new JoinConsumerGroupRequest
 		{
-			StreamId = Random.Shared.Next(1, 10),
+			StreamId = Identifier.Numeric(Random.Shared.Next(1,10)),
 			ConsumerGroupId = Random.Shared.Next(1, 10),
-			TopicId = Random.Shared.Next(1, 10),
+			TopicId = Identifier.Numeric(Random.Shared.Next(1,10))
 		};
 	}
 
@@ -57,9 +58,9 @@ internal static class GroupFactory
 	{
 		return new LeaveConsumerGroupRequest
 		{
-			StreamId = Random.Shared.Next(1, 10),
+			StreamId = Identifier.Numeric(Random.Shared.Next(1,10)),
 			ConsumerGroupId = Random.Shared.Next(1, 10),
-			TopicId = Random.Shared.Next(1, 10),
+			TopicId = Identifier.Numeric(Random.Shared.Next(1,10))
 		};
 	}
 }

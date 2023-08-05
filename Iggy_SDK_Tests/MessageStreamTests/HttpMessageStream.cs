@@ -27,6 +27,7 @@ public sealed class HttpMessageStream
 	
 	private const string URL = "http://localhost:3000";
 	
+	/*
 	public HttpMessageStream()
 	{
 		_toSnakeCaseOptions = new();
@@ -390,4 +391,5 @@ public sealed class HttpMessageStream
 			.Respond(HttpStatusCode.BadRequest, "application/json", JsonSerializer.Serialize(error, _toSnakeCaseOptions));
 		await Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.DeletePartitionsAsync(streamId, topicId, request));
 	}
+	*/
 }
