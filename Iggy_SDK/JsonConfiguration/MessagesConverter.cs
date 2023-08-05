@@ -31,16 +31,16 @@ internal sealed class MessagesConverter : JsonConverter<MessageSendRequest>
 			}
 
 			writer.WriteStartObject();
-			writer.WriteStartObject("key");
+			writer.WriteStartObject("partitioning");
 			
-			writer.WriteString(nameof(MessageSendRequest.Key.Kind).ToSnakeCase(), value: value.Key.Kind switch
+			writer.WriteString(nameof(MessageSendRequest.Partitioning.Kind).ToSnakeCase(), value: value.Partitioning.Kind switch
 			{
-				KeyKind.None => "none",
-				KeyKind.EntityId => "entity_id",
-				KeyKind.PartitionId => "partition_id",
+				PartitioningKind.None => "none",
+				PartitioningKind.EntityId => "entity_id",
+				PartitioningKind.PartitionId => "partition_id",
 				_ => throw new InvalidEnumArgumentException()
 			});
-			writer.WriteBase64String(nameof(MessageSendRequest.Key.Value).ToSnakeCase(), value.Key.Value);
+			writer.WriteBase64String(nameof(MessageSendRequest.Partitioning.Value).ToSnakeCase(), value.Partitioning.Value);
 			writer.WriteEndObject();
 			
 			writer.WriteStartArray("messages");

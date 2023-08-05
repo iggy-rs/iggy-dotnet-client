@@ -80,12 +80,7 @@ async Task ProduceMessages(IMessageClient bus, StreamResponse? stream, TopicResp
             await bus.SendMessagesAsync(streamId,topicId, new MessageSendRequest
             {
                 Messages = messages,
-                Key = new Key
-                {
-                    Kind = KeyKind.PartitionId,
-                    Length = 4,
-                    Value = valBytes,
-                }
+                Partitioning = Partitioning.PartitionId(3)
             });
         }
         catch (Exception e)

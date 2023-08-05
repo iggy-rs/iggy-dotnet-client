@@ -4,87 +4,87 @@ using Iggy_SDK.Enums;
 
 namespace Iggy_SDK.Identifiers;
 
-public sealed class Key
-{
-	public required KeyKind Kind { get; init; }
+public sealed class Partitioning 
+	{
+	public required PartitioningKind Kind { get; init; }
 	public required int Length { get; init; }
 	public required byte[] Value { get; init; }
 
-	public static Key None()
+	public static Partitioning None()
 	{
-		return new Key
+		return new Partitioning
 		{
-			Kind = KeyKind.None,
+			Kind = PartitioningKind.None,
 			Length = 0,
 			Value = Array.Empty<byte>()
 		};
 	}
-	public static Key PartitionId(int value)
+	public static Partitioning PartitionId(int value)
 	{
 		Span<byte> bytes = stackalloc byte[4];
 		BinaryPrimitives.WriteInt32LittleEndian(bytes, value);
 
-		return new Key
+		return new Partitioning
 		{
-			Kind = KeyKind.PartitionId,
+			Kind = PartitioningKind.PartitionId,
 			Length = 4,
 			Value = bytes.ToArray(),
 		};
 	}
-	public static Key EntityIdString(string value)
+	public static Partitioning EntityIdString(string value)
 	{
-		if (value.Length == 0 || value.Length > 255)
+		if (value.Length is 0 or > 255)
 		{
 			throw new ArgumentException("Value is too long", nameof(value));
 		}
-		return new Key
+		return new Partitioning
 		{
-			Kind = KeyKind.EntityId,
+			Kind = PartitioningKind.EntityId,
 			Length = value.Length,
 			Value = Encoding.UTF8.GetBytes(value)
 		};
 	}
-	public static Key EntityIdBytes(byte[] value)
+	public static Partitioning EntityIdBytes(byte[] value)
 	{
-		if (value.Length == 0 || value.Length > 255)
+		if (value.Length is 0 or > 255)
 		{
 			throw new ArgumentException("Value is too long", nameof(value));
 		}
-		return new Key
+		return new Partitioning
 		{
-			Kind = KeyKind.EntityId,
+			Kind = PartitioningKind.EntityId,
 			Length = value.Length,
 			Value = value
 		};
 	}
-	public static Key EntityIdInt(int value)
+	public static Partitioning EntityIdInt(int value)
 	{
 		Span<byte> bytes = stackalloc byte[4];
 		BinaryPrimitives.WriteInt32LittleEndian(bytes, value);
-		return new Key
+		return new Partitioning
 		{
-			Kind = KeyKind.EntityId,
+			Kind = PartitioningKind.EntityId,
 			Length = 4,
 			Value = bytes.ToArray()
 		};
 	}
-	public static Key EntityIdUlong(ulong value)
+	public static Partitioning EntityIdUlong(ulong value)
 	{
 		Span<byte> bytes = stackalloc byte[8];
 		BinaryPrimitives.WriteUInt64LittleEndian(bytes, value);
-		return new Key
+		return new Partitioning
 		{
-			Kind = KeyKind.EntityId,
+			Kind = PartitioningKind.EntityId,
 			Length = 8,
 			Value = bytes.ToArray()
 		};
 	}
-	public static Key EntityIdGuid(Guid value)
+	public static Partitioning EntityIdGuid(Guid value)
 	{
 		var bytes = value.ToByteArray();
-		return new Key
+		return new Partitioning
 		{
-			Kind = KeyKind.EntityId,
+			Kind = PartitioningKind.EntityId,
 			Length = 16,
 			Value = bytes
 		};

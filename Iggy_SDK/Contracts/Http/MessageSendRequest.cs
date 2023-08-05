@@ -8,6 +8,6 @@ namespace Iggy_SDK.Contracts.Http;
 [JsonConverter(typeof(MessagesConverter))]
 public sealed class MessageSendRequest
 {
-	public required Key Key { get; init; }
+	public required Partitioning Partitioning { get; init; }
 	public required IEnumerable<Message> Messages { get; init; }
 }

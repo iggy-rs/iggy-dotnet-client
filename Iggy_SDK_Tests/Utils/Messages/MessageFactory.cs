@@ -27,9 +27,9 @@ internal static class MessageFactory
 		return new MessageSendRequest
 		{
 			
-			Key = new Key
+			Partitioning = new Partitioning
 			{
-				Kind = KeyKind.PartitionId,
+				Kind = PartitioningKind.PartitionId,
 				Length = 4,
 				Value = valBytes,
 			},

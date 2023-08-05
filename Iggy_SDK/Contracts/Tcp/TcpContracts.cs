@@ -42,17 +42,17 @@ internal static class TcpContracts
     {
         WriteBytesFromStreamAndTopicIdToSpan(streamId , topicId , bytes);
         int streamTopicIdOffset = 2 + streamId.Length + 2 + topicId.Length;
-        bytes[streamTopicIdOffset] = request.Key.Kind switch
+        bytes[streamTopicIdOffset] = request.Partitioning.Kind switch
         {
-            KeyKind.None => 0,
-            KeyKind.PartitionId => 1,
-            KeyKind.EntityId => 2,
+            PartitioningKind.None => 0,
+            PartitioningKind.PartitionId => 1,
+            PartitioningKind.EntityId => 2,
             _ => throw new ArgumentOutOfRangeException()
         };
-        bytes[streamTopicIdOffset + 1] = (byte)request.Key.Length;
-        request.Key.Value.CopyTo(bytes[(streamTopicIdOffset + 2)..(streamTopicIdOffset + request.Key.Length + 2)]);
+        bytes[streamTopicIdOffset + 1] = (byte)request.Partitioning.Length;
+        request.Partitioning.Value.CopyTo(bytes[(streamTopicIdOffset + 2)..(streamTopicIdOffset + request.Partitioning.Length + 2)]);
 
-        var position = 2 + request.Key.Length + streamTopicIdOffset;
+        var position = 2 + request.Partitioning.Length + streamTopicIdOffset;
         bytes = request.Messages switch
         {
             Message[] messagesArray => HandleMessagesArray(position, messagesArray, bytes),

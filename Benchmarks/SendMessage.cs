@@ -27,7 +27,7 @@ public static class SendMessage
 			var startTime = Stopwatch.GetTimestamp();
 			await bus.SendMessagesAsync(streamId, topicId, new MessageSendRequest
 			{
-				Key = Key.PartitionId(1),
+				Partitioning = Partitioning.PartitionId(1),
 				Messages = messages,
 			});
 			var diff = Stopwatch.GetElapsedTime(startTime);

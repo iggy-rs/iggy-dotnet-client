@@ -26,7 +26,7 @@ public sealed class Identifier
 
 	public static Identifier String(string value)
 	{
-		if (value.Length == 0 || value.Length > 255)
+		if (value.Length is 0 or > 255)
 		{
 			throw new ArgumentException("Value is too long", nameof(value));
 		}
@@ -35,6 +35,16 @@ public sealed class Identifier
 			Kind = IdKind.String,
 			Length = value.Length,
 			Value = Encoding.UTF8.GetBytes(value)
+		};
+	}
+
+	public override string ToString()
+	{
+		return Kind switch
+		{
+			IdKind.Numeric => BitConverter.ToInt32(Value).ToString(),
+			IdKind.String => Encoding.UTF8.GetString(Value),
+			_ => throw new ArgumentOutOfRangeException()
 		};
 	}
 }

@@ -66,7 +66,7 @@ public sealed class TcpContract
         var topicId = Identifier.Numeric(1);
         var request = MessageFactory.CreateMessageSendRequest();
         var messageBufferSize = request.Messages.Sum(message => 16 + 4 + message.Payload.Length)
-	        + request.Key.Length + 14;
+	        + request.Partitioning.Length + 14;
         var result = new byte[messageBufferSize];
         
 
@@ -80,13 +80,13 @@ public sealed class TcpContract
         Assert.Equal(topicId.Length, BytesToIdentifierNumeric(result, 6).Length);
         Assert.Equal(streamId.Kind, BytesToIdentifierNumeric(result, 0).Kind);
         Assert.Equal(topicId.Kind, BytesToIdentifierNumeric(result, 6).Kind);
-        Assert.Equal(request.Key.Kind, result[12] switch { 0 => KeyKind.None, 1 => KeyKind.PartitionId, 2 => KeyKind.EntityId,
+        Assert.Equal(request.Partitioning.Kind, result[12] switch { 0 => PartitioningKind.None, 1 => PartitioningKind.PartitionId, 2 => PartitioningKind.EntityId,
             _ => throw new ArgumentOutOfRangeException()
         });
-        Assert.Equal(request.Key.Length, result[13]);
-        Assert.Equal(request.Key.Value.Length, result[14..(14 + request.Key.Length)].Length);
+        Assert.Equal(request.Partitioning.Length, result[13]);
+        Assert.Equal(request.Partitioning.Value.Length, result[14..(14 + request.Partitioning.Length)].Length);
         
-        int currentIndex = 14 + request.Key.Length;
+        int currentIndex = 14 + request.Partitioning.Length;
         foreach (var message in request.Messages)
         {
             // Assert

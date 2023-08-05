@@ -5,13 +5,14 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Exceptions;
+using Iggy_SDK.Identifiers;
 using Iggy_SDK.JsonConfiguration;
 using Iggy_SDK.StringHandlers;
 using Iggy_SDK.Utils;
 
 namespace Iggy_SDK.MessageStream.Implementations;
 
-/*
+
 public class HttpMessageStream : IMessageStream
 {
     //TODO - replace the HttpClient with IHttpClientFactory, when implementing support for ASP.NET Core DI
@@ -32,6 +33,7 @@ public class HttpMessageStream : IMessageStream
     public async Task CreateStreamAsync(StreamRequest request)
     {
         var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
+        Console.WriteLine(json);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
         
         var response = await _httpClient.PostAsync("/streams", data);
@@ -41,7 +43,7 @@ public class HttpMessageStream : IMessageStream
             throw new Exception("Unknown error occurred.");
         }
     }
-    public async Task DeleteStreamAsync(int streamId)
+    public async Task DeleteStreamAsync(Identifier streamId)
     {
         var response = await _httpClient.DeleteAsync($"/streams/{streamId}");
         if (!response.IsSuccessStatusCode)
@@ -50,7 +52,7 @@ public class HttpMessageStream : IMessageStream
             throw new Exception("Unknown error occurred.");
         }
     }
-    public async Task<StreamResponse?> GetStreamByIdAsync(int streamId)
+    public async Task<StreamResponse?> GetStreamByIdAsync(Identifier streamId)
     {
         var response = await _httpClient.GetAsync($"/streams/{streamId}");
         if (response.IsSuccessStatusCode)
@@ -71,7 +73,7 @@ public class HttpMessageStream : IMessageStream
         await HandleResponseAsync(response);
         throw new Exception("Unknown error occurred.");
     }
-    public async Task CreateTopicAsync(int streamId, TopicRequest topic)
+    public async Task CreateTopicAsync(Identifier streamId, TopicRequest topic)
     {
         var json = JsonSerializer.Serialize(topic, _toSnakeCaseOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
@@ -83,7 +85,7 @@ public class HttpMessageStream : IMessageStream
             throw new Exception("Unknown error occurred.");
         }
     }
-    public async Task DeleteTopicAsync(int streamId, int topicId)
+    public async Task DeleteTopicAsync(Identifier streamId, Identifier topicId)
     {
         var response = await _httpClient.DeleteAsync($"/streams/{streamId}/topics/{topicId}");
         if (!response.IsSuccessStatusCode)
@@ -92,7 +94,7 @@ public class HttpMessageStream : IMessageStream
             throw new Exception("Unknown error occurred.");
         }
     }
-    public async Task<IEnumerable<TopicResponse>> GetTopicsAsync(int streamId)
+    public async Task<IEnumerable<TopicResponse>> GetTopicsAsync(Identifier streamId)
     {
         var response = await _httpClient.GetAsync($"/streams/{streamId}/topics");
         if (response.IsSuccessStatusCode)
@@ -104,7 +106,7 @@ public class HttpMessageStream : IMessageStream
         throw new Exception("Unknown error occurred.");
     }
 
-    public async Task<TopicResponse?> GetTopicByIdAsync(int streamId, int topicId)
+    public async Task<TopicResponse?> GetTopicByIdAsync(Identifier streamId, Identifier topicId)
     {
         var response = await _httpClient.GetAsync($"/streams/{streamId}/topics/{topicId}");
         if (response.IsSuccessStatusCode)
@@ -114,14 +116,12 @@ public class HttpMessageStream : IMessageStream
         await HandleResponseAsync(response);
         throw new Exception("Unknown error occurred.");
     }
-    public async Task SendMessagesAsync(int streamId, int topicId, MessageSendRequest request)
+    public async Task SendMessagesAsync(Identifier streamId, Identifier topicId, MessageSendRequest request)
     {
         var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
-        var dd = json.ToString();
         var data = new StringContent(json, Encoding.UTF8, "application/json");
         
         var response = await _httpClient.PostAsync($"/streams/{streamId}/topics/{topicId}/messages", data);
-        var xd = await response.Content.ReadAsStringAsync();
         if (!response.IsSuccessStatusCode)
         {
             await HandleResponseAsync(response);
@@ -146,12 +146,12 @@ public class HttpMessageStream : IMessageStream
         throw new Exception("Unknown error occurred.");
     }
 
-    public async Task StoreOffsetAsync(int streamId, int topicId, OffsetContract contract)
+    public async Task StoreOffsetAsync(Identifier streamId, Identifier topicId, OffsetContract contract)
     {
         var json = JsonSerializer.Serialize(contract, _toSnakeCaseOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
         
-        var response = await _httpClient.PutAsync($"/streams/{streamId}/topics/{topicId}/messages/offsets", data);
+        var response = await _httpClient.PutAsync($"/streams/{streamId}/topics/{topicId}/consumer-offsets", data);
         if (!response.IsSuccessStatusCode)
         {
             await HandleResponseAsync(response);
@@ -161,8 +161,8 @@ public class HttpMessageStream : IMessageStream
 
     public async Task<OffsetResponse?> GetOffsetAsync(OffsetRequest request)
     {
-        var response = await _httpClient.GetAsync($"/streams/{request.StreamId}/topics/{request.TopicId}/messages/" +
-                       $"offsets?consumer_id={request.ConsumerId}&partition_id={request.PartitionId}");
+        var response = await _httpClient.GetAsync($"/streams/{request.StreamId}/topics/{request.TopicId}/" +
+                       $"consumer-offsets?consumer_id={request.ConsumerId}&partition_id={request.PartitionId}");
         if (response.IsSuccessStatusCode)
         {
             return await response.Content.ReadFromJsonAsync<OffsetResponse>(_toSnakeCaseOptions);
@@ -170,9 +170,9 @@ public class HttpMessageStream : IMessageStream
         await HandleResponseAsync(response);
         throw new Exception("Unknown error occurred.");
     }
-    public async Task<IEnumerable<ConsumerGroupResponse>> GetConsumerGroupsAsync(int streamId, int topicId)
+    public async Task<IEnumerable<ConsumerGroupResponse>> GetConsumerGroupsAsync(Identifier streamId, Identifier topicId)
     {
-        var response = await _httpClient.GetAsync($"/streams/{streamId}/topics/{topicId}/consumer_groups");
+        var response = await _httpClient.GetAsync($"/streams/{streamId}/topics/{topicId}/consumer-groups");
         
         if (response.IsSuccessStatusCode)
         {
@@ -182,9 +182,9 @@ public class HttpMessageStream : IMessageStream
         await HandleResponseAsync(response);
         throw new Exception("Unknown error occurred.");
     }
-    public async Task<ConsumerGroupResponse?> GetConsumerGroupByIdAsync(int streamId, int topicId, int groupId)
+    public async Task<ConsumerGroupResponse?> GetConsumerGroupByIdAsync(Identifier streamId, Identifier topicId, int groupId)
     {
-        var response = await _httpClient.GetAsync($"/streams/{streamId}/topics/{topicId}/consumer_groups/{groupId}");
+        var response = await _httpClient.GetAsync($"/streams/{streamId}/topics/{topicId}/consumer-groups/{groupId}");
         
         if (response.IsSuccessStatusCode)
         {
@@ -194,21 +194,21 @@ public class HttpMessageStream : IMessageStream
         await HandleResponseAsync(response);
         throw new Exception("Unknown error occurred.");
     }
-    public async Task CreateConsumerGroupAsync(int streamId, int topicId, CreateConsumerGroupRequest request)
+    public async Task CreateConsumerGroupAsync(Identifier streamId, Identifier topicId, CreateConsumerGroupRequest request)
     {
         var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
         
-        var response = await _httpClient.PostAsync($"/streams/{streamId}/topics/{topicId}/consumer_groups", data);
+        var response = await _httpClient.PostAsync($"/streams/{streamId}/topics/{topicId}/consumer-groups", data);
         if (!response.IsSuccessStatusCode)
         {
             await HandleResponseAsync(response);
             throw new Exception("Unknown error occurred.");
         }
     }
-    public async Task DeleteConsumerGroupAsync(int streamId, int topicId, int groupId)
+    public async Task DeleteConsumerGroupAsync(Identifier streamId, Identifier topicId, int groupId)
     {
-        var response = await _httpClient.DeleteAsync($"/streams/{streamId}/topics/{topicId}/consumer_groups/{groupId}");
+        var response = await _httpClient.DeleteAsync($"/streams/{streamId}/topics/{topicId}/consumer-groups/{groupId}");
         await HandleResponseAsync(response);
     }
     public async Task<Stats?> GetStatsAsync()
@@ -235,7 +235,7 @@ public class HttpMessageStream : IMessageStream
         throw new FeatureUnavailableException();
     }
 
-    public async Task DeletePartitionsAsync(int streamId, int topicId, DeletePartitionsRequest request)
+    public async Task DeletePartitionsAsync(Identifier streamId, Identifier topicId, DeletePartitionsRequest request)
     {
         var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
@@ -249,7 +249,7 @@ public class HttpMessageStream : IMessageStream
         }
     }
 
-    public async Task CreatePartitionsAsync(int streamId, int topicId, CreatePartitionsRequest request)
+    public async Task CreatePartitionsAsync(Identifier streamId, Identifier topicId, CreatePartitionsRequest request)
     {
         var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
@@ -278,4 +278,4 @@ public class HttpMessageStream : IMessageStream
     {
         return message.ToString();
     }
-}*/
+}

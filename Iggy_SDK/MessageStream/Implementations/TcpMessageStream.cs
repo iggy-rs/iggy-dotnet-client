@@ -208,7 +208,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	{
 		var streamTopicIdLength = 2 + streamId.Length + 2 + topicId.Length;
         var messageBufferSize = request.Messages.Sum(message => 16 + 4 + message.Payload.Length)
-	        + request.Key.Length + streamTopicIdLength + 2;
+	        + request.Partitioning.Length + streamTopicIdLength + 2;
         var payloadBufferSize = messageBufferSize + 4 + InitialBytesLength;
         
 		var message = ArrayPool<byte>.Shared.Rent(messageBufferSize);

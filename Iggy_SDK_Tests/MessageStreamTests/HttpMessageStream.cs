@@ -12,6 +12,7 @@ using Iggy_SDK_Tests.Utils.Topics;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Errors;
 using Iggy_SDK.Exceptions;
+using Iggy_SDK.Identifiers;
 using Iggy_SDK.JsonConfiguration;
 using Iggy_SDK.MessageStream;
 using RichardSzalay.MockHttp;
@@ -27,7 +28,7 @@ public sealed class HttpMessageStream
 	
 	private const string URL = "http://localhost:3000";
 	
-	/*
+	
 	public HttpMessageStream()
 	{
 		_toSnakeCaseOptions = new();
@@ -61,7 +62,7 @@ public sealed class HttpMessageStream
 	[Fact]
 	public async Task GetStreamByIdAsync_ReturnsStreamResponse_WhenFound()
 	{
-		var streamId = 1;
+		var streamId = Identifier.Numeric(1);
 		var streamResponse = StreamFactory.CreateStreamResponse();
 		var content = JsonSerializer.Serialize(streamResponse, _toSnakeCaseOptions);
 
@@ -76,7 +77,7 @@ public sealed class HttpMessageStream
 	[Fact]
 	public async Task GetStreamByIdAsync_ThrowsErrorResponseException_OnFailure()
 	{
-		var streamId = 1;
+		var streamId = Identifier.Numeric(1);
 		var error = JsonSerializer.Serialize(ErrorModelFactory.CreateErrorModelNotFound(), _toSnakeCaseOptions); 
 		
 		_httpHandler.When(HttpMethod.Get, $"/streams/{streamId}")
@@ -119,7 +120,7 @@ public sealed class HttpMessageStream
 	[Fact]
 	public async Task CreateTopicAsync_ThrowsErrorResponseException_OnFailure()
 	{
-		var streamId = 1;
+		var streamId = Identifier.Numeric(1);
 		var content = TopicFactory.CreateTopicRequest();
 		var json = JsonSerializer.Serialize(content, _toSnakeCaseOptions);
 		var error = JsonSerializer.Serialize(ErrorModelFactory.CreateErrorModelBadRequest(), _toSnakeCaseOptions);
@@ -136,8 +137,8 @@ public sealed class HttpMessageStream
 	[Fact]
 	public async Task DeleteTopicAsync_ThrowsErrorResponseException_OnFailure()
 	{
-		var streamId = 1;
-		var topicId = 1;
+		var streamId = Identifier.Numeric(1);
+		var topicId = Identifier.Numeric(1);
 		var error = JsonSerializer.Serialize(ErrorModelFactory.CreateErrorModelBadRequest(), _toSnakeCaseOptions);
 
 
@@ -151,7 +152,7 @@ public sealed class HttpMessageStream
 	[Fact]
 	public async Task GetTopicsAsync_ReturnsListOfTopicResponse_WhenFound()
 	{
-		int streamId = 1;
+		var streamId = Identifier.Numeric(1);
 		
 		var response = new List<TopicResponse>();
 		response.Add(TopicFactory.CreateTopicsResponse());
@@ -169,7 +170,7 @@ public sealed class HttpMessageStream
 	[Fact]
 	public async Task GetTopicsAsync_ThrowsErrorResponseException_OnFailure()
 	{
-		int streamId = 1;
+		var streamId = Identifier.Numeric(1);
 		var error = JsonSerializer.Serialize(ErrorModelFactory.CreateErrorModelNotFound(), _toSnakeCaseOptions); 
 		
 		_httpHandler.When(HttpMethod.Get, $"/streams/{streamId}/topics")
@@ -183,8 +184,8 @@ public sealed class HttpMessageStream
 	[Fact]
 	public async Task GetTopicByIdAsync_ReturnsTopicResponse_WhenFound()
 	{
-		int streamId = 1;
-		int topicId = 1;
+		var streamId = Identifier.Numeric(1);
+		var topicId = Identifier.Numeric(1);
 		TopicResponse topic = TopicFactory.CreateTopicsResponse();
 		var content = JsonSerializer.Serialize(topic, _toSnakeCaseOptions);
 
@@ -202,8 +203,8 @@ public sealed class HttpMessageStream
 	[Fact]
 	public async Task GetTopicByIdAsync_ThrowsErrorResponseException_OnFailure()
 	{
-		int streamId = 1;
-		int topicId = 1;
+		var streamId = Identifier.Numeric(1);
+		var topicId = Identifier.Numeric(1);
 		var error = JsonSerializer.Serialize(ErrorModelFactory.CreateErrorModelNotFound(), _toSnakeCaseOptions); 
 		
 		_httpHandler.When(HttpMethod.Get, $"/streams/{streamId}/topics/{topicId}")
@@ -216,8 +217,8 @@ public sealed class HttpMessageStream
 	[Fact]
 	public async Task SendMessageAsync_ThrowsErrorResponseException_OnFailure()
 	{
-		int streamId = 1;
-		int topicId = 1;
+		var streamId = Identifier.Numeric(1);
+		var topicId = Identifier.Numeric(1);
 		var request = MessageFactory.CreateMessageSendRequest();		
 		var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions); 
 		var error = JsonSerializer.Serialize(ErrorModelFactory.CreateErrorModelBadRequest(), _toSnakeCaseOptions);
@@ -273,13 +274,13 @@ public sealed class HttpMessageStream
 	[Fact]
 	public async Task UpdateOffsetAsync_ThrowsErrorResponseException_OnFailure()
 	{
-		int streamId = 1;
-		int topicId = 1;
+		var streamId = Identifier.Numeric(1);
+		var topicId = Identifier.Numeric(1);
 		var contract = OffsetFactory.CreateOffsetContract();
 		var error = JsonSerializer.Serialize(ErrorModelFactory.CreateErrorModelBadRequest(), _toSnakeCaseOptions);
 
 
-		_httpHandler.When(HttpMethod.Put, $"/streams/{streamId}/topics/{topicId}/messages/offsets")
+		_httpHandler.When(HttpMethod.Put, $"/streams/{streamId}/topics/{topicId}/consumer-offsets")
 			.Respond(HttpStatusCode.BadRequest, "application/json", error);
 		
 		await Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.StoreOffsetAsync(streamId, topicId, contract));
@@ -292,8 +293,8 @@ public sealed class HttpMessageStream
 		var request = OffsetFactory.CreateOffsetRequest();
 		var response = OffsetFactory.CreateOffsetResponse();
 		
-        _httpHandler.When(HttpMethod.Get, $"/streams/{request.StreamId}/topics/{request.TopicId}/messages/" +
-                       $"offsets?consumer_id={request.ConsumerId}&partition_id={request.PartitionId}")
+        _httpHandler.When(HttpMethod.Get, $"/streams/{request.StreamId}/topics/{request.TopicId}/" +
+                       $"consumer-offsets?consumer_id={request.ConsumerId}&partition_id={request.PartitionId}")
 					.Respond(HttpStatusCode.OK, "application/json", JsonSerializer.Serialize(response, _toSnakeCaseOptions));
         
 		var result = await _sut.GetOffsetAsync(request);
@@ -308,8 +309,8 @@ public sealed class HttpMessageStream
 		var request = OffsetFactory.CreateOffsetRequest();
 		var response = ErrorModelFactory.CreateErrorModelNotFound();
 		
-        _httpHandler.When(HttpMethod.Get, $"/streams/{request.StreamId}/topics/{request.TopicId}/messages/" +
-                       $"offsets?consumer_id={request.ConsumerId}&partition_id={request.PartitionId}")
+        _httpHandler.When(HttpMethod.Get, $"/streams/{request.StreamId}/topics/{request.TopicId}/" +
+                       $"consumer-offsets?consumer_id={request.ConsumerId}&partition_id={request.PartitionId}")
 					.Respond(HttpStatusCode.NotFound, "application/json", JsonSerializer.Serialize(response, _toSnakeCaseOptions));
         
 		await Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.GetOffsetAsync(request));
@@ -318,11 +319,11 @@ public sealed class HttpMessageStream
 	[Fact]
 	public async Task GetGroupsAsync_ReturnsGroupResponse_WhenFound()
 	{
-		int streamId = 1;
-		int topicId = 1;
+		var streamId = Identifier.Numeric(1);
+		var topicId = Identifier.Numeric(1);
 		var response = GroupFactory.CreateGroupsResponse(3);
 
-		_httpHandler.When($"/streams/{streamId}/topics/{topicId}/consumer_groups")
+		_httpHandler.When($"/streams/{streamId}/topics/{topicId}/consumer-groups")
 			.Respond(HttpStatusCode.OK, "application/json", JsonSerializer.Serialize(response, _toSnakeCaseOptions));
 		
 		var result = await _sut.GetConsumerGroupsAsync(streamId , topicId);
@@ -333,11 +334,11 @@ public sealed class HttpMessageStream
 	[Fact]
 	public async Task GetGroupsAsync_ThrowsErrorResponseException_WhenNotFound()
 	{
-		int streamId = 1;
-		int topicId = 1;
+		var streamId = Identifier.Numeric(1);
+		var topicId = Identifier.Numeric(1);
 		var error = ErrorModelFactory.CreateErrorModelNotFound();
 
-		_httpHandler.When($"/streams/{streamId}/topics/{topicId}/consumer_groups")
+		_httpHandler.When($"/streams/{streamId}/topics/{topicId}/consumer-groups")
 			.Respond(HttpStatusCode.NotFound, "application/json", JsonSerializer.Serialize(error, _toSnakeCaseOptions));
 
 		await Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.GetConsumerGroupsAsync(streamId, topicId));
@@ -359,8 +360,8 @@ public sealed class HttpMessageStream
 	[Fact]
 	public async Task CreatePartitions_ThrowsErrorResponseException_OnFailure()
 	{
-		int streamId = 1;
-		int topicId = 1;
+		var streamId = Identifier.Numeric(1);
+		var topicId = Identifier.Numeric(1);
 		var request = PartitionFactory.CreatePartitionsRequest();
 		var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions); 
 		
@@ -380,8 +381,8 @@ public sealed class HttpMessageStream
 	[Fact]
 	public async Task DeletePartitions_ThrowsErrorResponseException_OnFailure()
 	{
-		int streamId = 1;
-		int topicId = 1;
+		var streamId = Identifier.Numeric(1);
+		var topicId = Identifier.Numeric(1);
 		var request = PartitionFactory.CreateDeletePartitionsRequest();
 		
 		var error = ErrorModelFactory.CreateErrorModelBadRequest();
@@ -391,5 +392,5 @@ public sealed class HttpMessageStream
 			.Respond(HttpStatusCode.BadRequest, "application/json", JsonSerializer.Serialize(error, _toSnakeCaseOptions));
 		await Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.DeletePartitionsAsync(streamId, topicId, request));
 	}
-	*/
+	
 }

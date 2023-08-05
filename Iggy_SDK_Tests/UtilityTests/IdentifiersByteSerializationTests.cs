@@ -20,13 +20,13 @@ public sealed class IdentifiersByteSerializationTests
 		const char character = 'a';
 		string val = string.Concat(Enumerable.Range(0, 500).Select(_ => character));
 		
-		Assert.Throws<ArgumentException>(() => Key.EntityIdString(val));
+		Assert.Throws<ArgumentException>(() => Partitioning.EntityIdString(val));
 	}
 	
 	[Fact]
 	public void KeyBytes_WithInvalidLength_ShouldThrowArgumentException()
 	{
 		byte[] val = Enumerable.Range(0, 500).Select(x => (byte)x).ToArray();
-		Assert.Throws<ArgumentException>(() => Key.EntityIdBytes(val));
+		Assert.Throws<ArgumentException>(() => Partitioning.EntityIdBytes(val));
 	}
 }

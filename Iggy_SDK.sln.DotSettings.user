@@ -8,6 +8,7 @@
     &lt;TestId&gt;xUnit::8514D555-35CF-4538-97D3-DC42A182B694::net7.0::Iggy_SDK_Tests.UtilityTests.IdentifiersByteSerializationTests.KeyEntityId_WithInvalidLength_ShouldThrowArgumentException&lt;/TestId&gt;
     &lt;TestId&gt;xUnit::8514D555-35CF-4538-97D3-DC42A182B694::net7.0::Iggy_SDK_Tests.UtilityTests.IdentifiersByteSerializationTests.KeyBytes_WithInvalidLength_ShouldThrowArgumentException&lt;/TestId&gt;
     &lt;TestId&gt;xUnit::8514D555-35CF-4538-97D3-DC42A182B694::net7.0::Iggy_SDK_Tests.ContractTests.TcpContract&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::8514D555-35CF-4538-97D3-DC42A182B694::net7.0::Iggy_SDK_Tests.MessageStreamTests.HttpMessageStream&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=594bddbd_002D4029_002D4993_002D9e7a_002D647e1a5e4e6b/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="CreateTopicAsync_Returns201Created_WhenSuccessfullyCreated" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;

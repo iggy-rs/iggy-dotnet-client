@@ -1,7 +1,7 @@
 
 namespace Iggy_SDK.Enums;
 
-public enum KeyKind
+public enum PartitioningKind
 {
 	None,
 	PartitionId,
