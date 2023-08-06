@@ -9,4 +9,6 @@ public interface IMessageClient
 	Task SendMessagesAsync<TMessage>(Identifier streamId, Identifier topicId, Partitioning partitioning,
 		ICollection<TMessage> messages, Func<TMessage, byte[]> serializer);
 	Task<IEnumerable<MessageResponse>> PollMessagesAsync(MessageFetchRequest request);
+	Task<IEnumerable<MessageResponse<TMessage>>> PollMessagesAsync<TMessage>(MessageFetchRequest request,
+		Func<byte[], TMessage> serializer);
 }

@@ -153,6 +153,11 @@ public class HttpMessageStream : IMessageStream
         throw new Exception("Unknown error occurred.");
     }
 
+    public Task<IEnumerable<MessageResponse<TMessage>>> PollMessagesAsync<TMessage>(MessageFetchRequest request, Func<byte[], TMessage> serializer)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task StoreOffsetAsync(Identifier streamId, Identifier topicId, OffsetContract contract)
     {
         var json = JsonSerializer.Serialize(contract, _toSnakeCaseOptions);

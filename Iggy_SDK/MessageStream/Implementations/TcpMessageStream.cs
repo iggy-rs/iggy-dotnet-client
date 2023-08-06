@@ -307,7 +307,62 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 		return msgBytesSum;
 	}
+	public async Task<IEnumerable<MessageResponse<TMessage>>> PollMessagesAsync<TMessage>(MessageFetchRequest request,
+		Func<byte[], TMessage> serializer)
+	{
 
+		int messageBufferSize = 18 + 5 + 2 + request.StreamId.Length + 2 + request.TopicId.Length;
+		int payloadBufferSize = messageBufferSize + 4 + InitialBytesLength;
+		var message = ArrayPool<byte>.Shared.Rent(messageBufferSize);
+		var payload = ArrayPool<byte>.Shared.Rent(payloadBufferSize);
+		
+		//I fucking hate exceptions
+		try
+		{
+			TcpContracts.GetMessages(message.AsSpan()[..messageBufferSize], request);
+			CreatePayloadOptimized(payload, message.AsSpan()[..messageBufferSize], CommandCodes.POLL_MESSAGES_CODE);
+
+			await _stream.WriteAsync(payload.AsMemory()[..payloadBufferSize]);
+		}
+		finally
+		{
+			ArrayPool<byte>.Shared.Return(message);
+			ArrayPool<byte>.Shared.Return(payload);
+		}
+
+		var buffer = ArrayPool<byte>.Shared.Rent(ExpectedResponseSize);
+		try
+		{
+			await _stream.ReadExactlyAsync(buffer.AsMemory()[..ExpectedResponseSize]);
+			var response = GetResponseLengthAndStatus(buffer);
+			if (response.Status != 0)
+			{
+				throw new TcpInvalidResponseException();
+			}
+
+			if (response.Length <= 1)
+			{
+				return Enumerable.Empty<MessageResponse<TMessage>>();
+			}
+
+			var responseBuffer = ArrayPool<byte>.Shared.Rent(response.Length);
+			
+			try
+			{
+				await _stream.ReadExactlyAsync(responseBuffer.AsMemory()[..response.Length]);
+				var result = BinaryMapper.MapMessages(responseBuffer.AsSpan()[..response.Length], serializer);
+				return result;
+			}
+			finally
+			{
+				ArrayPool<byte>.Shared.Return(responseBuffer);
+			}
+		}
+		finally
+		{
+			ArrayPool<byte>.Shared.Return(buffer);
+		}
+	}
 	public async Task<IEnumerable<MessageResponse>> PollMessagesAsync(MessageFetchRequest request)
 	{
 		int messageBufferSize = 18 + 5 + 2 + request.StreamId.Length + 2 + request.TopicId.Length;
@@ -363,6 +418,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			ArrayPool<byte>.Shared.Return(buffer);
 		}
 	}
+
 
 	public async Task StoreOffsetAsync(Identifier streamId, Identifier topicId, OffsetContract contract)
 	{

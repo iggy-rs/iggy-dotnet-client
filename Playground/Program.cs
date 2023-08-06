@@ -2,6 +2,7 @@
 
 using System.Buffers.Binary;
 using System.Text;
+using System.Threading.Channels;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
@@ -54,15 +55,46 @@ catch
 	Console.WriteLine("cannot create stream and topic");
 }
 
-
 await bus.SendMessagesAsync<Product>(Identifier.Numeric(1), Identifier.Numeric(1),
 	Partitioning.PartitionId(1), products, static product =>
 	{
-		Span<byte> bytes = stackalloc byte[4 + product.Description.Length + product.Name.Length];
-		
-		Encoding.UTF8.GetBytes(product.Name).CopyTo(bytes[..product.Name.Length]);
-		Encoding.UTF8.GetBytes(product.Description).CopyTo(bytes[product.Name.Length..]);
-		BinaryPrimitives.WriteInt32LittleEndian(bytes[(product.Name.Length + product.Description.Length)..], product.Quantity);
-		
+		var descLength = product.Description.Length;
+		var nameLength = product.Name.Length;
+		Span<byte> bytes = stackalloc byte[4 + descLength + nameLength + 4];
+
+		BinaryPrimitives.WriteInt32LittleEndian(bytes[..4], product.Quantity);
+		BinaryPrimitives.WriteInt32LittleEndian(bytes[4..8], nameLength);
+		Encoding.UTF8.GetBytes(product.Name).CopyTo(bytes[8..(nameLength + 8)]);
+		Encoding.UTF8.GetBytes(product.Description).CopyTo(bytes[(nameLength + 8)..]);
+
 		return bytes.ToArray();
 	});
+
+var messages = (await bus.PollMessagesAsync<Product>(new MessageFetchRequest
+{
+	Consumer = Consumer.New(1),
+	Count = 3,
+	TopicId = Identifier.Numeric(1),
+	StreamId = Identifier.Numeric(1),
+	PartitionId = 1,
+	PollingStrategy = MessagePolling.Next,
+	Value = 0,
+	AutoCommit = true,
+}, bytes =>
+{
+	var quantity = BinaryPrimitives.ReadInt32LittleEndian(bytes.AsSpan()[..4]);
+	var nameLength = BinaryPrimitives.ReadInt32LittleEndian(bytes.AsSpan()[4..8]);
+	var name = Encoding.UTF8.GetString(bytes.AsSpan()[8..(nameLength + 8)]);
+	var description = Encoding.UTF8.GetString(bytes.AsSpan()[(nameLength + 8)..]);
+	return new Product
+	{
+		Quantity = quantity,
+		Name = name,
+		Description = description
+	};
+})).ToList();
+
+foreach (var obj in messages)
+{
+	Console.WriteLine(obj.Message.Quantity);
+}
