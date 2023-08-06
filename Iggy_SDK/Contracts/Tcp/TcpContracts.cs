@@ -38,26 +38,27 @@ internal static class TcpContracts
         
         bytes[position + 17] = request.AutoCommit ? (byte)1 : (byte)0;
     }
-    internal static void CreateMessage(Span<byte> bytes, Identifier streamId, Identifier topicId, MessageSendRequest request)
+    internal static void CreateMessage(Span<byte> bytes, Identifier streamId, Identifier topicId,
+        Partitioning partitioning, ICollection<Message> messages)
     {
         WriteBytesFromStreamAndTopicIdToSpan(streamId , topicId , bytes);
         int streamTopicIdOffset = 2 + streamId.Length + 2 + topicId.Length;
-        bytes[streamTopicIdOffset] = request.Partitioning.Kind switch
+        bytes[streamTopicIdOffset] = partitioning.Kind switch
         {
             PartitioningKind.None => 0,
             PartitioningKind.PartitionId => 1,
             PartitioningKind.EntityId => 2,
             _ => throw new ArgumentOutOfRangeException()
         };
-        bytes[streamTopicIdOffset + 1] = (byte)request.Partitioning.Length;
-        request.Partitioning.Value.CopyTo(bytes[(streamTopicIdOffset + 2)..(streamTopicIdOffset + request.Partitioning.Length + 2)]);
+        bytes[streamTopicIdOffset + 1] = (byte)partitioning.Length;
+        partitioning.Value.CopyTo(bytes[(streamTopicIdOffset + 2)..(streamTopicIdOffset + partitioning.Length + 2)]);
 
-        var position = 2 + request.Partitioning.Length + streamTopicIdOffset;
-        bytes = request.Messages switch
+        var position = 2 + partitioning.Length + streamTopicIdOffset;
+        bytes = messages switch
         {
             Message[] messagesArray => HandleMessagesArray(position, messagesArray, bytes),
             List<Message> messagesList => HandleMessagesList(position, messagesList, bytes),
-            _ => HandleMessagesEnumerable(position, request.Messages, bytes),
+            _ => HandleMessagesEnumerable(position, messages, bytes),
         };
     }
     private static Span<byte> HandleMessagesEnumerable(int position, IEnumerable<Message> messages, Span<byte> bytes)

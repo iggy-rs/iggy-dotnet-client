@@ -1,12 +1,15 @@
 using System.Buffers;
 using System.Buffers.Binary;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Contracts.Tcp;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Exceptions;
 using Iggy_SDK.Identifiers;
 using Iggy_SDK.Mappers;
+using Iggy_SDK.Messages;
 using Iggy_SDK.Utils;
 
 namespace Iggy_SDK.MessageStream.Implementations;
@@ -215,7 +218,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var payload = ArrayPool<byte>.Shared.Rent(payloadBufferSize);
 		try
 		{
-			TcpContracts.CreateMessage(message.AsSpan()[..messageBufferSize], streamId, topicId, request);
+			TcpContracts.CreateMessage(message.AsSpan()[..messageBufferSize], streamId, topicId, request.Partitioning,
+				request.Messages);
 			CreatePayloadOptimized(payload, message.AsSpan()[..messageBufferSize], CommandCodes.SEND_MESSAGES_CODE);
 
 			await _stream.WriteAsync(payload.AsMemory()[..payloadBufferSize]);
@@ -236,6 +240,72 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			ArrayPool<byte>.Shared.Return(payload);
 		}
 		
+	}
+
+	public async Task SendMessagesAsync<TMessage>(Identifier streamId, Identifier topicId, Partitioning partitioning,
+		ICollection<TMessage> messages, Func<TMessage, byte[]> serializer)
+	{
+		var msgCountSuccess = messages.TryGetNonEnumeratedCount(out var msgCount);
+		if (!msgCountSuccess)
+		{
+			msgCount = messages.Count;
+		}
+		var messagesPool = ArrayPool<Message>.Shared.Rent(msgCount);
+
+		for (var i = 0; i < messages.Count; i++)
+		{
+			messagesPool[i] = new Message
+			{
+				Payload = serializer(messages.ElementAt(i)),
+				Id = Guid.NewGuid()
+			};
+		}
+
+		var messagesToSend = messagesPool[..msgCount];
+		var msgBytesSum = CalculateMessageBytesCount(messagesToSend);
+
+		var streamTopicIdLength = 2 + streamId.Length + 2 + topicId.Length;
+		var messageBufferSize = msgBytesSum + partitioning.Length + streamTopicIdLength + 2;
+        var payloadBufferSize = messageBufferSize + 4 + InitialBytesLength;
+        
+		var message = ArrayPool<byte>.Shared.Rent(messageBufferSize);
+		var payload = ArrayPool<byte>.Shared.Rent(payloadBufferSize);
+		try
+		{
+			TcpContracts.CreateMessage(message.AsSpan()[..messageBufferSize], streamId, topicId, partitioning,
+				messagesToSend);
+			CreatePayloadOptimized(payload, message.AsSpan()[..messageBufferSize], CommandCodes.SEND_MESSAGES_CODE);
+
+			await _stream.WriteAsync(payload.AsMemory()[..payloadBufferSize]);
+			
+			//re-use already rented buffer
+			var buffer = message[..ExpectedResponseSize];
+			await _stream.ReadExactlyAsync(buffer);
+			
+			var status = GetResponseStatus(buffer);
+			if (status != 0)
+			{
+				throw new InvalidResponseException($"Invalid response status code: {status}");
+			}
+		}
+		finally
+		{
+			ArrayPool<Message>.Shared.Return(messagesPool);
+			ArrayPool<byte>.Shared.Return(message);
+			ArrayPool<byte>.Shared.Return(payload);
+		}
+	}
+
+	private static int CalculateMessageBytesCount(Message[] messagesToSend)
+	{
+		ref var searchSpace = ref MemoryMarshal.GetArrayDataReference(messagesToSend);
+		var msgBytesSum = 0;
+		for (int i = 0; i < messagesToSend.AsSpan().Length; i++)
+		{
+			var item = Unsafe.Add(ref searchSpace, i);
+			msgBytesSum += item.Payload.Length + 16 + 4;
+		}
+		return msgBytesSum;
 	}
 
 	public async Task<IEnumerable<MessageResponse>> PollMessagesAsync(MessageFetchRequest request)

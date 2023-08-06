@@ -128,6 +128,13 @@ public class HttpMessageStream : IMessageStream
             throw new Exception("Unknown error occurred.");
         }
     }
+
+    public Task SendMessagesAsync<TMessage>(Identifier streamId, Identifier topicId, Partitioning partitioning,
+        ICollection<TMessage> messages, Func<TMessage, byte[]> serializer)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<IEnumerable<MessageResponse>> PollMessagesAsync(MessageFetchRequest request)
     {
         var url = CreateUrl($"/streams/{request.StreamId}/topics/{request.TopicId}/messages?consumer_id={request.Consumer.Id}" +

@@ -71,7 +71,7 @@ public sealed class TcpContract
         
 
         // Act
-        TcpContracts.CreateMessage(result, streamId, topicId, request);
+        TcpContracts.CreateMessage(result, streamId, topicId, request.Partitioning, request.Messages);
         
         //Assert
         Assert.Equal(streamId.Value, BytesToIdentifierNumeric(result, 0).Value);
