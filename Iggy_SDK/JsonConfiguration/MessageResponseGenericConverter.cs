@@ -5,12 +5,18 @@ using Iggy_SDK.Extensions;
 
 namespace Iggy_SDK.JsonConfiguration;
 
-internal sealed class MessageResponseConverter : JsonConverter<IEnumerable<MessageResponse>>
+public sealed class MessageResponseGenericConverter<TMessage> : JsonConverter<IEnumerable<MessageResponse<TMessage>>>
 {
-	public override IEnumerable<MessageResponse> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+	private readonly Func<byte[], TMessage> _serializer;
+
+	public MessageResponseGenericConverter(Func<byte[], TMessage> serializer)
 	{
-		//TODO - maby get rid of this allocation by using MemoryPools
-		var messageResponses = new List<MessageResponse>();
+		_serializer = serializer;
+	}
+	public override IEnumerable<MessageResponse<TMessage>>? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+	{
+		//TODO - mby get rid of this allocation as well 
+		var messageResponses = new List<MessageResponse<TMessage>>();
 		using var doc = JsonDocument.ParseValue(ref reader);
 		
 		var root = doc.RootElement;
@@ -21,19 +27,19 @@ internal sealed class MessageResponseConverter : JsonConverter<IEnumerable<Messa
 			var id = element.GetProperty(nameof(MessageResponse.Id).ToSnakeCase()).GetUInt128();
 			var payload = element.GetProperty(nameof(MessageResponse.Payload).ToSnakeCase()).GetBytesFromBase64();
 
-			messageResponses.Add(new MessageResponse
+			messageResponses.Add(new MessageResponse<TMessage>
 			{
 				Offset = offset,
 				Timestamp = timestamp,
 				Id = new Guid(id.GetBytesFromUInt128()), 
-				Payload = payload
+				Message = _serializer(payload)
 			});
 		}
 
 		return messageResponses;
 	}
 
-	public override void Write(Utf8JsonWriter writer, IEnumerable<MessageResponse> value, JsonSerializerOptions options)
+	public override void Write(Utf8JsonWriter writer, IEnumerable<MessageResponse<TMessage>> value, JsonSerializerOptions options)
 	{
 		throw new NotImplementedException();
 	}

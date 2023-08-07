@@ -1,8 +1,5 @@
-﻿// See https://aka.ms/new-console-template for more information
-
-using System.Buffers.Binary;
+﻿using System.Buffers.Binary;
 using System.Text;
-using System.Threading.Channels;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
@@ -11,10 +8,10 @@ using Playground;
 
 var bus = MessageStreamFactory.CreateMessageStream(options =>
 {
-	options.BaseAdress = "127.0.0.1:8090";
-	options.Protocol = Protocol.Tcp;
-	options.ReceiveBufferSize = Int32.MaxValue;
-	options.SendBufferSize = Int32.MaxValue;
+	options.BaseAdress = "http://127.0.0.1:3000";
+	options.Protocol = Protocol.Http;
+	options.ReceiveBufferSize = int.MaxValue;
+	options.SendBufferSize = int.MaxValue;
 });
 
 List<Product> products = new();
