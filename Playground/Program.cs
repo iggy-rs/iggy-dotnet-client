@@ -93,5 +93,5 @@ var messages = (await bus.PollMessagesAsync<Product>(new MessageFetchRequest
 
 foreach (var obj in messages)
 {
-	Console.WriteLine(obj.Message.Quantity);
+	Console.WriteLine(obj.Message.Description);
 }

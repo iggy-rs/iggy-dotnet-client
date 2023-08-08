@@ -15,8 +15,7 @@ internal sealed class BinaryFactory
 
     internal static byte[] CreateMessagePayload(ulong offset, ulong timestamp, Guid guid, ReadOnlySpan<byte> payload)
     {
-        
-        int messageLength = payload.Length;
+        var messageLength = payload.Length;
         var totalSize = 36 + payload.Length;
         var payloadBuffer = new byte[totalSize];
         

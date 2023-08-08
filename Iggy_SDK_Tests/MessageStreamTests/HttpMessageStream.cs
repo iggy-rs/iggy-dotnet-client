@@ -235,6 +235,7 @@ public sealed class HttpMessageStream
 		await Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.SendMessagesAsync(streamId, topicId, request));
 		_httpHandler.Flush();
 	} 
+	
 	[Fact]
 	public async Task GetMessagesAsync_ReturnsMessages_WhenFound()
 	{
