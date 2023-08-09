@@ -1,9 +1,10 @@
 ﻿using System.Buffers.Binary;
 using Iggy_Sample_Producer;
+using Iggy_SDK;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
-using Iggy_SDK.Identifiers;
+using Iggy_SDK.Kinds;
 using Iggy_SDK.Messages;
 using Iggy_SDK.MessageStream;
 using Shared;

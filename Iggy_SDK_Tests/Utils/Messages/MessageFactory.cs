@@ -1,10 +1,11 @@
 using System.Buffers.Binary;
 using System.Text;
 using System.Text.Json;
+using Iggy_SDK;
 using Iggy_SDK_Tests.Utils.DummyObj;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
-using Iggy_SDK.Identifiers;
+using Iggy_SDK.Kinds;
 using Iggy_SDK.Messages;
 
 namespace Iggy_SDK_Tests.Utils.Messages;

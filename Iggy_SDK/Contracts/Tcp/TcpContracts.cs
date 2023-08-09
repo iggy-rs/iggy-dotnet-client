@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
-using Iggy_SDK.Identifiers;
+using Iggy_SDK.Kinds;
 using Iggy_SDK.Messages;
 
 namespace Iggy_SDK.Contracts.Tcp;

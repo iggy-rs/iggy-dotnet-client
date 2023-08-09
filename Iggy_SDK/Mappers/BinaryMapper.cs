@@ -92,7 +92,7 @@ internal static class BinaryMapper
                 Offset = offset,
                 Timestamp = timestamp,
                 Id = id,
-                //can i somehow omit this allocation ?
+                //TODO - can i somehow omit this allocation ?
                 Message = serializer(payloadSlice.ToArray())
             });
 

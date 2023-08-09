@@ -1,10 +1,11 @@
 ﻿using System.Text;
 using System.Text.Json;
+using Iggy_SDK;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
-using Iggy_SDK.Identifiers;
 using Iggy_SDK.JsonConfiguration;
+using Iggy_SDK.Kinds;
 using Shared;
 
 var jsonOptions = new JsonSerializerOptions();

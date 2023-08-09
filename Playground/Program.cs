@@ -1,9 +1,10 @@
 ﻿using System.Buffers.Binary;
 using System.Text;
+using Iggy_SDK;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
-using Iggy_SDK.Identifiers;
+using Iggy_SDK.Kinds;
 using Playground;
 
 var bus = MessageStreamFactory.CreateMessageStream(options =>

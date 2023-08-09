@@ -2,6 +2,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Iggy_SDK;
 using Iggy_SDK_Tests.Utils.Errors;
 using Iggy_SDK_Tests.Utils.Groups;
 using Iggy_SDK_Tests.Utils.Messages;
@@ -12,8 +13,8 @@ using Iggy_SDK_Tests.Utils.Topics;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Errors;
 using Iggy_SDK.Exceptions;
-using Iggy_SDK.Identifiers;
 using Iggy_SDK.JsonConfiguration;
+using Iggy_SDK.Kinds;
 using Iggy_SDK.MessageStream;
 using RichardSzalay.MockHttp;
 

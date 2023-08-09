@@ -1,5 +1,6 @@
 using System.Buffers.Binary;
 using System.Text;
+using Iggy_SDK;
 using Iggy_SDK_Tests.Utils.Groups;
 using Iggy_SDK_Tests.Utils.Messages;
 using Iggy_SDK_Tests.Utils.Offset;
@@ -8,7 +9,7 @@ using Iggy_SDK_Tests.Utils.Streams;
 using Iggy_SDK_Tests.Utils.Topics;
 using Iggy_SDK.Contracts.Tcp;
 using Iggy_SDK.Enums;
-using Iggy_SDK.Identifiers;
+using Iggy_SDK.Kinds;
 
 namespace Iggy_SDK_Tests.ContractTests;
 
