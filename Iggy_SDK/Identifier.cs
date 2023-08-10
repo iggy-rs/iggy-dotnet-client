@@ -2,7 +2,7 @@ using System.Buffers.Binary;
 using System.Text;
 using Iggy_SDK.Enums;
 
-namespace Iggy_SDK.Identifiers;
+namespace Iggy_SDK;
 
 public sealed class Identifier
 {

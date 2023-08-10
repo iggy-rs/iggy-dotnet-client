@@ -17,6 +17,7 @@ internal static class BinaryMapper
         };
     }
     
+    //TODO - look into making this lazy
     internal static IEnumerable<MessageResponse> MapMessages(ReadOnlySpan<byte> payload)
     {
         const int propertiesSize = 36;
@@ -49,6 +50,50 @@ internal static class BinaryMapper
                 Timestamp = timestamp,
                 Id = id,
                 Payload = payloadSlice.ToArray()
+            });
+
+            if (position + propertiesSize >= length)
+            {
+                break;
+            }
+        }
+
+        return messages;
+    }
+    internal static IEnumerable<MessageResponse<TMessage>> MapMessages<TMessage>(ReadOnlySpan<byte> payload,
+        Func<byte[], TMessage> serializer)
+    {
+        const int propertiesSize = 36;
+        int length = payload.Length;
+        int position = 4;
+        List<MessageResponse<TMessage>> messages = new();
+
+        while (position < length)
+        {
+            ulong offset = BinaryPrimitives.ReadUInt64LittleEndian(payload[position..(position + 8)]);
+            ulong timestamp = BinaryPrimitives.ReadUInt64LittleEndian(payload[(position + 8)..(position + 16)]);
+            var id = new Guid(payload[(position + 16)..(position + 32)]);
+            uint messageLength = BinaryPrimitives.ReadUInt32LittleEndian(payload[(position + 32)..(position + 36)]);
+
+            int payloadRangeStart = position + propertiesSize;
+            int payloadRangeEnd = position + propertiesSize + (int)messageLength;
+            if (payloadRangeStart > length || payloadRangeEnd > length)
+            {
+                break;
+            }
+
+            var payloadSlice = payload[payloadRangeStart..payloadRangeEnd];
+
+            int totalSize = propertiesSize + (int)messageLength;
+            position += totalSize;
+
+            messages.Add(new MessageResponse<TMessage>
+            {
+                Offset = offset,
+                Timestamp = timestamp,
+                Id = id,
+                //TODO - can i somehow omit this allocation ?
+                Message = serializer(payloadSlice.ToArray())
             });
 
             if (position + propertiesSize >= length)

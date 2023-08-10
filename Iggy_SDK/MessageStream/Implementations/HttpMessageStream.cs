@@ -5,8 +5,9 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Exceptions;
-using Iggy_SDK.Identifiers;
 using Iggy_SDK.JsonConfiguration;
+using Iggy_SDK.Kinds;
+using Iggy_SDK.Messages;
 using Iggy_SDK.StringHandlers;
 using Iggy_SDK.Utils;
 
@@ -33,7 +34,6 @@ public class HttpMessageStream : IMessageStream
     public async Task CreateStreamAsync(StreamRequest request)
     {
         var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
-        Console.WriteLine(json);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
         
         var response = await _httpClient.PostAsync("/streams", data);
@@ -128,6 +128,31 @@ public class HttpMessageStream : IMessageStream
             throw new Exception("Unknown error occurred.");
         }
     }
+
+    public async Task SendMessagesAsync<TMessage>(Identifier streamId, Identifier topicId, Partitioning partitioning,
+        ICollection<TMessage> messages, Func<TMessage, byte[]> serializer)
+    {
+        //TODO - maybe get rid of this closure ?
+        var request = new MessageSendRequest
+        {
+            Partitioning = partitioning,
+            Messages = messages.Select(message => new Message
+            {
+                Id = Guid.NewGuid(),
+                Payload = serializer(message),
+            }).ToArray()
+        };
+        var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
+        var data = new StringContent(json, Encoding.UTF8, "application/json");
+        
+        var response = await _httpClient.PostAsync($"/streams/{streamId}/topics/{topicId}/messages", data);
+        if (!response.IsSuccessStatusCode)
+        {
+            await HandleResponseAsync(response);
+            throw new Exception("Unknown error occurred.");
+        }
+    }
+
     public async Task<IEnumerable<MessageResponse>> PollMessagesAsync(MessageFetchRequest request)
     {
         var url = CreateUrl($"/streams/{request.StreamId}/topics/{request.TopicId}/messages?consumer_id={request.Consumer.Id}" +
@@ -141,6 +166,24 @@ public class HttpMessageStream : IMessageStream
                        Converters = { new MessageResponseConverter() }
                    })
                    ?? Enumerable.Empty<MessageResponse>();
+        }
+        await HandleResponseAsync(response);
+        throw new Exception("Unknown error occurred.");
+    }
+
+    public async Task<IEnumerable<MessageResponse<TMessage>>> PollMessagesAsync<TMessage>(MessageFetchRequest request, Func<byte[], TMessage> serializer)
+    {
+        var url = CreateUrl($"/streams/{request.StreamId}/topics/{request.TopicId}/messages?consumer_id={request.Consumer.Id}" +
+                            $"&partition_id={request.PartitionId}&kind={request.PollingStrategy}&value={request.Value}&count={request.Count}&auto_commit={request.AutoCommit}");
+        
+        var response =  await _httpClient.GetAsync(url);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<IEnumerable<MessageResponse<TMessage>>>(new JsonSerializerOptions
+                   {
+                       Converters = { new MessageResponseGenericConverter<TMessage>(serializer) }
+                   })
+                   ?? Enumerable.Empty<MessageResponse<TMessage>>();
         }
         await HandleResponseAsync(response);
         throw new Exception("Unknown error occurred.");

@@ -1,6 +1,7 @@
+using Iggy_SDK;
 using Iggy_SDK.Contracts;
 using Iggy_SDK.Contracts.Http;
-using Iggy_SDK.Identifiers;
+using Iggy_SDK.Kinds;
 
 namespace Iggy_SDK_Tests.Utils.Groups;
 

@@ -1,4 +1,7 @@
+using System.Buffers.Binary;
+using System.Text;
 using Iggy_SDK_Tests.Utils;
+using Iggy_SDK_Tests.Utils.DummyObj;
 using Iggy_SDK_Tests.Utils.Groups;
 using Iggy_SDK_Tests.Utils.Messages;
 using Iggy_SDK_Tests.Utils.Stats;
@@ -27,6 +30,59 @@ public sealed class BinaryMapper
         Assert.Equal(offset, response.Offset);
     }
 
+    [Fact]
+    public void MapMessagesTMessage_ReturnsValidMessageResponse()
+    {
+        //Arrange
+        Func<byte[], DummyMessage> deserializer = bytes =>
+        {
+            int id = BinaryPrimitives.ReadInt32LittleEndian(bytes);
+            int textLength = BinaryPrimitives.ReadInt32LittleEndian(bytes[4..8]);
+            string text = Encoding.UTF8.GetString(bytes[8..(8 + textLength)]);
+            return new DummyMessage { Id = id, Text = text };
+        };
+
+        var (offset, timestamp, guid, payload) = MessageFactory.CreateMessageResponseFieldsTMessage();
+        byte[] msgOnePayload = BinaryFactory.CreateMessagePayload(offset, timestamp,
+            guid, payload);
+        
+        var (offset1, timestamp1, guid1, payload1) = MessageFactory.CreateMessageResponseFieldsTMessage();
+        byte[] msgTwoPayload = BinaryFactory.CreateMessagePayload(offset1, timestamp1,
+            guid1, payload1);
+
+        byte[] combinedPayload = new byte[4 + msgOnePayload.Length + msgTwoPayload.Length];
+        for (int i = 4; i < msgOnePayload.Length + 4; i++)
+        {
+            combinedPayload[i] = msgOnePayload[i - 4];
+        }
+        for (int i = 0; i < msgTwoPayload.Length; i++)
+        {
+            combinedPayload[4 + msgOnePayload.Length + i] = msgTwoPayload[i];
+        }
+        //Act
+        var response = Iggy_SDK.Mappers.BinaryMapper.MapMessages<DummyMessage>(combinedPayload, bytes =>
+        {
+            var id = BitConverter.ToInt32(bytes[..4]);
+            var txtLength = BitConverter.ToInt32(bytes[4..8]);
+            var text = Encoding.UTF8.GetString(bytes[txtLength..]);
+            return new DummyMessage
+            {
+                Id = id,
+                Text = text
+            };
+        }).ToList();
+        //Assert 
+        Assert.NotEmpty(response);
+        Assert.Equal(2, response.Count);
+        Assert.Equal(response[0].Id , guid);
+        Assert.Equal(response[0].Offset, offset);
+        Assert.Equal(response[0].Timestamp, timestamp);
+        Assert.Equal(response[1].Id, guid1);
+        Assert.Equal(response[1].Offset, offset1);
+        Assert.Equal(response[1].Timestamp, timestamp1);
+        Assert.Equal(response[0].Message.Id, deserializer(payload).Id);
+        
+    }
     [Fact]
     public void MapMessages_ReturnsValidMessageResponses()
     {
@@ -67,13 +123,12 @@ public sealed class BinaryMapper
         Assert.Equal(guid1, response2.Id);
         Assert.Equal(payload1, response2.Payload);
     }
-
     [Fact]
     public void MapStreams_ReturnsValidStreamsResponses()
     {
         // Arrange
         var (id1, topicsCount1, sizeBytes, messagesCount, name1) = StreamFactory.CreateStreamsResponseFields();
-        byte[] payload1 = BinaryFactory.CreateStreamPayload(id1, topicsCount1, name1, sizeBytes, messagesCount);
+            byte[] payload1 = BinaryFactory.CreateStreamPayload(id1, topicsCount1, name1, sizeBytes, messagesCount);
         var (id2, topicsCount2, sizeBytes2, messagesCount2, name2) = StreamFactory.CreateStreamsResponseFields();
         byte[] payload2 = BinaryFactory.CreateStreamPayload(id2, topicsCount2, name2, sizeBytes2, messagesCount2);
 

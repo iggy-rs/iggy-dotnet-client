@@ -1,4 +1,4 @@
-using Iggy_SDK.Identifiers;
+using Iggy_SDK.Kinds;
 
 namespace Iggy_SDK.Contracts.Http;
 

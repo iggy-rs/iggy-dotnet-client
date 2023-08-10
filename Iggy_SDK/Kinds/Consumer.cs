@@ -1,6 +1,6 @@
 using Iggy_SDK.Enums;
 
-namespace Iggy_SDK.Identifiers;
+namespace Iggy_SDK.Kinds;
 
 public sealed class Consumer
 {

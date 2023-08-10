@@ -1,10 +1,11 @@
 using System.Buffers.Binary;
 using System.Text;
 using System.Text.Json;
+using Iggy_SDK;
 using Iggy_SDK_Tests.Utils.DummyObj;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
-using Iggy_SDK.Identifiers;
+using Iggy_SDK.Kinds;
 using Iggy_SDK.Messages;
 
 namespace Iggy_SDK_Tests.Utils.Messages;
@@ -17,6 +18,43 @@ internal static class MessageFactory
 		var timestamp = (ulong)Random.Shared.Next(420, 69420);
 		var guid = Guid.NewGuid();
 		var bytes = Encoding.UTF8.GetBytes(RandomString(Random.Shared.Next(6, 69)));
+		return (offset, timestamp, guid, bytes);
+	}
+	internal static (ulong offset, ulong timestamp, Guid guid, byte[] payload) CreateMessageResponseFieldsTMessage()
+	{
+		var msg = new DummyMessage
+		{
+			Id = Random.Shared.Next(1, 69),
+			Text = "Hello"
+		};
+		Func<DummyMessage, byte[]> serializer = msg =>
+		{
+			Span<byte> bytes = stackalloc byte[4 + 4 + msg.Text.Length];
+			BinaryPrimitives.WriteInt32LittleEndian(bytes[..4], msg.Id);
+			BinaryPrimitives.WriteInt32LittleEndian(bytes[4..8], msg.Text.Length);
+			Encoding.UTF8.GetBytes(msg.Text).CopyTo(bytes[8..]);
+			return bytes.ToArray();
+		};
+		ulong offset = (ulong)Random.Shared.Next(6, 69);
+		var timestamp = (ulong)Random.Shared.Next(420, 69420);
+		var guid = Guid.NewGuid();
+		var bytes = serializer(msg);
+		return (offset, timestamp, guid, bytes);
+	}
+	internal static (ulong offset, ulong timestamp, Guid guid, byte[] payload) CreateMessageResponseGenerics()
+	{
+		ulong offset = (ulong)Random.Shared.Next(6, 69);
+		var timestamp = (ulong)Random.Shared.Next(420, 69420);
+		var guid = Guid.NewGuid();
+		var bytes = Encoding.UTF8.GetBytes("Hello");
+		return (offset, timestamp, guid, bytes);
+	}
+	internal static (ulong offset, ulong timestamp, Guid guid, byte[] payload) CreateMessageResponseFields<TMessage>(TMessage message, Func<TMessage, byte[]> serializer)
+	{
+		ulong offset = (ulong)Random.Shared.Next(6, 69);
+		var timestamp = (ulong)Random.Shared.Next(420, 69420);
+		var guid = Guid.NewGuid();
+		var bytes = serializer(message);
 		return (offset, timestamp, guid, bytes);
 	}
 

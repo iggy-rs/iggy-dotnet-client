@@ -1,8 +1,9 @@
 ﻿using Benchmarks;
+using Iggy_SDK;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
-using Iggy_SDK.Identifiers;
+using Iggy_SDK.Kinds;
 
 const int messagesCount = 1000;
 const int messagesBatch = 1000;
