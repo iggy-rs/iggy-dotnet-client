@@ -13,26 +13,12 @@ internal static class TcpContracts
 {
     internal static void GetMessages(Span<byte> bytes, MessageFetchRequest request)
     {
-
-        bytes[0] = request.Consumer.Type switch
-        {
-            ConsumerType.Consumer => 1,
-            ConsumerType.ConsumerGroup => 2,
-            _ => throw new ArgumentOutOfRangeException()
-        };
+        bytes[0] = GetConsumerTypeByte(request.Consumer.Type);
         BinaryPrimitives.WriteInt32LittleEndian(bytes[1..5], request.Consumer.Id);
         WriteBytesFromStreamAndTopicIdToSpan(request.StreamId, request.TopicId, bytes, 5);
         var position = 5 + 2 + request.StreamId.Length + 2 + request.TopicId.Length;
         BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], request.PartitionId);
-        bytes[position + 4] = request.PollingStrategy switch
-        {
-            MessagePolling.Offset => 0,
-            MessagePolling.Timestamp => 1,
-            MessagePolling.First => 2,
-            MessagePolling.Last => 3,
-            MessagePolling.Next => 4,
-            _ => throw new ArgumentOutOfRangeException()
-        };
+        bytes[position + 4] = GetPollingStrategyByte(request.PollingStrategy);
         BinaryPrimitives.WriteUInt64LittleEndian(bytes[(position + 5)..(position + 13)], request.Value);
         BinaryPrimitives.WriteInt32LittleEndian(bytes[(position + 13)..(position + 17)], request.Count);
         
@@ -43,13 +29,7 @@ internal static class TcpContracts
     {
         WriteBytesFromStreamAndTopicIdToSpan(streamId , topicId , bytes);
         int streamTopicIdOffset = 2 + streamId.Length + 2 + topicId.Length;
-        bytes[streamTopicIdOffset] = partitioning.Kind switch
-        {
-            PartitioningKind.None => 0,
-            PartitioningKind.PartitionId => 1,
-            PartitioningKind.EntityId => 2,
-            _ => throw new ArgumentOutOfRangeException()
-        };
+        bytes[streamTopicIdOffset] = GetPartitioningKindByte(partitioning.Kind);
         bytes[streamTopicIdOffset + 1] = (byte)partitioning.Length;
         partitioning.Value.CopyTo(bytes[(streamTopicIdOffset + 2)..(streamTopicIdOffset + partitioning.Length + 2)]);
 
@@ -91,7 +71,6 @@ internal static class TcpContracts
         {
             var guid = start.Id;
             MemoryMarshal.TryWrite(id, ref guid);
-            
             for (int j = position; j < position + 16; j++)
             {
                 bytes[j] = id[j - position];
@@ -118,7 +97,6 @@ internal static class TcpContracts
         {
             var guid = start.Id;
             MemoryMarshal.TryWrite(id, ref guid);
-            
             for (int j = position; j < position + 16; j++)
             {
                 bytes[j] = id[j - position];
@@ -224,12 +202,7 @@ internal static class TcpContracts
     {
         Span<byte> bytes =
             stackalloc byte[2 + streamId.Length + 2 + topicId.Length + 17];
-        bytes[0] = contract.Consumer.Type switch
-        {
-            ConsumerType.Consumer => 1,
-            ConsumerType.ConsumerGroup => 2,
-            _ => throw new ArgumentOutOfRangeException()
-        };
+        bytes[0] = GetConsumerTypeByte(contract.Consumer.Type);
         BinaryPrimitives.WriteInt32LittleEndian(bytes[1..5], contract.Consumer.Id);
         WriteBytesFromStreamAndTopicIdToSpan(streamId , topicId, bytes, 5);
         var position = 5 + 2 + streamId.Length + 2 + topicId.Length; 
@@ -242,12 +215,7 @@ internal static class TcpContracts
     {
         Span<byte> bytes =
             stackalloc byte[2 + request.StreamId.Length + 2 + request.TopicId.Length + sizeof(int) * 2 + 1];
-        bytes[0] = request.Consumer.Type switch
-        {
-            ConsumerType.Consumer => 1,
-            ConsumerType.ConsumerGroup => 2,
-            _ => throw new ArgumentOutOfRangeException()
-        };
+        bytes[0] = GetConsumerTypeByte(request.Consumer.Type);
         BinaryPrimitives.WriteInt32LittleEndian(bytes[1..5], request.Consumer.Id);
         WriteBytesFromStreamAndTopicIdToSpan(request.StreamId , request.TopicId, bytes, 5);
         var position = 5 + 2 + request.StreamId.Length + 2 + request.TopicId.Length; 
@@ -271,14 +239,50 @@ internal static class TcpContracts
         BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], request.PartitionsCount);
         return bytes.ToArray();
     }
-	private static void WriteBytesFromIdentifierToSpan(Identifier identifier, Span<byte> bytes)
-	{
-        bytes[0] = identifier.Kind switch
+      private static byte GetConsumerTypeByte(ConsumerType type)
+    {
+        return type switch
+        {
+            ConsumerType.Consumer => 1,
+            ConsumerType.ConsumerGroup => 2,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+    }
+    private static byte GetIdKindByte(IdKind kind)
+    {
+        return kind switch
         {
             IdKind.Numeric => 1,
             IdKind.String => 2,
             _ => throw new ArgumentOutOfRangeException()
         };
+    }
+    private static byte GetPartitioningKindByte(PartitioningKind kind)
+    {
+        return kind switch
+        {
+            PartitioningKind.None => 0,
+            PartitioningKind.PartitionId => 1,
+            PartitioningKind.EntityId => 2,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+    }
+
+    private static byte GetPollingStrategyByte(MessagePolling pollingStrategy)
+    {
+        return pollingStrategy switch
+        {
+            MessagePolling.Offset => 0,
+            MessagePolling.Timestamp => 1,
+            MessagePolling.First => 2,
+            MessagePolling.Last => 3,
+            MessagePolling.Next => 4,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+    }
+	private static void WriteBytesFromIdentifierToSpan(Identifier identifier, Span<byte> bytes)
+    {
+        bytes[0] = GetIdKindByte(identifier.Kind);
         bytes[1] = (byte)identifier.Length;
         for (int i = 0; i < identifier.Length; i++)
         {
@@ -287,12 +291,7 @@ internal static class TcpContracts
 	}
     private static void WriteBytesFromStreamAndTopicIdToSpan(Identifier streamId, Identifier topicId, Span<byte> bytes, int startPos = 0)
     {
-        bytes[startPos] = streamId.Kind switch
-        {
-            IdKind.Numeric => 1,
-            IdKind.String => 2,
-            _ => throw new ArgumentOutOfRangeException()
-        };
+        bytes[startPos] = GetIdKindByte(streamId.Kind);
         bytes[startPos + 1] = (byte)streamId.Length;
         for (int i = 0; i < streamId.Length; i++)
         {
@@ -300,17 +299,11 @@ internal static class TcpContracts
         }
 
         int position = startPos + 2 + streamId.Length;
-        bytes[position] = topicId.Kind switch
-        {
-            IdKind.Numeric => 1,
-            IdKind.String => 2,
-            _ => throw new ArgumentOutOfRangeException()
-        };
+        bytes[position] = GetIdKindByte(topicId.Kind);
         bytes[position + 1] = (byte)topicId.Length;
         for (int i = 0; i < topicId.Length; i++)
         {
             bytes[i + position + 2] = topicId.Value[i];
         }
     }
-
 }
