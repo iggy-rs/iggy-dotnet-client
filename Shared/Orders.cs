@@ -37,6 +37,12 @@ public class OrderCreated : ISerializableMessage
 		var json = JsonSerializer.Serialize(env, _jsonSerializerOptions);
 		return Encoding.UTF8.GetBytes(json);
 	}
+	public Envelope ToEnvelope()
+	{
+		var envelope = new Envelope();
+		var env = envelope.New("order_created", this);
+		return env;
+	}
 
 	public override string ToString()
 	{
@@ -72,6 +78,13 @@ public class OrderConfirmed : ISerializableMessage
 		return Encoding.UTF8.GetBytes(json);
 	}
 
+	public Envelope ToEnvelope()
+	{
+		var envelope = new Envelope();
+		var env = envelope.New("order_confirmed", this);
+		return env;
+	}
+
 	private string ToJsonPrint()
 	{
 		return JsonSerializer.Serialize(this, _jsonSerializerOptions);
@@ -99,6 +112,12 @@ public class OrderRejected : ISerializableMessage
 		var envelope = new Envelope();
 		var env = envelope.New("order_rejected", this);
 		return JsonSerializer.Serialize(env, _jsonSerializerOptions);
+	}
+	public Envelope ToEnvelope()
+	{
+		var envelope = new Envelope();
+		var env = envelope.New("order_rejected", this);
+		return env;
 	}
 
 	public byte[] ToBytes()

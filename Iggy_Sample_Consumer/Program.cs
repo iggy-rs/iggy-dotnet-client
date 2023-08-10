@@ -42,21 +42,31 @@ async Task ConsumeMessages()
 {
     int intervalInMs = 1000;
     Console.WriteLine($"Messages will be polled from stream {streamId}, topic {topicId}, partition {partitionId} with interval {intervalInMs} ms");
+    Func<byte[], Envelope> deserializer = serializedData =>
+    {
+        Envelope envelope = new Envelope();
+        int messageTypeLength = BitConverter.ToInt32(serializedData, 0);
+        envelope.MessageType = Encoding.UTF8.GetString(serializedData, 4, messageTypeLength);
+        envelope.Payload = Encoding.UTF8.GetString(serializedData, 4 + messageTypeLength, serializedData.Length - (4 + messageTypeLength));
+        return envelope;
+    };
+
     while (true)
     {
         try
         {
-            var messages = (await bus.PollMessagesAsync(new MessageFetchRequest
-            {
-                Consumer = Consumer.New(1),
-                Count = 1,
-                TopicId = topicId,
-                StreamId = streamId,
-                PartitionId = partitionId,
-                PollingStrategy = MessagePolling.Next,
-                Value = 0,
-                AutoCommit = true,
-            })).ToList();
+             var messages = (await bus.PollMessagesAsync<Envelope>(new MessageFetchRequest
+             {
+                 Consumer = Consumer.New(1),
+                 Count = 1,
+                 TopicId = topicId,
+                 StreamId = streamId,
+                 PartitionId = partitionId,
+                 PollingStrategy = MessagePolling.Next,
+                 Value = 0,
+                 AutoCommit = true
+            }, deserializer)).ToList();
+            
             
             if (!messages.Any())
             {
@@ -79,50 +89,34 @@ async Task ConsumeMessages()
         }
     }
 }
-void HandleMessage(MessageResponse messageResponse)
+
+void HandleMessage(MessageResponse<Envelope> messageResponse)
 {
-    //this is giga inefficient, but its only a sample so who cares
-    var length = (messageResponse.Payload.Length * 3) / 4;
-    var bytes = new byte[length];
-    var str = Encoding.UTF8.GetString(messageResponse.Payload);
-    var isBase64 = Convert.TryFromBase64Chars(str, bytes, out _);
-    Envelope? message;
-    if (isBase64)
-    {
-        bytes = Convert.FromBase64String(str);
-        var json = Encoding.UTF8.GetString(bytes);
-        message = JsonSerializer.Deserialize<Envelope>(json);
-    }
-    else
-    {
-        message = JsonSerializer.Deserialize<Envelope>(messageResponse.Payload, jsonOptions);
-    }
-
     
-    Console.Write($"Handling message type: {message!.MessageType} at offset: {messageResponse.Offset} with message Id:{messageResponse.Id.ToString()} ");
-
-    switch (message.MessageType)
+    Console.Write($"Handling message type: {messageResponse.Message.MessageType} at offset: {messageResponse.Offset} with message Id:{messageResponse.Id.ToString()} ");
+    switch (messageResponse.Message.MessageType)
     {
         case "order_created":
         {
-            var orderCreated = JsonSerializer.Deserialize<OrderCreated>(message.Payload, jsonOptions);
+            var orderCreated = JsonSerializer.Deserialize<OrderCreated>(messageResponse.Message.Payload, jsonOptions);
             Console.WriteLine(orderCreated);
             break;
         }
         case "order_confirmed":
         {
-            var orderConfirmed = JsonSerializer.Deserialize<OrderConfirmed>(message.Payload, jsonOptions);
+            var orderConfirmed = JsonSerializer.Deserialize<OrderConfirmed>(messageResponse.Message.Payload, jsonOptions);
             Console.WriteLine(orderConfirmed);
             break;
         }
         case "order_rejected":
         {
-            var orderRejected = JsonSerializer.Deserialize<OrderRejected>(message.Payload, jsonOptions);
+            var orderRejected = JsonSerializer.Deserialize<OrderRejected>(messageResponse.Message.Payload, jsonOptions);
             Console.WriteLine(orderRejected);
             break;
         }
     }
 }
+
 
 async Task ValidateSystem(Identifier streamId, Identifier topicId, int partitionId)
 {

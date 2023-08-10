@@ -81,7 +81,7 @@ public sealed class TcpContract
         Assert.Equal(topicId.Length, BytesToIdentifierNumeric(result, 6).Length);
         Assert.Equal(streamId.Kind, BytesToIdentifierNumeric(result, 0).Kind);
         Assert.Equal(topicId.Kind, BytesToIdentifierNumeric(result, 6).Kind);
-        Assert.Equal(request.Partitioning.Kind, result[12] switch { 0 => PartitioningKind.None, 1 => PartitioningKind.PartitionId, 2 => PartitioningKind.EntityId,
+        Assert.Equal(request.Partitioning.Kind, result[12] switch { 0 => PartitioningKind.Balanced, 1 => PartitioningKind.PartitionId, 2 => PartitioningKind.MessageKey,
             _ => throw new ArgumentOutOfRangeException()
         });
         Assert.Equal(request.Partitioning.Length, result[13]);

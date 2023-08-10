@@ -3,7 +3,7 @@ namespace Iggy_SDK.Enums;
 
 public enum PartitioningKind
 {
-	None,
+	Balanced,
 	PartitionId,
-	EntityId
+	MessageKey
 }

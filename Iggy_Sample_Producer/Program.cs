@@ -1,4 +1,5 @@
 ﻿using System.Buffers.Binary;
+using System.Text;
 using Iggy_Sample_Producer;
 using Iggy_SDK;
 using Iggy_SDK.Contracts.Http;
@@ -55,34 +56,33 @@ async Task ProduceMessages(IMessageClient bus, StreamResponse? stream, TopicResp
     var messageBatchCount = 1;
     int intervalInMs = 1000;
     Console.WriteLine($"Messages will be sent to stream {stream!.Id}, topic {topic!.Id}, partition {topic.PartitionsCount} with interval {intervalInMs} ms");
+    Func<Envelope, byte[]> serializer = envelope =>
+    {
+        Span<byte> buffer = stackalloc byte[envelope.MessageType.Length + 4 + envelope.Payload.Length];
+        BinaryPrimitives.WriteInt32LittleEndian(
+            buffer[..4], envelope.MessageType.Length);
+        Encoding.UTF8.GetBytes(envelope.MessageType).CopyTo(buffer[4..(envelope.MessageType.Length + 4)]);
+        Encoding.UTF8.GetBytes(envelope.Payload).CopyTo(buffer[(envelope.MessageType.Length + 4)..]);
+        return buffer.ToArray();
+    };
 
     while (true)
     {
         var debugMessages = new List<ISerializableMessage>();
-        var messages = new List<Message>();
+        var messages = new List<Envelope>();
         
         for (int i = 0; i < messageBatchCount; i++)
         {
             var message = MessageGenerator.GenerateMessage();
+            var envelope = message.ToEnvelope();
             var json = message.ToBytes();
             
             debugMessages.Add(message);
-            messages.Add(new Message
-            {
-                Id = Guid.NewGuid(),
-                Payload = json
-            });
+            messages.Add(envelope);
         }
-
         try
         {
-            var valBytes = new byte[4];
-            BinaryPrimitives.WriteUInt32LittleEndian(valBytes, 3);
-            await bus.SendMessagesAsync(streamId,topicId, new MessageSendRequest
-            {
-                Messages = messages,
-                Partitioning = Partitioning.PartitionId(3)
-            });
+            await bus.SendMessagesAsync<Envelope>(streamId, topicId, Partitioning.PartitionId(3), messages, serializer);
         }
         catch (Exception e)
         {

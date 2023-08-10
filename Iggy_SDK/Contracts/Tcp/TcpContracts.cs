@@ -261,9 +261,9 @@ internal static class TcpContracts
     {
         return kind switch
         {
-            PartitioningKind.None => 0,
-            PartitioningKind.PartitionId => 1,
-            PartitioningKind.EntityId => 2,
+            PartitioningKind.Balanced => 1,
+            PartitioningKind.PartitionId => 2,
+            PartitioningKind.MessageKey => 3,
             _ => throw new ArgumentOutOfRangeException()
         };
     }
@@ -272,11 +272,11 @@ internal static class TcpContracts
     {
         return pollingStrategy switch
         {
-            MessagePolling.Offset => 0,
-            MessagePolling.Timestamp => 1,
-            MessagePolling.First => 2,
-            MessagePolling.Last => 3,
-            MessagePolling.Next => 4,
+            MessagePolling.Offset => 1,
+            MessagePolling.Timestamp => 2,
+            MessagePolling.First => 3,
+            MessagePolling.Last => 4,
+            MessagePolling.Next => 5,
             _ => throw new ArgumentOutOfRangeException()
         };
     }

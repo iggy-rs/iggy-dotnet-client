@@ -14,7 +14,7 @@ public sealed class Partitioning
 	{
 		return new Partitioning
 		{
-			Kind = PartitioningKind.None,
+			Kind = PartitioningKind.Balanced,
 			Length = 0,
 			Value = Array.Empty<byte>()
 		};
@@ -39,7 +39,7 @@ public sealed class Partitioning
 		}
 		return new Partitioning
 		{
-			Kind = PartitioningKind.EntityId,
+			Kind = PartitioningKind.MessageKey,
 			Length = value.Length,
 			Value = Encoding.UTF8.GetBytes(value)
 		};
@@ -52,7 +52,7 @@ public sealed class Partitioning
 		}
 		return new Partitioning
 		{
-			Kind = PartitioningKind.EntityId,
+			Kind = PartitioningKind.MessageKey,
 			Length = value.Length,
 			Value = value
 		};
@@ -63,7 +63,7 @@ public sealed class Partitioning
 		BinaryPrimitives.WriteInt32LittleEndian(bytes, value);
 		return new Partitioning
 		{
-			Kind = PartitioningKind.EntityId,
+			Kind = PartitioningKind.MessageKey,
 			Length = 4,
 			Value = bytes.ToArray()
 		};
@@ -74,7 +74,7 @@ public sealed class Partitioning
 		BinaryPrimitives.WriteUInt64LittleEndian(bytes, value);
 		return new Partitioning
 		{
-			Kind = PartitioningKind.EntityId,
+			Kind = PartitioningKind.MessageKey,
 			Length = 8,
 			Value = bytes.ToArray()
 		};
@@ -84,7 +84,7 @@ public sealed class Partitioning
 		var bytes = value.ToByteArray();
 		return new Partitioning
 		{
-			Kind = PartitioningKind.EntityId,
+			Kind = PartitioningKind.MessageKey,
 			Length = 16,
 			Value = bytes
 		};
