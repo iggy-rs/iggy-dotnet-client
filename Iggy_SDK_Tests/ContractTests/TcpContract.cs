@@ -46,8 +46,8 @@ public sealed class TcpContract
         Assert.Equal(
             result[21] switch
             {
-                0 => MessagePolling.Offset, 1 => MessagePolling.Timestamp, 2 => MessagePolling.First,
-                3 => MessagePolling.Last, 4 => MessagePolling.Next,
+                1 => MessagePolling.Offset, 2 => MessagePolling.Timestamp, 3 => MessagePolling.First,
+                4 => MessagePolling.Last, 5 => MessagePolling.Next,
                 _ => throw new ArgumentOutOfRangeException()
             }, request.PollingStrategy);
         Assert.Equal(request.Value, BitConverter.ToUInt64(result[22..30]));
@@ -81,7 +81,7 @@ public sealed class TcpContract
         Assert.Equal(topicId.Length, BytesToIdentifierNumeric(result, 6).Length);
         Assert.Equal(streamId.Kind, BytesToIdentifierNumeric(result, 0).Kind);
         Assert.Equal(topicId.Kind, BytesToIdentifierNumeric(result, 6).Kind);
-        Assert.Equal(request.Partitioning.Kind, result[12] switch { 0 => PartitioningKind.Balanced, 1 => PartitioningKind.PartitionId, 2 => PartitioningKind.MessageKey,
+        Assert.Equal(request.Partitioning.Kind, result[12] switch { 1 => PartitioningKind.Balanced, 2 => PartitioningKind.PartitionId, 3 => PartitioningKind.MessageKey,
             _ => throw new ArgumentOutOfRangeException()
         });
         Assert.Equal(request.Partitioning.Length, result[13]);
