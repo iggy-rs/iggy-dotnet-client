@@ -48,7 +48,7 @@ var messages = new List<Message>();
 await bus.SendMessagesAsync(streamId, topicId, new MessageSendRequest
 {
     Messages = messages,
-    Key = Key.PartitionId(partitionId)
+    Partitioning = Partitioning.PartitionId(partitionId)
 });
 ```
 The `Message` struct has two fields `Id` and `Payload`
@@ -68,12 +68,39 @@ var messages = await bus.PollMessagesAsync(new MessageFetchRequest
     TopicId = topicId,
     Consumer = Consumer.New(consumerId),
     Count = 1,
-    PartitionId = 1,
+    PartitionId = partitionId,
     PollingStrategy = MessagePolling.Next,
     Value = 0,
     AutoCommit = true
 });
 ```
+With version 0.0.5 a new api for `PollMessagesAsync` and `SendMessagesAsync` has been added, that allows user
+to provide custom serializer/deserializer.
+
+SendMessages:
+```c#
+Func<Product, byte[]> serialier = // provide your own serializer.
+var messages = new List<Product>();
+await bus.SendMessagesAsync<Product>(streamId, topicId, Partitioning.PartitionId(partitionId), serializer);
+```
+PollMessages:
+```c#
+Func<byte[], Product> deserializer = // provide your own deserializer.
+var messages = await bus.PollMessagesAsync<Product>(new MessageFetchRequest<Product>
+{
+    StreamId = streamId,
+    TopicId = topicId,
+    Consumer = Consumer.New(consumerId),
+    Count = 1,
+    PartitionId = partitionId,
+    PollingStrategy = MessagePolling.Next,
+    Value = 0,
+    AutoCommit = true
+}, deserializer);
+```
+
+
+
 It is worth noting that every method will throw an `InvalidResponseException` when encountering an error.<br><br>
 If you register `IMessageStream` in a dependency injection container, you will have access to interfaces
 that encapsulate smaller parts of the system `IStreamClient` `ITopicClient` `IMessageClient` `IOffsetClient` `IConsumerGroupClient` `IUtilsClient`
