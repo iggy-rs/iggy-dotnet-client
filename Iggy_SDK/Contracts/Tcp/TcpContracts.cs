@@ -25,15 +25,15 @@ internal static class TcpContracts
         bytes[position + 17] = request.AutoCommit ? (byte)1 : (byte)0;
     }
     internal static void CreateMessage(Span<byte> bytes, Identifier streamId, Identifier topicId,
-        Partitioning partitioning, ICollection<Message> messages)
+        Partitioning partitioning, IEnumerable<Message> messages)
     {
         WriteBytesFromStreamAndTopicIdToSpan(streamId , topicId , bytes);
-        int streamTopicIdOffset = 2 + streamId.Length + 2 + topicId.Length;
-        bytes[streamTopicIdOffset] = GetPartitioningKindByte(partitioning.Kind);
-        bytes[streamTopicIdOffset + 1] = (byte)partitioning.Length;
-        partitioning.Value.CopyTo(bytes[(streamTopicIdOffset + 2)..(streamTopicIdOffset + partitioning.Length + 2)]);
+        int streamTopicIdPosition = 2 + streamId.Length + 2 + topicId.Length;
+        bytes[streamTopicIdPosition] = GetPartitioningKindByte(partitioning.Kind);
+        bytes[streamTopicIdPosition + 1] = (byte)partitioning.Length;
+        partitioning.Value.CopyTo(bytes[(streamTopicIdPosition + 2)..(streamTopicIdPosition + partitioning.Length + 2)]);
 
-        var position = 2 + partitioning.Length + streamTopicIdOffset;
+        var position = 2 + partitioning.Length + streamTopicIdPosition;
         bytes = messages switch
         {
             Message[] messagesArray => HandleMessagesArray(position, messagesArray, bytes),
@@ -43,44 +43,34 @@ internal static class TcpContracts
     }
     private static Span<byte> HandleMessagesEnumerable(int position, IEnumerable<Message> messages, Span<byte> bytes)
     {
-        Span<byte> id = stackalloc byte[16];
         foreach (var message in messages)
         {
-            var guid = message.Id;
-            MemoryMarshal.TryWrite(id, ref guid);
-            for (int i = position; i < position + 16; i++)
-            {
-                bytes[i] = id[i - position];
-            }
+            var idSlice = bytes[position..(position + 16)]; 
+            Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(idSlice), message.Id);
 
             BinaryPrimitives.WriteInt32LittleEndian(bytes[(position + 16)..(position + 20)], message.Payload.Length);
-            var payloadBytes = message.Payload.AsSpan();
-            var slice = bytes[(position + 16 + 4)..];
+            var payloadBytes = message.Payload;
+            var slice = bytes[(position + 20)..];
             payloadBytes.CopyTo(slice);
-            position += payloadBytes.Length + 16 + 4;
+            position += payloadBytes.Length + 20;
         }
 
         return bytes;
     }
     private static Span<byte> HandleMessagesArray(int position, Message[] messages, Span<byte> bytes)
     {
-        Span<byte> id = stackalloc byte[16];
         ref var start = ref MemoryMarshal.GetArrayDataReference(messages);
         ref var end = ref Unsafe.Add(ref start, messages.Length);
         while (Unsafe.IsAddressLessThan(ref start, ref end))
         {
-            var guid = start.Id;
-            MemoryMarshal.TryWrite(id, ref guid);
-            for (int j = position; j < position + 16; j++)
-            {
-                bytes[j] = id[j - position];
-            }
+            var idSlice = bytes[position..(position + 16)];
+            Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(idSlice), start.Id);
 
             BinaryPrimitives.WriteInt32LittleEndian(bytes[(position + 16)..(position + 20)], start.Payload.Length);
-            var payloadBytes = start.Payload.AsSpan();
-            var slice = bytes[(position + 16 + 4)..];
+            var payloadBytes = start.Payload;
+            var slice = bytes[(position + 20)..];
             payloadBytes.CopyTo(slice);
-            position += payloadBytes.Length + 16 + 4;
+            position += payloadBytes.Length + 20;
 
             start = ref Unsafe.Add(ref start, 1);
         }
@@ -89,24 +79,19 @@ internal static class TcpContracts
     }
     private static Span<byte> HandleMessagesList(int position, List<Message> messages, Span<byte> bytes)
     {
-        Span<byte> id = stackalloc byte[16];
         Span<Message> listAsSpan = CollectionsMarshal.AsSpan(messages);
         ref var start = ref MemoryMarshal.GetReference(listAsSpan);
         ref var end = ref Unsafe.Add(ref start, listAsSpan.Length);
         while (Unsafe.IsAddressLessThan(ref start, ref end))
         {
-            var guid = start.Id;
-            MemoryMarshal.TryWrite(id, ref guid);
-            for (int j = position; j < position + 16; j++)
-            {
-                bytes[j] = id[j - position];
-            }
+            var idSlice = bytes[position..(position + 16)];
+            Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(idSlice), start.Id);
 
             BinaryPrimitives.WriteInt32LittleEndian(bytes[(position + 16)..(position + 20)], start.Payload.Length);
-            var payloadBytes = start.Payload.AsSpan();
-            var slice = bytes[(position + 16 + 4)..];
+            var payloadBytes = start.Payload;
+            var slice = bytes[(position + 20)..];
             payloadBytes.CopyTo(slice);
-            position += payloadBytes.Length + 16 + 4;
+            position += payloadBytes.Length + 20;
 
             start = ref Unsafe.Add(ref start, 1);
         }
@@ -231,6 +216,7 @@ internal static class TcpContracts
         BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], request.PartitionsCount);
         return bytes.ToArray();
     }
+    
     internal static byte[] DeletePartitions(Identifier streamId, Identifier topicId, DeletePartitionsRequest request)
     {
         Span<byte> bytes = stackalloc byte[2 + streamId.Length + 2 + topicId.Length + sizeof(int)];
@@ -239,7 +225,9 @@ internal static class TcpContracts
         BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], request.PartitionsCount);
         return bytes.ToArray();
     }
-      private static byte GetConsumerTypeByte(ConsumerType type)
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static byte GetConsumerTypeByte(ConsumerType type)
     {
         return type switch
         {
@@ -248,6 +236,8 @@ internal static class TcpContracts
             _ => throw new ArgumentOutOfRangeException()
         };
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static byte GetIdKindByte(IdKind kind)
     {
         return kind switch
@@ -257,6 +247,7 @@ internal static class TcpContracts
             _ => throw new ArgumentOutOfRangeException()
         };
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static byte GetPartitioningKindByte(PartitioningKind kind)
     {
         return kind switch
@@ -267,7 +258,7 @@ internal static class TcpContracts
             _ => throw new ArgumentOutOfRangeException()
         };
     }
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static byte GetPollingStrategyByte(MessagePolling pollingStrategy)
     {
         return pollingStrategy switch
@@ -280,30 +271,25 @@ internal static class TcpContracts
             _ => throw new ArgumentOutOfRangeException()
         };
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void WriteBytesFromIdentifierToSpan(Identifier identifier, Span<byte> bytes)
     {
         bytes[0] = GetIdKindByte(identifier.Kind);
         bytes[1] = (byte)identifier.Length;
-        for (int i = 0; i < identifier.Length; i++)
-        {
-            bytes[i + 2] = identifier.Value[i];
-        }
+        identifier.Value.CopyTo(bytes[2..]);
 	}
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void WriteBytesFromStreamAndTopicIdToSpan(Identifier streamId, Identifier topicId, Span<byte> bytes, int startPos = 0)
     {
         bytes[startPos] = GetIdKindByte(streamId.Kind);
         bytes[startPos + 1] = (byte)streamId.Length;
-        for (int i = 0; i < streamId.Length; i++)
-        {
-            bytes[i + startPos + 2] = streamId.Value[i];
-        }
+        streamId.Value.CopyTo(bytes[(startPos + 2)..(startPos + 2 + streamId.Length)]);
 
-        int position = startPos + 2 + streamId.Length;
+        var position = startPos + 2 + streamId.Length;
         bytes[position] = GetIdKindByte(topicId.Kind);
         bytes[position + 1] = (byte)topicId.Length;
-        for (int i = 0; i < topicId.Length; i++)
-        {
-            bytes[i + position + 2] = topicId.Value[i];
-        }
+        topicId.Value.CopyTo(bytes[(position + 2)..(position + 2 + topicId.Length)]);
     }
 }

@@ -2,6 +2,6 @@ namespace Iggy_SDK.Messages;
 
 public struct Message
 {
-	public Guid Id { get; set; }
-	public byte[] Payload { get; set; }
+	public required Guid Id { get; init; }
+	public required byte[] Payload { get; init; }
 }

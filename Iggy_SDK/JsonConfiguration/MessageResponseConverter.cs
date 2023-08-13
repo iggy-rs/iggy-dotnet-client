@@ -9,7 +9,7 @@ internal sealed class MessageResponseConverter : JsonConverter<IEnumerable<Messa
 {
 	public override IEnumerable<MessageResponse> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 	{
-		//TODO - maby get rid of this allocation by using MemoryPools
+		//TODO - mby get rid of this allocation by using ArrayPools
 		var messageResponses = new List<MessageResponse>();
 		using var doc = JsonDocument.ParseValue(ref reader);
 		

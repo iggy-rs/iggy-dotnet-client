@@ -11,7 +11,7 @@ public sealed class Partitioning
 	public required byte[] Value { get; init; }
 
 	public static Partitioning None()
-	{
+		{
 		return new Partitioning
 		{
 			Kind = PartitioningKind.Balanced,
@@ -35,7 +35,7 @@ public sealed class Partitioning
 	{
 		if (value.Length is 0 or > 255)
 		{
-			throw new ArgumentException("Value is too long", nameof(value));
+			throw new ArgumentException("Value has incorrect size, must be between 1 and 255", nameof(value));
 		}
 		return new Partitioning
 		{
@@ -48,7 +48,7 @@ public sealed class Partitioning
 	{
 		if (value.Length is 0 or > 255)
 		{
-			throw new ArgumentException("Value is too long", nameof(value));
+			throw new ArgumentException("Value has incorrect size, must be between 1 and 255", nameof(value));
 		}
 		return new Partitioning
 		{

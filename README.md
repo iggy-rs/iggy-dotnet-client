@@ -55,8 +55,8 @@ The `Message` struct has two fields `Id` and `Payload`
 ```c#
 struct Message
 {
-    public Guid Id { get; set; }
-    public byte[] Payload { get; set; }
+    public required Guid Id { get; init; }
+    public required byte[] Payload { get; init; }
 }
 ```
 
@@ -104,6 +104,7 @@ var messages = await bus.PollMessagesAsync<Product>(new MessageFetchRequest<Prod
 It is worth noting that every method will throw an `InvalidResponseException` when encountering an error.<br><br>
 If you register `IMessageStream` in a dependency injection container, you will have access to interfaces
 that encapsulate smaller parts of the system `IStreamClient` `ITopicClient` `IMessageClient` `IOffsetClient` `IConsumerGroupClient` `IUtilsClient`
+`IPartitionClient`
 
 For more information about how Iggy works check its [documentation](https://docs.iggy.rs/)
 

@@ -11,15 +11,18 @@ using Iggy_SDK.Kinds;
 using Iggy_SDK.Mappers;
 using Iggy_SDK.Messages;
 using Iggy_SDK.Utils;
+using System;
 
 namespace Iggy_SDK.MessageStream.Implementations;
 
 public sealed class TcpMessageStream : IMessageStream, IDisposable
 {
-	private const int InitialBytesLength = 4;
-	private const int ExpectedResponseSize = 8;
+	private const int INITIAL_BYTES_LENGTH = 4;
+	private const int EXPECTED_RESPONSE_SIZE = 8;
 	private readonly TcpClient _client;
 	private readonly NetworkStream _stream;
+
+	private Memory<byte> _buffer = new(new byte[EXPECTED_RESPONSE_SIZE]);
 
 	internal TcpMessageStream(TcpClient client)
 	{
@@ -32,9 +35,9 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = TcpContracts.CreateStream(request);
 		var payload = CreatePayload(message,CommandCodes.CREATE_STREAM_CODE);
 
-		await _stream.WriteAsync(payload, 0, payload.Length);
+		await _stream.WriteAsync(payload);
 
-		var buffer = new byte[ExpectedResponseSize];
+		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
 		await _stream.ReadExactlyAsync(buffer);
 
 		var status = GetResponseStatus(buffer);
@@ -49,9 +52,9 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = GetBytesFromIdentifier(streamId);
 		var payload = CreatePayload(message, CommandCodes.GET_STREAM_CODE);
 
-		await _stream.WriteAsync(payload, 0, payload.Length);
+		await _stream.WriteAsync(payload);
 
-		var buffer = new byte[ExpectedResponseSize];
+		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
 		await _stream.ReadExactlyAsync(buffer);
 
 		var response = GetResponseLengthAndStatus(buffer);
@@ -76,9 +79,9 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = Enumerable.Empty<byte>().ToArray();
 		var payload = CreatePayload(message, CommandCodes.GET_STREAMS_CODE);
 
-		await _stream.WriteAsync(payload, 0, payload.Length);
+		await _stream.WriteAsync(payload);
 
-		var buffer = new byte[ExpectedResponseSize];
+		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
 		await _stream.ReadExactlyAsync(buffer);
 
 		var response = GetResponseLengthAndStatus(buffer);
@@ -103,9 +106,9 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = GetBytesFromIdentifier(streamId);
 		var payload = CreatePayload(message, CommandCodes.DELETE_STREAM_CODE);
 
-		await _stream.WriteAsync(payload, 0, payload.Length);
+		await _stream.WriteAsync(payload);
 
-		var buffer = new byte[ExpectedResponseSize];
+		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
 		await _stream.ReadExactlyAsync(buffer);
 
 		var status = GetResponseStatus(buffer);
@@ -121,9 +124,9 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = GetBytesFromIdentifier(streamId);
 		var payload = CreatePayload(message, CommandCodes.GET_TOPICS_CODE);
 
-		await _stream.WriteAsync(payload, 0, payload.Length);
+		await _stream.WriteAsync(payload);
 
-		var buffer = new byte[ExpectedResponseSize];
+		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
 		await _stream.ReadExactlyAsync(buffer);
 
 		var response = GetResponseLengthAndStatus(buffer);
@@ -148,9 +151,9 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = TcpContracts.GetTopicById(streamId, topicId);
 		var payload = CreatePayload(message, CommandCodes.GET_TOPIC_CODE);
 
-		await _stream.WriteAsync(payload, 0, payload.Length);
+		await _stream.WriteAsync(payload);
 
-		var buffer = new byte[ExpectedResponseSize];
+		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
 		await _stream.ReadExactlyAsync(buffer);
 
 		var response = GetResponseLengthAndStatus(buffer);
@@ -176,9 +179,9 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = TcpContracts.CreateTopic(streamId, topic);
 		var payload = CreatePayload(message, CommandCodes.CREATE_TOPIC_CODE);
 
-		await _stream.WriteAsync(payload, 0, payload.Length);
+		await _stream.WriteAsync(payload);
 
-		var buffer = new byte[ExpectedResponseSize];
+		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
 		await _stream.ReadExactlyAsync(buffer);
 		
 		var status = GetResponseStatus(buffer); 
@@ -194,9 +197,9 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = TcpContracts.DeleteTopic(streamId, topicId);
 		var payload = CreatePayload(message, CommandCodes.DELETE_TOPIC_CODE);
 
-		await _stream.WriteAsync(payload, 0, payload.Length);
+		await _stream.WriteAsync(payload);
 
-		var buffer = new byte[ExpectedResponseSize];
+		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
 		await _stream.ReadExactlyAsync(buffer);
 		
 		var status = GetResponseStatus(buffer);
@@ -206,13 +209,12 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			throw new InvalidResponseException($"Invalid response status code: {status}");
 		}
 	}
-
 	public async Task SendMessagesAsync(Identifier streamId, Identifier topicId, MessageSendRequest request)
 	{
 		var streamTopicIdLength = 2 + streamId.Length + 2 + topicId.Length;
         var messageBufferSize = request.Messages.Sum(message => 16 + 4 + message.Payload.Length)
 	        + request.Partitioning.Length + streamTopicIdLength + 2;
-        var payloadBufferSize = messageBufferSize + 4 + InitialBytesLength;
+        var payloadBufferSize = messageBufferSize + 4 + INITIAL_BYTES_LENGTH;
         
 		var message = ArrayPool<byte>.Shared.Rent(messageBufferSize);
 		var payload = ArrayPool<byte>.Shared.Rent(payloadBufferSize);
@@ -222,13 +224,12 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 				request.Messages);
 			CreatePayloadOptimized(payload, message.AsSpan()[..messageBufferSize], CommandCodes.SEND_MESSAGES_CODE);
 
+			var recv = _stream.ReadExactlyAsync(_buffer);
 			await _stream.WriteAsync(payload.AsMemory()[..payloadBufferSize]);
 			
-			//re-use already rented buffer
-			var buffer = message[..ExpectedResponseSize];
-			await _stream.ReadExactlyAsync(buffer);
+			await recv;
 			
-			var status = GetResponseStatus(buffer);
+			var status = GetResponseStatus(_buffer.Span);
 			if (status != 0)
 			{
 				throw new InvalidResponseException($"Invalid response status code: {status}");
@@ -266,7 +267,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 
 		var streamTopicIdLength = 2 + streamId.Length + 2 + topicId.Length;
 		var messageBufferSize = msgBytesSum + partitioning.Length + streamTopicIdLength + 2;
-        var payloadBufferSize = messageBufferSize + 4 + InitialBytesLength;
+        var payloadBufferSize = messageBufferSize + 4 + INITIAL_BYTES_LENGTH;
         
 		var message = ArrayPool<byte>.Shared.Rent(messageBufferSize);
 		var payload = ArrayPool<byte>.Shared.Rent(payloadBufferSize);
@@ -276,13 +277,12 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 				messagesToSend);
 			CreatePayloadOptimized(payload, message.AsSpan()[..messageBufferSize], CommandCodes.SEND_MESSAGES_CODE);
 
+			var recv = _stream.ReadExactlyAsync(_buffer);
 			await _stream.WriteAsync(payload.AsMemory()[..payloadBufferSize]);
 			
-			//re-use already rented buffer
-			var buffer = message[..ExpectedResponseSize];
-			await _stream.ReadExactlyAsync(buffer);
+			await recv;
 			
-			var status = GetResponseStatus(buffer);
+			var status = GetResponseStatus(_buffer.Span);
 			if (status != 0)
 			{
 				throw new InvalidResponseException($"Invalid response status code: {status}");
@@ -312,7 +312,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	{
 
 		int messageBufferSize = 18 + 5 + 2 + request.StreamId.Length + 2 + request.TopicId.Length;
-		int payloadBufferSize = messageBufferSize + 4 + InitialBytesLength;
+		int payloadBufferSize = messageBufferSize + 4 + INITIAL_BYTES_LENGTH;
 		var message = ArrayPool<byte>.Shared.Rent(messageBufferSize);
 		var payload = ArrayPool<byte>.Shared.Rent(payloadBufferSize);
 		
@@ -330,10 +330,10 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			ArrayPool<byte>.Shared.Return(payload);
 		}
 
-		var buffer = ArrayPool<byte>.Shared.Rent(ExpectedResponseSize);
+		var buffer = ArrayPool<byte>.Shared.Rent(EXPECTED_RESPONSE_SIZE);
 		try
 		{
-			await _stream.ReadExactlyAsync(buffer.AsMemory()[..ExpectedResponseSize]);
+			await _stream.ReadExactlyAsync(buffer.AsMemory()[..EXPECTED_RESPONSE_SIZE]);
 			var response = GetResponseLengthAndStatus(buffer);
 			if (response.Status != 0)
 			{
@@ -366,7 +366,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	public async Task<IEnumerable<MessageResponse>> PollMessagesAsync(MessageFetchRequest request)
 	{
 		int messageBufferSize = 18 + 5 + 2 + request.StreamId.Length + 2 + request.TopicId.Length;
-		int payloadBufferSize = messageBufferSize + 4 + InitialBytesLength;
+		int payloadBufferSize = messageBufferSize + 4 + INITIAL_BYTES_LENGTH;
 		var message = ArrayPool<byte>.Shared.Rent(messageBufferSize);
 		var payload = ArrayPool<byte>.Shared.Rent(payloadBufferSize);
 		
@@ -384,10 +384,10 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			ArrayPool<byte>.Shared.Return(payload);
 		}
 
-		var buffer = ArrayPool<byte>.Shared.Rent(ExpectedResponseSize);
+		var buffer = ArrayPool<byte>.Shared.Rent(EXPECTED_RESPONSE_SIZE);
 		try
 		{
-			await _stream.ReadExactlyAsync(buffer.AsMemory()[..ExpectedResponseSize]);
+			await _stream.ReadExactlyAsync(buffer.AsMemory()[..EXPECTED_RESPONSE_SIZE]);
 
 			var response = GetResponseLengthAndStatus(buffer);
 			if (response.Status != 0)
@@ -425,9 +425,9 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = TcpContracts.UpdateOffset(streamId, topicId, contract);
 		var payload = CreatePayload(message, CommandCodes.STORE_OFFSET_CODE);
 
-		await _stream.WriteAsync(payload, 0, payload.Length);
+		await _stream.WriteAsync(payload);
 
-		var buffer = new byte[ExpectedResponseSize];
+		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
 		await _stream.ReadExactlyAsync(buffer);
 
 		var status = GetResponseStatus(buffer);
@@ -443,9 +443,9 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = TcpContracts.GetOffset(request);
 		var payload = CreatePayload(message, CommandCodes.GET_OFFSET_CODE);
 
-		await _stream.WriteAsync(payload, 0, payload.Length);
+		await _stream.WriteAsync(payload);
 
-		var buffer = new byte[ExpectedResponseSize];
+		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
 		await _stream.ReadExactlyAsync(buffer);
 		
 		var response = GetResponseLengthAndStatus(buffer); 
@@ -470,9 +470,9 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = TcpContracts.GetGroups(streamId, topicId);
 		var payload = CreatePayload(message, CommandCodes.GET_GROUPS_CODE);
 
-		await _stream.WriteAsync(payload, 0, payload.Length);
+		await _stream.WriteAsync(payload);
 
-		var buffer = new byte[ExpectedResponseSize];
+		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
 		await _stream.ReadExactlyAsync(buffer);
 
 		var response = GetResponseLengthAndStatus(buffer);
@@ -497,9 +497,9 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = TcpContracts.GetGroup(streamId, topicId, groupId);
 		var payload = CreatePayload(message, CommandCodes.GET_GROUP_CODE);
 
-		await _stream.WriteAsync(payload, 0, payload.Length);
+		await _stream.WriteAsync(payload);
 
-		var buffer = new byte[ExpectedResponseSize];
+		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
 		await _stream.ReadExactlyAsync(buffer);
 
 		var response = GetResponseLengthAndStatus(buffer);
@@ -524,9 +524,9 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = TcpContracts.CreateGroup(streamId, topicId, request);
 		var payload = CreatePayload(message, CommandCodes.CREATE_GROUP_CODE);
 
-		await _stream.WriteAsync(payload, 0, payload.Length);
+		await _stream.WriteAsync(payload);
 
-		var buffer = new byte[ExpectedResponseSize];
+		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
 		await _stream.ReadExactlyAsync(buffer);
 		
 		var status = GetResponseStatus(buffer);
@@ -542,9 +542,9 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = TcpContracts.DeleteGroup(streamId, topicId, groupId);
 		var payload = CreatePayload(message, CommandCodes.DELETE_GROUP_CODE);
 
-		await _stream.WriteAsync(payload, 0, payload.Length);
+		await _stream.WriteAsync(payload);
 
-		var buffer = new byte[ExpectedResponseSize];
+		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
 		await _stream.ReadExactlyAsync(buffer);
 
 		var status = GetResponseStatus(buffer);
@@ -560,9 +560,9 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = TcpContracts.JoinGroup(request);
 		var payload = CreatePayload(message, CommandCodes.JOIN_GROUP_CODE);
 
-		await _stream.WriteAsync(payload, 0, payload.Length);
+		await _stream.WriteAsync(payload);
 
-		var buffer = new byte[ExpectedResponseSize];
+		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
 		await _stream.ReadExactlyAsync(buffer);
 
 		var status = GetResponseStatus(buffer);
@@ -578,9 +578,9 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = TcpContracts.LeaveGroup(request);
 		var payload = CreatePayload(message, CommandCodes.LEAVE_GROUP_CODE);
 
-		await _stream.WriteAsync(payload, 0, payload.Length);
+		await _stream.WriteAsync(payload);
 
-		var buffer = new byte[ExpectedResponseSize];
+		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
 		await _stream.ReadExactlyAsync(buffer);
 
 		var status = GetResponseStatus(buffer);
@@ -595,9 +595,9 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = TcpContracts.DeletePartitions(streamId, topicId, request);
 		var payload = CreatePayload(message, CommandCodes.DELETE_PARTITIONS_CODE);
 		
-		await _stream.WriteAsync(payload, 0, payload.Length);
+		await _stream.WriteAsync(payload);
 
-		var buffer = new byte[ExpectedResponseSize];
+		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
 		await _stream.ReadExactlyAsync(buffer);
 
 		var status = GetResponseStatus(buffer);
@@ -613,9 +613,9 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = TcpContracts.CreatePartitions(streamId, topicId, request);
 		var payload = CreatePayload(message, CommandCodes.CREATE_PARTITIONS_CODE);
 		
-		await _stream.WriteAsync(payload, 0, payload.Length);
+		await _stream.WriteAsync(payload);
 
-		var buffer = new byte[ExpectedResponseSize];
+		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
 		await _stream.ReadExactlyAsync(buffer);
 
 		var status = GetResponseStatus(buffer);
@@ -630,9 +630,9 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = Array.Empty<byte>();
 		var payload = CreatePayload(message, CommandCodes.GET_STATS_CODE);
 
-		await _stream.WriteAsync(payload, 0, payload.Length);
+		await _stream.WriteAsync(payload);
 
-		var buffer = new byte[ExpectedResponseSize];
+		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
 		await _stream.ReadExactlyAsync(buffer);
 
 		var response = GetResponseLengthAndStatus(buffer);
@@ -685,7 +685,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	private static byte[] CreatePayload(Span<byte> message, int command)
 	{
 		var messageLength = message.Length + 4;
-		Span<byte> messageBytes = stackalloc byte[InitialBytesLength + messageLength];
+		Span<byte> messageBytes = stackalloc byte[INITIAL_BYTES_LENGTH + messageLength];
 		BinaryPrimitives.WriteInt32LittleEndian(messageBytes[..4], messageLength);
 		BinaryPrimitives.WriteInt32LittleEndian(messageBytes[4..8], command);
 		message.CopyTo(messageBytes[8..]);

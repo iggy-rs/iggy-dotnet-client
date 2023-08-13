@@ -21,7 +21,6 @@ public static class SendMessage
 			$"Executing Send Messages command for producer {producerNumber}, stream id {streamId}, messages count {totalMessages}, with size {totalMessagesBytes}");
 		Message[] messages = CreateMessages(messagesCount, messageSize);
 		List<TimeSpan> latencies = new();
-		var valBytes = BitConverter.GetBytes(1);
 		
 		for (int i = 0; i < messagesBatch; i++)
 		{
