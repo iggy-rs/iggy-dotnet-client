@@ -69,16 +69,15 @@ async Task ProduceMessages(IMessageClient bus, StreamResponse? stream, TopicResp
     while (true)
     {
         var debugMessages = new List<ISerializableMessage>();
-        var messages = new List<Envelope>();
+        var messages = new Envelope[messageBatchCount];
         
         for (int i = 0; i < messageBatchCount; i++)
         {
             var message = MessageGenerator.GenerateMessage();
             var envelope = message.ToEnvelope();
-            var json = message.ToBytes();
             
             debugMessages.Add(message);
-            messages.Add(envelope);
+            messages[i] = envelope;
         }
         try
         {

@@ -212,8 +212,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	public async Task SendMessagesAsync(Identifier streamId, Identifier topicId, MessageSendRequest request)
 	{
 		var streamTopicIdLength = 2 + streamId.Length + 2 + topicId.Length;
-        var messageBufferSize = request.Messages.Sum(message => 16 + 4 + message.Payload.Length)
-	        + request.Partitioning.Length + streamTopicIdLength + 2;
+		var messageBufferSize = CalculateMessageBytesCount(request.Messages)
+		               + request.Partitioning.Length + streamTopicIdLength + 2;
         var payloadBufferSize = messageBufferSize + 4 + INITIAL_BYTES_LENGTH;
         
 		var message = ArrayPool<byte>.Shared.Rent(messageBufferSize);
@@ -222,7 +222,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		{
 			TcpContracts.CreateMessage(message.AsSpan()[..messageBufferSize], streamId, topicId, request.Partitioning,
 				request.Messages);
-			CreatePayloadOptimized(payload, message.AsSpan()[..messageBufferSize], CommandCodes.SEND_MESSAGES_CODE);
+			CreatePayload(payload, message.AsSpan()[..messageBufferSize], CommandCodes.SEND_MESSAGES_CODE);
 
 			var recv = _stream.ReadExactlyAsync(_buffer);
 			await _stream.WriteAsync(payload.AsMemory()[..payloadBufferSize]);
@@ -275,7 +275,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		{
 			TcpContracts.CreateMessage(message.AsSpan()[..messageBufferSize], streamId, topicId, partitioning,
 				messagesToSend);
-			CreatePayloadOptimized(payload, message.AsSpan()[..messageBufferSize], CommandCodes.SEND_MESSAGES_CODE);
+			CreatePayload(payload, message.AsSpan()[..messageBufferSize], CommandCodes.SEND_MESSAGES_CODE);
 
 			var recv = _stream.ReadExactlyAsync(_buffer);
 			await _stream.WriteAsync(payload.AsMemory()[..payloadBufferSize]);
@@ -295,15 +295,37 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			ArrayPool<byte>.Shared.Return(payload);
 		}
 	}
-
-	private static int CalculateMessageBytesCount(Message[] messagesToSend)
+	private static int CalculateMessageBytesCount(IEnumerable<Message> messages)
 	{
-		ref var searchSpace = ref MemoryMarshal.GetArrayDataReference(messagesToSend);
-		var msgBytesSum = 0;
-		for (int i = 0; i < messagesToSend.AsSpan().Length; i++)
+		return messages switch
 		{
-			var item = Unsafe.Add(ref searchSpace, i);
-			msgBytesSum += item.Payload.Length + 16 + 4;
+			Message[] messagesArray => CalculateMessageBytesCountArray(messagesArray),
+			List<Message> messagesList => CalculateMessageBytesCountList(messagesList),
+			_ => messages.Sum(x => 16 + 4 + x.Payload.Length)
+		};
+	}
+	private static int CalculateMessageBytesCountArray(Message[] messages)
+	{
+		ref var start = ref MemoryMarshal.GetArrayDataReference(messages);
+		ref var end = ref Unsafe.Add(ref start, messages.Length);
+		var msgBytesSum = 0;
+		while (Unsafe.IsAddressLessThan(ref start, ref end))
+		{
+			msgBytesSum += start.Payload.Length + 16 + 4;
+			start = ref Unsafe.Add(ref start, 1);
+		}
+		return msgBytesSum;
+	}
+	private static int CalculateMessageBytesCountList(List<Message> messages)
+	{
+		var messagesSpan = CollectionsMarshal.AsSpan(messages);
+		ref var start = ref MemoryMarshal.GetReference(messagesSpan);
+		ref var end = ref Unsafe.Add(ref start, messagesSpan.Length);
+		var msgBytesSum = 0;
+		while (Unsafe.IsAddressLessThan(ref start, ref end))
+		{
+			msgBytesSum += start.Payload.Length + 16 + 4;
+			start = ref Unsafe.Add(ref start, 1);
 		}
 		return msgBytesSum;
 	}
@@ -320,7 +342,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		try
 		{
 			TcpContracts.GetMessages(message.AsSpan()[..messageBufferSize], request);
-			CreatePayloadOptimized(payload, message.AsSpan()[..messageBufferSize], CommandCodes.POLL_MESSAGES_CODE);
+			CreatePayload(payload, message.AsSpan()[..messageBufferSize], CommandCodes.POLL_MESSAGES_CODE);
 
 			await _stream.WriteAsync(payload.AsMemory()[..payloadBufferSize]);
 		}
@@ -374,7 +396,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		try
 		{
 			TcpContracts.GetMessages(message.AsSpan()[..messageBufferSize], request);
-			CreatePayloadOptimized(payload, message.AsSpan()[..messageBufferSize], CommandCodes.POLL_MESSAGES_CODE);
+			CreatePayload(payload, message.AsSpan()[..messageBufferSize], CommandCodes.POLL_MESSAGES_CODE);
 
 			await _stream.WriteAsync(payload.AsMemory()[..payloadBufferSize]);
 		}
@@ -653,6 +675,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		return BinaryMapper.MapStats(responseBuffer);
 	}
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static byte[] GetBytesFromIdentifier(Identifier identifier)
 	{
         Span<byte> bytes = stackalloc byte[2 + identifier.Length];
@@ -679,6 +702,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		return (status, length);
 	}
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static int GetResponseStatus(Span<byte> buffer) =>
 		BinaryPrimitives.ReadInt32LittleEndian(buffer[..4]);
 		
@@ -692,7 +716,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		return messageBytes.ToArray();
 	}
 	//TODO - Eventually make this main method for all of the payloads
-	private static void CreatePayloadOptimized(Span<byte> result, Span<byte> message, int command)
+	private static void CreatePayload(Span<byte> result, Span<byte> message, int command)
 	{
 		var messageLength = message.Length + 4;
 		BinaryPrimitives.WriteInt32LittleEndian(result[..4], messageLength);
