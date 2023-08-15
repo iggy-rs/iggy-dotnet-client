@@ -119,6 +119,7 @@ public class HttpMessageStream : IMessageStream
     public async Task SendMessagesAsync(Identifier streamId, Identifier topicId, MessageSendRequest request,
         Func<byte[], byte[]>? encryptor = null)
     {
+        //TODO - this doesn't work fix it.
 		if (encryptor is not null)
 		{
 			foreach (var msg in request.Messages)

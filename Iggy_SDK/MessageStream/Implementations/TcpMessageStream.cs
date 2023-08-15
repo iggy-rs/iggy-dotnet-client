@@ -209,15 +209,11 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	public async Task SendMessagesAsync(Identifier streamId, Identifier topicId, MessageSendRequest request,
 		Func<byte[], byte[]>? encryptor = null)
 	{
-		if (encryptor is not null)
-		{
-			foreach (var msg in request.Messages)
-			{
-				encryptor(msg.Payload);
-			}
-		}
+		//TODO - refactor type from IEnumerable<Message> to IList<Message>, do the same for methods that poll messages.
+		var messages = request.Messages;
+		
 		var streamTopicIdLength = 2 + streamId.Length + 2 + topicId.Length;
-		var messageBufferSize = CalculateMessageBytesCount(request.Messages)
+		var messageBufferSize = CalculateMessageBytesCount(messages)
 		               + request.Partitioning.Length + streamTopicIdLength + 2;
         var payloadBufferSize = messageBufferSize + 4 + INITIAL_BYTES_LENGTH;
         
@@ -226,7 +222,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		try
 		{
 			TcpContracts.CreateMessage(message.AsSpan()[..messageBufferSize], streamId, topicId, request.Partitioning,
-				request.Messages);
+				messages);
 			CreatePayload(payload, message.AsSpan()[..messageBufferSize], CommandCodes.SEND_MESSAGES_CODE);
 
 			var recv = _socket.ReceiveAsync(_buffer);
@@ -434,7 +430,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			try
 			{
 				await _socket.ReceiveAsync(responseBuffer.AsMemory()[..response.Length]);
-				var result = BinaryMapper.MapMessages(responseBuffer.AsSpan()[..response.Length], decryptor);
+				var result = BinaryMapper.MapMessages(
+					responseBuffer.AsSpan()[..response.Length], decryptor);
 				return result;
 			}
 			finally

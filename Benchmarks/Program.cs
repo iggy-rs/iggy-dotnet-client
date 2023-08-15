@@ -4,6 +4,8 @@ using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
 using Iggy_SDK.Kinds;
+using Iggy_SDK.MessageStream;
+using Iggy_SDK.MessageStream.Implementations;
 
 const int messagesCount = 1000;
 const int messagesBatch = 1000;
@@ -11,25 +13,30 @@ const int messageSize = 1000;
 const int producerCount = 7;
 const int startingStreamId = 100;
 const int topicId = 1;
+Dictionary<int, IMessageStream> clients = new();
 
-var bus = MessageStreamFactory.CreateMessageStream(options =>
+for (int i = 0; i < producerCount; i++)
 {
-	options.BaseAdress = "127.0.0.1:8090";
-	options.Protocol = Protocol.Tcp;
-	options.ReceiveBufferSize = Int32.MaxValue;
-	options.SendBufferSize = Int32.MaxValue;
-});
+	var bus = MessageStreamFactory.CreateMessageStream(options =>
+	{
+		options.BaseAdress = "127.0.0.1:8090";
+		options.Protocol = Protocol.Tcp;
+		options.ReceiveBufferSize = Int32.MaxValue;
+		options.SendBufferSize = Int32.MaxValue;
+	});
+	clients[i] = bus;
+}
 
 try
 {
 	for (int i = 0; i < producerCount; i++)
 	{
-		await bus.CreateStreamAsync(new StreamRequest
+		await clients[0].CreateStreamAsync(new StreamRequest
 		{
 			Name = $"Test bench stream_{i}",
 			StreamId = startingStreamId + i
 		});
-		await bus.CreateTopicAsync(Identifier.Numeric(startingStreamId + i), new TopicRequest
+		await clients[0].CreateTopicAsync(Identifier.Numeric(startingStreamId + i), new TopicRequest
 		{
 			Name = $"Test bench topic_{i}",
 			PartitionsCount = 1,
@@ -43,11 +50,10 @@ catch
 }
 
 List<Task> tasks = new();
-var valBytes = BitConverter.GetBytes(1);
 
 for (int i = 0; i < producerCount; i++)
 {
-	tasks.Add(SendMessage.Create(bus, i, producerCount, messagesBatch, messagesCount, messageSize,
+	tasks.Add(SendMessage.Create(clients[i], i, producerCount, messagesBatch, messagesCount, messageSize,
 		Identifier.Numeric(startingStreamId + i),
 		Identifier.Numeric(topicId)));
 }
@@ -58,9 +64,8 @@ try
 {
 	for (int i = 0; i < producerCount; i++)
 	{
-		await bus.DeleteStreamAsync(Identifier.Numeric(startingStreamId + i));
+		await clients[0].DeleteStreamAsync(Identifier.Numeric(startingStreamId + i));
 	}
-
 }
 catch
 {
