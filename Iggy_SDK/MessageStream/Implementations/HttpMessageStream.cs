@@ -116,8 +116,16 @@ public class HttpMessageStream : IMessageStream
         await HandleResponseAsync(response);
         throw new Exception("Unknown error occurred.");
     }
-    public async Task SendMessagesAsync(Identifier streamId, Identifier topicId, MessageSendRequest request)
+    public async Task SendMessagesAsync(Identifier streamId, Identifier topicId, MessageSendRequest request,
+        Func<byte[], byte[]>? encryptor = null)
     {
+		if (encryptor is not null)
+		{
+			foreach (var msg in request.Messages)
+			{
+				encryptor(msg.Payload);
+			}
+		}
         var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
         
@@ -130,7 +138,7 @@ public class HttpMessageStream : IMessageStream
     }
 
     public async Task SendMessagesAsync<TMessage>(Identifier streamId, Identifier topicId, Partitioning partitioning,
-        ICollection<TMessage> messages, Func<TMessage, byte[]> serializer)
+        ICollection<TMessage> messages, Func<TMessage, byte[]> serializer, Func<byte[], byte[]>? encryptor = null)
     {
         //TODO - maybe get rid of this closure ?
         var request = new MessageSendRequest
@@ -139,7 +147,7 @@ public class HttpMessageStream : IMessageStream
             Messages = messages.Select(message => new Message
             {
                 Id = Guid.NewGuid(),
-                Payload = serializer(message),
+                Payload = encryptor is not null ? encryptor(serializer(message)) : serializer(message),
             }).ToArray()
         };
         var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);

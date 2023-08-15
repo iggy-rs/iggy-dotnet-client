@@ -206,8 +206,16 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			throw new InvalidResponseException($"Invalid response status code: {status}");
 		}
 	}
-	public async Task SendMessagesAsync(Identifier streamId, Identifier topicId, MessageSendRequest request)
+	public async Task SendMessagesAsync(Identifier streamId, Identifier topicId, MessageSendRequest request,
+		Func<byte[], byte[]>? encryptor = null)
 	{
+		if (encryptor is not null)
+		{
+			foreach (var msg in request.Messages)
+			{
+				encryptor(msg.Payload);
+			}
+		}
 		var streamTopicIdLength = 2 + streamId.Length + 2 + topicId.Length;
 		var messageBufferSize = CalculateMessageBytesCount(request.Messages)
 		               + request.Partitioning.Length + streamTopicIdLength + 2;
@@ -241,7 +249,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	}
 
 	public async Task SendMessagesAsync<TMessage>(Identifier streamId, Identifier topicId, Partitioning partitioning,
-		ICollection<TMessage> messages, Func<TMessage, byte[]> serializer)
+		ICollection<TMessage> messages, Func<TMessage, byte[]> serializer, Func<byte[], byte[]>? encryptor = null)
 	{
 		var msgCountSuccess = messages.TryGetNonEnumeratedCount(out var msgCount);
 		if (!msgCountSuccess)
@@ -254,7 +262,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		{
 			messagesPool[i] = new Message
 			{
-				Payload = serializer(messages.ElementAt(i)),
+				Payload = encryptor is not null ?
+					encryptor(serializer(messages.ElementAt(i))) : serializer(messages.ElementAt(i)),
 				Id = Guid.NewGuid()
 			};
 		}

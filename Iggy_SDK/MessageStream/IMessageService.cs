@@ -5,9 +5,10 @@ namespace Iggy_SDK.MessageStream;
 
 public interface IMessageClient
 {
-	Task SendMessagesAsync(Identifier streamId, Identifier topicId, MessageSendRequest request);
+	Task SendMessagesAsync(Identifier streamId, Identifier topicId, MessageSendRequest request, Func<byte[], byte[]>?
+		encryptor = null);
 	Task SendMessagesAsync<TMessage>(Identifier streamId, Identifier topicId, Partitioning partitioning,
-		ICollection<TMessage> messages, Func<TMessage, byte[]> serializer);
+		ICollection<TMessage> messages, Func<TMessage, byte[]> serializer, Func<byte[], byte[]>? encryptor = null);
 	Task<IEnumerable<MessageResponse>> PollMessagesAsync(MessageFetchRequest request);
 	Task<IEnumerable<MessageResponse<TMessage>>> PollMessagesAsync<TMessage>(MessageFetchRequest request,
 		Func<byte[], TMessage> serializer);
