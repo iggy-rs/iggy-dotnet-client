@@ -81,7 +81,7 @@ SendMessages:
 ```c#
 Func<Product, byte[]> serialier = // provide your own serializer.
 var messages = new List<Product>();
-await bus.SendMessagesAsync<Product>(streamId, topicId, Partitioning.PartitionId(partitionId), serializer);
+await bus.SendMessagesAsync<Product>(streamId, topicId, Partitioning.PartitionId(partitionId), messages, serializer);
 ```
 PollMessages:
 ```c#
