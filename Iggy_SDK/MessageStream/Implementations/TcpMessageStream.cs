@@ -336,7 +336,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		return msgBytesSum;
 	}
 	public async Task<IEnumerable<MessageResponse<TMessage>>> PollMessagesAsync<TMessage>(MessageFetchRequest request,
-		Func<byte[], TMessage> serializer)
+		Func<byte[], TMessage> serializer, Func<byte[], byte[]>? decryptor = null)
 	{
 
 		int messageBufferSize = 18 + 5 + 2 + request.StreamId.Length + 2 + request.TopicId.Length;
@@ -378,7 +378,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			try
 			{
 				await _socket.ReceiveAsync(responseBuffer.AsMemory()[..response.Length]);
-				var result = BinaryMapper.MapMessages(responseBuffer.AsSpan()[..response.Length], serializer);
+				var result = BinaryMapper.MapMessages(
+					responseBuffer.AsSpan()[..response.Length], serializer, decryptor);
 				return result;
 			}
 			finally
@@ -391,7 +392,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			ArrayPool<byte>.Shared.Return(buffer);
 		}
 	}
-	public async Task<IEnumerable<MessageResponse>> PollMessagesAsync(MessageFetchRequest request)
+	public async Task<IEnumerable<MessageResponse>> PollMessagesAsync(MessageFetchRequest request, Func<byte[], byte[]>? decryptor = null)
 	{
 		int messageBufferSize = 18 + 5 + 2 + request.StreamId.Length + 2 + request.TopicId.Length;
 		int payloadBufferSize = messageBufferSize + 4 + INITIAL_BYTES_LENGTH;
@@ -433,7 +434,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			try
 			{
 				await _socket.ReceiveAsync(responseBuffer.AsMemory()[..response.Length]);
-				var result = BinaryMapper.MapMessages(responseBuffer.AsSpan()[..response.Length]);
+				var result = BinaryMapper.MapMessages(responseBuffer.AsSpan()[..response.Length], decryptor);
 				return result;
 			}
 			finally

@@ -161,7 +161,7 @@ public class HttpMessageStream : IMessageStream
         }
     }
 
-    public async Task<IEnumerable<MessageResponse>> PollMessagesAsync(MessageFetchRequest request)
+    public async Task<IEnumerable<MessageResponse>> PollMessagesAsync(MessageFetchRequest request, Func<byte[], byte[]>? decryptor = null)
     {
         var url = CreateUrl($"/streams/{request.StreamId}/topics/{request.TopicId}/messages?consumer_id={request.Consumer.Id}" +
                             $"&partition_id={request.PartitionId}&kind={request.PollingStrategy}&value={request.Value}&count={request.Count}&auto_commit={request.AutoCommit}");
@@ -171,7 +171,7 @@ public class HttpMessageStream : IMessageStream
         {
             return await response.Content.ReadFromJsonAsync<IEnumerable<MessageResponse>>(new JsonSerializerOptions
                    {
-                       Converters = { new MessageResponseConverter() }
+                       Converters = { new MessageResponseConverter(decryptor) }
                    })
                    ?? Enumerable.Empty<MessageResponse>();
         }
@@ -179,7 +179,9 @@ public class HttpMessageStream : IMessageStream
         throw new Exception("Unknown error occurred.");
     }
 
-    public async Task<IEnumerable<MessageResponse<TMessage>>> PollMessagesAsync<TMessage>(MessageFetchRequest request, Func<byte[], TMessage> serializer)
+    public async Task<IEnumerable<MessageResponse<TMessage>>> PollMessagesAsync<TMessage>(MessageFetchRequest request,
+        Func<byte[], TMessage> serializer,
+        Func<byte[], byte[]>? decryptor = null)
     {
         var url = CreateUrl($"/streams/{request.StreamId}/topics/{request.TopicId}/messages?consumer_id={request.Consumer.Id}" +
                             $"&partition_id={request.PartitionId}&kind={request.PollingStrategy}&value={request.Value}&count={request.Count}&auto_commit={request.AutoCommit}");
@@ -189,7 +191,7 @@ public class HttpMessageStream : IMessageStream
         {
             return await response.Content.ReadFromJsonAsync<IEnumerable<MessageResponse<TMessage>>>(new JsonSerializerOptions
                    {
-                       Converters = { new MessageResponseGenericConverter<TMessage>(serializer) }
+                       Converters = { new MessageResponseGenericConverter<TMessage>(serializer, decryptor) }
                    })
                    ?? Enumerable.Empty<MessageResponse<TMessage>>();
         }

@@ -9,7 +9,8 @@ public interface IMessageClient
 		encryptor = null);
 	Task SendMessagesAsync<TMessage>(Identifier streamId, Identifier topicId, Partitioning partitioning,
 		ICollection<TMessage> messages, Func<TMessage, byte[]> serializer, Func<byte[], byte[]>? encryptor = null);
-	Task<IEnumerable<MessageResponse>> PollMessagesAsync(MessageFetchRequest request);
+	Task<IEnumerable<MessageResponse>> PollMessagesAsync(MessageFetchRequest request, Func<byte[],byte[]>? decryptor = null);
 	Task<IEnumerable<MessageResponse<TMessage>>> PollMessagesAsync<TMessage>(MessageFetchRequest request,
-		Func<byte[], TMessage> serializer);
+		Func<byte[], TMessage> serializer, Func<byte[], byte[]>? decryptor = null);
+	
 }

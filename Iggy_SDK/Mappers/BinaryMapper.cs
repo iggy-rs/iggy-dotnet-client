@@ -18,7 +18,7 @@ internal static class BinaryMapper
     }
     
     //TODO - look into making this lazy
-    internal static IEnumerable<MessageResponse> MapMessages(ReadOnlySpan<byte> payload)
+    internal static IEnumerable<MessageResponse> MapMessages(ReadOnlySpan<byte> payload, Func<byte[], byte[]>? decryptor = null)
     {
         const int propertiesSize = 36;
         int length = payload.Length;
@@ -44,12 +44,13 @@ internal static class BinaryMapper
             int totalSize = propertiesSize + (int)messageLength;
             position += totalSize;
 
+            //TODO - can i omit this allocation somehow aswell ?
             messages.Add(new MessageResponse
             {
                 Offset = offset,
                 Timestamp = timestamp,
                 Id = id,
-                Payload = payloadSlice.ToArray()
+                Payload = decryptor is not null ? decryptor(payloadSlice.ToArray()) : payloadSlice.ToArray()
             });
 
             if (position + propertiesSize >= length)
@@ -61,7 +62,7 @@ internal static class BinaryMapper
         return messages;
     }
     internal static IEnumerable<MessageResponse<TMessage>> MapMessages<TMessage>(ReadOnlySpan<byte> payload,
-        Func<byte[], TMessage> serializer)
+        Func<byte[], TMessage> serializer, Func<byte[], byte[]>? decryptor = null)
     {
         const int propertiesSize = 36;
         int length = payload.Length;
@@ -93,7 +94,8 @@ internal static class BinaryMapper
                 Timestamp = timestamp,
                 Id = id,
                 //TODO - can i somehow omit this allocation ?
-                Message = serializer(payloadSlice.ToArray())
+                Message =  decryptor is not null ? 
+                    serializer(decryptor(payloadSlice.ToArray())) : serializer(payloadSlice.ToArray())
             });
 
             if (position + propertiesSize >= length)

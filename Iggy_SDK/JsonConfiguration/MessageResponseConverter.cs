@@ -7,6 +7,11 @@ namespace Iggy_SDK.JsonConfiguration;
 
 internal sealed class MessageResponseConverter : JsonConverter<IEnumerable<MessageResponse>>
 {
+	private readonly Func<byte[], byte[]>? _decryptor;
+	public MessageResponseConverter(Func<byte[], byte[]> decryptor)
+	{
+		_decryptor = decryptor;	
+	}
 	public override IEnumerable<MessageResponse> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 	{
 		//TODO - mby get rid of this allocation by using ArrayPools
@@ -26,7 +31,7 @@ internal sealed class MessageResponseConverter : JsonConverter<IEnumerable<Messa
 				Offset = offset,
 				Timestamp = timestamp,
 				Id = new Guid(id.GetBytesFromUInt128()), 
-				Payload = payload
+				Payload = _decryptor is not null ? _decryptor(payload) : payload
 			});
 		}
 

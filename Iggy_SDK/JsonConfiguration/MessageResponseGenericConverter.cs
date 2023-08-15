@@ -8,10 +8,12 @@ namespace Iggy_SDK.JsonConfiguration;
 public sealed class MessageResponseGenericConverter<TMessage> : JsonConverter<IEnumerable<MessageResponse<TMessage>>>
 {
 	private readonly Func<byte[], TMessage> _serializer;
+	private readonly Func<byte[], byte[]>? _decryptor;
 
-	public MessageResponseGenericConverter(Func<byte[], TMessage> serializer)
+	public MessageResponseGenericConverter(Func<byte[], TMessage> serializer, Func<byte[], byte[]>? decryptor)
 	{
 		_serializer = serializer;
+		_decryptor = decryptor;
 	}
 	public override IEnumerable<MessageResponse<TMessage>>? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 	{
@@ -32,7 +34,7 @@ public sealed class MessageResponseGenericConverter<TMessage> : JsonConverter<IE
 				Offset = offset,
 				Timestamp = timestamp,
 				Id = new Guid(id.GetBytesFromUInt128()), 
-				Message = _serializer(payload)
+				Message = _decryptor is not null ? _serializer(_decryptor(payload)) : _serializer(payload)
 			});
 		}
 
