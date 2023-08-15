@@ -38,10 +38,11 @@ public static class MessageStreamFactory
         {
             throw new InvalidBaseAdressException();
         }
-        var client = new TcpClient(urlPortSplitter[0], int.Parse(urlPortSplitter[1]));
-        client.SendBufferSize = options.SendBufferSize;
-        options.ReceiveBufferSize = options.ReceiveBufferSize;
-        return new TcpMessageStream(client);
+        var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        socket.Connect(urlPortSplitter[0], int.Parse(urlPortSplitter[1]));
+        socket.SendBufferSize = options.SendBufferSize;
+        socket.ReceiveBufferSize = options.ReceiveBufferSize;
+        return new TcpMessageStream(socket);
     }
 
     

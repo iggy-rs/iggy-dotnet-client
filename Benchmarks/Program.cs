@@ -7,7 +7,7 @@ using Iggy_SDK.Kinds;
 
 const int messagesCount = 1000;
 const int messagesBatch = 1000;
-const int messageSize = 69;
+const int messageSize = 1000;
 const int producerCount = 7;
 const int startingStreamId = 100;
 const int topicId = 1;

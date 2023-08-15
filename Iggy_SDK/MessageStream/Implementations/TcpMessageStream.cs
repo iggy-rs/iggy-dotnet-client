@@ -11,7 +11,6 @@ using Iggy_SDK.Kinds;
 using Iggy_SDK.Mappers;
 using Iggy_SDK.Messages;
 using Iggy_SDK.Utils;
-using System;
 
 namespace Iggy_SDK.MessageStream.Implementations;
 
@@ -19,15 +18,13 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 {
 	private const int INITIAL_BYTES_LENGTH = 4;
 	private const int EXPECTED_RESPONSE_SIZE = 8;
-	private readonly TcpClient _client;
-	private readonly NetworkStream _stream;
+	private readonly Socket _socket;
 
 	private Memory<byte> _buffer = new(new byte[EXPECTED_RESPONSE_SIZE]);
 
-	internal TcpMessageStream(TcpClient client)
+	internal TcpMessageStream(Socket socket)
 	{
-		_client = client;
-		_stream = client.GetStream();
+		_socket = socket;
 	}
 
 	public async Task CreateStreamAsync(StreamRequest request)
@@ -35,10 +32,10 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = TcpContracts.CreateStream(request);
 		var payload = CreatePayload(message,CommandCodes.CREATE_STREAM_CODE);
 
-		await _stream.WriteAsync(payload);
+		await _socket.SendAsync(payload);
 
 		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
-		await _stream.ReadExactlyAsync(buffer);
+		await _socket.ReceiveAsync(buffer);
 
 		var status = GetResponseStatus(buffer);
 		if (status != 0)
@@ -52,10 +49,10 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = GetBytesFromIdentifier(streamId);
 		var payload = CreatePayload(message, CommandCodes.GET_STREAM_CODE);
 
-		await _stream.WriteAsync(payload);
+		await _socket.SendAsync(payload);
 
 		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
-		await _stream.ReadExactlyAsync(buffer);
+		await _socket.ReceiveAsync(buffer);
 
 		var response = GetResponseLengthAndStatus(buffer);
 		var responseBuffer = new byte[response.Length];
@@ -70,7 +67,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			return null;	
 		}
 
-		await _stream.ReadExactlyAsync(responseBuffer);
+		await _socket.ReceiveAsync(responseBuffer);
 		return BinaryMapper.MapStream(responseBuffer);
 	}
 
@@ -79,10 +76,10 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = Enumerable.Empty<byte>().ToArray();
 		var payload = CreatePayload(message, CommandCodes.GET_STREAMS_CODE);
 
-		await _stream.WriteAsync(payload);
+		await _socket.SendAsync(payload);
 
 		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
-		await _stream.ReadExactlyAsync(buffer);
+		await _socket.ReceiveAsync(buffer);
 
 		var response = GetResponseLengthAndStatus(buffer);
 		var responseBuffer = new byte[response.Length];
@@ -97,7 +94,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			return Enumerable.Empty<StreamResponse>();
 		}
 		
-		await _stream.ReadExactlyAsync(responseBuffer);
+		await _socket.ReceiveAsync(responseBuffer);
 		return BinaryMapper.MapStreams(responseBuffer);
 	}
 
@@ -106,10 +103,10 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = GetBytesFromIdentifier(streamId);
 		var payload = CreatePayload(message, CommandCodes.DELETE_STREAM_CODE);
 
-		await _stream.WriteAsync(payload);
+		await _socket.SendAsync(payload);
 
 		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
-		await _stream.ReadExactlyAsync(buffer);
+		await _socket.ReceiveAsync(buffer);
 
 		var status = GetResponseStatus(buffer);
 
@@ -124,10 +121,10 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = GetBytesFromIdentifier(streamId);
 		var payload = CreatePayload(message, CommandCodes.GET_TOPICS_CODE);
 
-		await _stream.WriteAsync(payload);
+		await _socket.SendAsync(payload);
 
 		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
-		await _stream.ReadExactlyAsync(buffer);
+		await _socket.ReceiveAsync(buffer);
 
 		var response = GetResponseLengthAndStatus(buffer);
 
@@ -142,7 +139,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 		
 		var responseBuffer = new byte[response.Length];
-		await _stream.ReadExactlyAsync(responseBuffer);
+		await _socket.ReceiveAsync(responseBuffer);
 		return BinaryMapper.MapTopics(responseBuffer);
 	}
 
@@ -151,10 +148,10 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = TcpContracts.GetTopicById(streamId, topicId);
 		var payload = CreatePayload(message, CommandCodes.GET_TOPIC_CODE);
 
-		await _stream.WriteAsync(payload);
+		await _socket.SendAsync(payload);
 
 		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
-		await _stream.ReadExactlyAsync(buffer);
+		await _socket.ReceiveAsync(buffer);
 
 		var response = GetResponseLengthAndStatus(buffer);
 
@@ -169,7 +166,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 		
 		var responseBuffer = new byte[response.Length];
-		await _stream.ReadExactlyAsync(responseBuffer);
+		await _socket.ReceiveAsync(responseBuffer);
 		return BinaryMapper.MapTopic(responseBuffer);
 	}
 
@@ -179,10 +176,10 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = TcpContracts.CreateTopic(streamId, topic);
 		var payload = CreatePayload(message, CommandCodes.CREATE_TOPIC_CODE);
 
-		await _stream.WriteAsync(payload);
+		await _socket.SendAsync(payload);
 
 		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
-		await _stream.ReadExactlyAsync(buffer);
+		await _socket.ReceiveAsync(buffer);
 		
 		var status = GetResponseStatus(buffer); 
 		
@@ -197,10 +194,10 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = TcpContracts.DeleteTopic(streamId, topicId);
 		var payload = CreatePayload(message, CommandCodes.DELETE_TOPIC_CODE);
 
-		await _stream.WriteAsync(payload);
+		await _socket.SendAsync(payload);
 
 		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
-		await _stream.ReadExactlyAsync(buffer);
+		await _socket.ReceiveAsync(buffer);
 		
 		var status = GetResponseStatus(buffer);
 		
@@ -224,8 +221,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 				request.Messages);
 			CreatePayload(payload, message.AsSpan()[..messageBufferSize], CommandCodes.SEND_MESSAGES_CODE);
 
-			var recv = _stream.ReadExactlyAsync(_buffer);
-			await _stream.WriteAsync(payload.AsMemory()[..payloadBufferSize]);
+			var recv = _socket.ReceiveAsync(_buffer);
+			await _socket.SendAsync(payload.AsMemory()[..payloadBufferSize]);
 			
 			await recv;
 			
@@ -277,8 +274,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 				messagesToSend);
 			CreatePayload(payload, message.AsSpan()[..messageBufferSize], CommandCodes.SEND_MESSAGES_CODE);
 
-			var recv = _stream.ReadExactlyAsync(_buffer);
-			await _stream.WriteAsync(payload.AsMemory()[..payloadBufferSize]);
+			var recv = _socket.ReceiveAsync(_buffer);
+			await _socket.SendAsync(payload.AsMemory()[..payloadBufferSize]);
 			
 			await recv;
 			
@@ -344,7 +341,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			TcpContracts.GetMessages(message.AsSpan()[..messageBufferSize], request);
 			CreatePayload(payload, message.AsSpan()[..messageBufferSize], CommandCodes.POLL_MESSAGES_CODE);
 
-			await _stream.WriteAsync(payload.AsMemory()[..payloadBufferSize]);
+			await _socket.SendAsync(payload.AsMemory()[..payloadBufferSize]);
 		}
 		finally
 		{
@@ -355,7 +352,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var buffer = ArrayPool<byte>.Shared.Rent(EXPECTED_RESPONSE_SIZE);
 		try
 		{
-			await _stream.ReadExactlyAsync(buffer.AsMemory()[..EXPECTED_RESPONSE_SIZE]);
+			await _socket.ReceiveAsync(buffer.AsMemory()[..EXPECTED_RESPONSE_SIZE]);
 			var response = GetResponseLengthAndStatus(buffer);
 			if (response.Status != 0)
 			{
@@ -371,7 +368,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			
 			try
 			{
-				await _stream.ReadExactlyAsync(responseBuffer.AsMemory()[..response.Length]);
+				await _socket.ReceiveAsync(responseBuffer.AsMemory()[..response.Length]);
 				var result = BinaryMapper.MapMessages(responseBuffer.AsSpan()[..response.Length], serializer);
 				return result;
 			}
@@ -398,7 +395,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			TcpContracts.GetMessages(message.AsSpan()[..messageBufferSize], request);
 			CreatePayload(payload, message.AsSpan()[..messageBufferSize], CommandCodes.POLL_MESSAGES_CODE);
 
-			await _stream.WriteAsync(payload.AsMemory()[..payloadBufferSize]);
+			await _socket.SendAsync(payload.AsMemory()[..payloadBufferSize]);
 		}
 		finally
 		{
@@ -409,7 +406,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var buffer = ArrayPool<byte>.Shared.Rent(EXPECTED_RESPONSE_SIZE);
 		try
 		{
-			await _stream.ReadExactlyAsync(buffer.AsMemory()[..EXPECTED_RESPONSE_SIZE]);
+			await _socket.ReceiveAsync(buffer.AsMemory()[..EXPECTED_RESPONSE_SIZE]);
 
 			var response = GetResponseLengthAndStatus(buffer);
 			if (response.Status != 0)
@@ -426,7 +423,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			
 			try
 			{
-				await _stream.ReadExactlyAsync(responseBuffer.AsMemory()[..response.Length]);
+				await _socket.ReceiveAsync(responseBuffer.AsMemory()[..response.Length]);
 				var result = BinaryMapper.MapMessages(responseBuffer.AsSpan()[..response.Length]);
 				return result;
 			}
@@ -447,10 +444,10 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = TcpContracts.UpdateOffset(streamId, topicId, contract);
 		var payload = CreatePayload(message, CommandCodes.STORE_OFFSET_CODE);
 
-		await _stream.WriteAsync(payload);
+		await _socket.SendAsync(payload);
 
 		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
-		await _stream.ReadExactlyAsync(buffer);
+		await _socket.ReceiveAsync(buffer);
 
 		var status = GetResponseStatus(buffer);
 
@@ -465,10 +462,10 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = TcpContracts.GetOffset(request);
 		var payload = CreatePayload(message, CommandCodes.GET_OFFSET_CODE);
 
-		await _stream.WriteAsync(payload);
+		await _socket.SendAsync(payload);
 
 		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
-		await _stream.ReadExactlyAsync(buffer);
+		await _socket.ReceiveAsync(buffer);
 		
 		var response = GetResponseLengthAndStatus(buffer); 
 		
@@ -483,7 +480,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 
 		var responseBuffer = new byte[response.Length];
-		await _stream.ReadExactlyAsync(responseBuffer);
+		await _socket.ReceiveAsync(responseBuffer);
 		return BinaryMapper.MapOffsets(responseBuffer);
 	}
 
@@ -492,10 +489,10 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = TcpContracts.GetGroups(streamId, topicId);
 		var payload = CreatePayload(message, CommandCodes.GET_GROUPS_CODE);
 
-		await _stream.WriteAsync(payload);
+		await _socket.SendAsync(payload);
 
 		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
-		await _stream.ReadExactlyAsync(buffer);
+		await _socket.ReceiveAsync(buffer);
 
 		var response = GetResponseLengthAndStatus(buffer);
 		
@@ -510,7 +507,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 
 		var responseBuffer = new byte[response.Length];
-		await _stream.ReadExactlyAsync(responseBuffer);
+		await _socket.ReceiveAsync(responseBuffer);
 		return BinaryMapper.MapConsumerGroups(responseBuffer);
 	}
 
@@ -519,10 +516,10 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = TcpContracts.GetGroup(streamId, topicId, groupId);
 		var payload = CreatePayload(message, CommandCodes.GET_GROUP_CODE);
 
-		await _stream.WriteAsync(payload);
+		await _socket.SendAsync(payload);
 
 		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
-		await _stream.ReadExactlyAsync(buffer);
+		await _socket.ReceiveAsync(buffer);
 
 		var response = GetResponseLengthAndStatus(buffer);
 		
@@ -537,7 +534,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 
 		var responseBuffer = new byte[response.Length];
-		await _stream.ReadExactlyAsync(responseBuffer);
+		await _socket.ReceiveAsync(responseBuffer);
 		return BinaryMapper.MapConsumerGroup(responseBuffer);
 	}
 
@@ -546,10 +543,10 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = TcpContracts.CreateGroup(streamId, topicId, request);
 		var payload = CreatePayload(message, CommandCodes.CREATE_GROUP_CODE);
 
-		await _stream.WriteAsync(payload);
+		await _socket.SendAsync(payload);
 
 		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
-		await _stream.ReadExactlyAsync(buffer);
+		await _socket.ReceiveAsync(buffer);
 		
 		var status = GetResponseStatus(buffer);
 		
@@ -564,10 +561,10 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = TcpContracts.DeleteGroup(streamId, topicId, groupId);
 		var payload = CreatePayload(message, CommandCodes.DELETE_GROUP_CODE);
 
-		await _stream.WriteAsync(payload);
+		await _socket.SendAsync(payload);
 
 		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
-		await _stream.ReadExactlyAsync(buffer);
+		await _socket.ReceiveAsync(buffer);
 
 		var status = GetResponseStatus(buffer);
 
@@ -582,10 +579,10 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = TcpContracts.JoinGroup(request);
 		var payload = CreatePayload(message, CommandCodes.JOIN_GROUP_CODE);
 
-		await _stream.WriteAsync(payload);
+		await _socket.SendAsync(payload);
 
 		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
-		await _stream.ReadExactlyAsync(buffer);
+		await _socket.ReceiveAsync(buffer);
 
 		var status = GetResponseStatus(buffer);
 
@@ -600,10 +597,10 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = TcpContracts.LeaveGroup(request);
 		var payload = CreatePayload(message, CommandCodes.LEAVE_GROUP_CODE);
 
-		await _stream.WriteAsync(payload);
+		await _socket.SendAsync(payload);
 
 		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
-		await _stream.ReadExactlyAsync(buffer);
+		await _socket.ReceiveAsync(buffer);
 
 		var status = GetResponseStatus(buffer);
 
@@ -617,10 +614,10 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = TcpContracts.DeletePartitions(streamId, topicId, request);
 		var payload = CreatePayload(message, CommandCodes.DELETE_PARTITIONS_CODE);
 		
-		await _stream.WriteAsync(payload);
+		await _socket.SendAsync(payload);
 
 		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
-		await _stream.ReadExactlyAsync(buffer);
+		await _socket.ReceiveAsync(buffer);
 
 		var status = GetResponseStatus(buffer);
 
@@ -635,10 +632,10 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = TcpContracts.CreatePartitions(streamId, topicId, request);
 		var payload = CreatePayload(message, CommandCodes.CREATE_PARTITIONS_CODE);
 		
-		await _stream.WriteAsync(payload);
+		await _socket.SendAsync(payload);
 
 		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
-		await _stream.ReadExactlyAsync(buffer);
+		await _socket.ReceiveAsync(buffer);
 
 		var status = GetResponseStatus(buffer);
 
@@ -652,10 +649,10 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var message = Array.Empty<byte>();
 		var payload = CreatePayload(message, CommandCodes.GET_STATS_CODE);
 
-		await _stream.WriteAsync(payload);
+		await _socket.SendAsync(payload);
 
 		var buffer = new byte[EXPECTED_RESPONSE_SIZE];
-		await _stream.ReadExactlyAsync(buffer);
+		await _socket.ReceiveAsync(buffer);
 
 		var response = GetResponseLengthAndStatus(buffer);
 
@@ -670,7 +667,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 
 		var responseBuffer = new byte[response.Length];
-		await _stream.ReadExactlyAsync(responseBuffer);
+		await _socket.ReceiveAsync(responseBuffer);
 
 		return BinaryMapper.MapStats(responseBuffer);
 	}
@@ -725,8 +722,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	}
 	public void Dispose()
 	{
-		_client.Dispose();
-		_stream.Dispose();
+		_socket.Close();
+		_socket.Dispose();
 	}
 
 }
