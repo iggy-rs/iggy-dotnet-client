@@ -3,9 +3,7 @@ using Iggy_SDK;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
-using Iggy_SDK.Kinds;
 using Iggy_SDK.MessageStream;
-using Iggy_SDK.MessageStream.Implementations;
 
 const int messagesCount = 1000;
 const int messagesBatch = 1000;

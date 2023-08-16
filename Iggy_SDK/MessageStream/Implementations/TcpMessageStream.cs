@@ -209,8 +209,15 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	public async Task SendMessagesAsync(Identifier streamId, Identifier topicId, MessageSendRequest request,
 		Func<byte[], byte[]>? encryptor = null)
 	{
-		//TODO - refactor type from IEnumerable<Message> to IList<Message>, do the same for methods that poll messages.
+		//TODO - explore making fields of Message class mutable, so there is no need to create em from scratch
 		var messages = request.Messages;
+		if (encryptor is not null)
+		{
+			for (var i = 0; i < request.Messages.Count; i++)
+			{
+				messages[i] = messages[i] with { Payload = encryptor(messages[i].Payload) };
+			}
+		}
 		
 		var streamTopicIdLength = 2 + streamId.Length + 2 + topicId.Length;
 		var messageBufferSize = CalculateMessageBytesCount(messages)
@@ -245,26 +252,20 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	}
 
 	public async Task SendMessagesAsync<TMessage>(Identifier streamId, Identifier topicId, Partitioning partitioning,
-		ICollection<TMessage> messages, Func<TMessage, byte[]> serializer, Func<byte[], byte[]>? encryptor = null)
+		IList<TMessage> messages, Func<TMessage, byte[]> serializer, Func<byte[], byte[]>? encryptor = null)
 	{
-		var msgCountSuccess = messages.TryGetNonEnumeratedCount(out var msgCount);
-		if (!msgCountSuccess)
-		{
-			msgCount = messages.Count;
-		}
-		var messagesPool = ArrayPool<Message>.Shared.Rent(msgCount);
-
+		var messagesPool = ArrayPool<Message>.Shared.Rent(messages.Count);
 		for (var i = 0; i < messages.Count; i++)
 		{
 			messagesPool[i] = new Message
 			{
 				Payload = encryptor is not null ?
-					encryptor(serializer(messages.ElementAt(i))) : serializer(messages.ElementAt(i)),
+					encryptor(serializer(messages[i])) : serializer(messages[i]),
 				Id = Guid.NewGuid()
 			};
 		}
 
-		var messagesToSend = messagesPool[..msgCount];
+		var messagesToSend = messagesPool[..messages.Count];
 		var msgBytesSum = CalculateMessageBytesCount(messagesToSend);
 
 		var streamTopicIdLength = 2 + streamId.Length + 2 + topicId.Length;

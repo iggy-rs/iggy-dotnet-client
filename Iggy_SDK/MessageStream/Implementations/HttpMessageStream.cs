@@ -119,12 +119,11 @@ public class HttpMessageStream : IMessageStream
     public async Task SendMessagesAsync(Identifier streamId, Identifier topicId, MessageSendRequest request,
         Func<byte[], byte[]>? encryptor = null)
     {
-        //TODO - this doesn't work fix it.
 		if (encryptor is not null)
 		{
-			foreach (var msg in request.Messages)
+			for (var i = 0; i < request.Messages.Count; i++)
 			{
-				encryptor(msg.Payload);
+				request.Messages[i]= request.Messages[i] with { Payload = encryptor(request.Messages[i].Payload) };
 			}
 		}
         var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
@@ -139,7 +138,7 @@ public class HttpMessageStream : IMessageStream
     }
 
     public async Task SendMessagesAsync<TMessage>(Identifier streamId, Identifier topicId, Partitioning partitioning,
-        ICollection<TMessage> messages, Func<TMessage, byte[]> serializer, Func<byte[], byte[]>? encryptor = null)
+        IList<TMessage> messages, Func<TMessage, byte[]> serializer, Func<byte[], byte[]>? encryptor = null)
     {
         //TODO - maybe get rid of this closure ?
         var request = new MessageSendRequest

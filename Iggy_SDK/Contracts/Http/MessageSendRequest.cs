@@ -9,5 +9,5 @@ namespace Iggy_SDK.Contracts.Http;
 public sealed class MessageSendRequest
 {
 	public required Partitioning Partitioning { get; init; }
-	public required IEnumerable<Message> Messages { get; init; }
+	public required IList<Message> Messages { get; init; }
 }
