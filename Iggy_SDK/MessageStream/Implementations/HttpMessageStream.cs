@@ -161,6 +161,7 @@ public class HttpMessageStream : IMessageStream
         }
     }
 
+    //TODO - maybe this could be made lazy loaded aswell, using streams
     public async Task<IEnumerable<MessageResponse>> PollMessagesAsync(MessageFetchRequest request, Func<byte[], byte[]>? decryptor = null)
     {
         var url = CreateUrl($"/streams/{request.StreamId}/topics/{request.TopicId}/messages?consumer_id={request.Consumer.Id}" +
@@ -179,6 +180,7 @@ public class HttpMessageStream : IMessageStream
         throw new Exception("Unknown error occurred.");
     }
 
+    //TODO - maybe this could be made lazy loaded aswell, using streams
     public async Task<IEnumerable<MessageResponse<TMessage>>> PollMessagesAsync<TMessage>(MessageFetchRequest request,
         Func<byte[], TMessage> serializer,
         Func<byte[], byte[]>? decryptor = null)

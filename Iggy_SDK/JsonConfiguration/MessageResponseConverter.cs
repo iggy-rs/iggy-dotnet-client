@@ -8,7 +8,7 @@ namespace Iggy_SDK.JsonConfiguration;
 internal sealed class MessageResponseConverter : JsonConverter<IEnumerable<MessageResponse>>
 {
 	private readonly Func<byte[], byte[]>? _decryptor;
-	public MessageResponseConverter(Func<byte[], byte[]> decryptor)
+	public MessageResponseConverter(Func<byte[], byte[]>? decryptor)
 	{
 		_decryptor = decryptor;	
 	}

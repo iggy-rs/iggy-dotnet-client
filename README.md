@@ -98,8 +98,7 @@ var messages = await bus.PollMessagesAsync<Product>(new MessageFetchRequest<Prod
     AutoCommit = true
 }, deserializer);
 ```
-
-
+In version 0.0.6 an option encryptor/decryptor parameter has been added.
 
 It is worth noting that every method will throw an `InvalidResponseException` when encountering an error.<br><br>
 If you register `IMessageStream` in a dependency injection container, you will have access to interfaces

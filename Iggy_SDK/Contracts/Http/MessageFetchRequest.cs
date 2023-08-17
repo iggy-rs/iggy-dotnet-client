@@ -9,6 +9,7 @@ public sealed class MessageFetchRequest
 	public required Identifier StreamId { get; init; }	
 	public required Identifier TopicId { get; init; }
 	public required int PartitionId { get; init; }
+	//TODO - merge MessagePolling together with value into PollingStrategy
 	public required MessagePolling PollingStrategy { get; init; }
 	public required ulong Value { get; init; }
 	public required int Count { get; init; }

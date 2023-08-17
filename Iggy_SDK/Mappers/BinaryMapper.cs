@@ -61,6 +61,7 @@ internal static class BinaryMapper
 
         return messages;
     }
+    //TODO - look into making this lazy aswell.
     internal static IEnumerable<MessageResponse<TMessage>> MapMessages<TMessage>(ReadOnlySpan<byte> payload,
         Func<byte[], TMessage> serializer, Func<byte[], byte[]>? decryptor = null)
     {

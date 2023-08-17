@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using Iggy_SDK;
 using Iggy_SDK.Contracts.Http;
@@ -50,6 +51,25 @@ async Task ConsumeMessages()
         envelope.Payload = Encoding.UTF8.GetString(serializedData, 4 + messageTypeLength, serializedData.Length - (4 + messageTypeLength));
         return envelope;
     };
+    byte[] key = {
+        0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
+        0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c,
+        0xa8, 0x8d, 0x2d, 0x0a, 0x9f, 0x9d, 0xea, 0x43,
+        0x6c, 0x25, 0x17, 0x13, 0x20, 0x45, 0x78, 0xc8
+    };
+    byte[] iv = {
+        0x5f, 0x8a, 0xe4, 0x78, 0x9c, 0x3d, 0x2b, 0x0f,
+        0x12, 0x6a, 0x7e, 0x45, 0x91, 0xba, 0xdf, 0x33
+    };
+    Func<byte[], byte[]> decryptor = payload =>
+    {
+        using Aes aes = Aes.Create();
+        ICryptoTransform decryptor = aes.CreateDecryptor(key, iv);
+        using MemoryStream memoryStream = new MemoryStream(payload);
+        using CryptoStream cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read);
+        using BinaryReader binaryReader = new BinaryReader(cryptoStream);
+        return binaryReader.ReadBytes(payload.Length);
+    };
 
     while (true)
     {
@@ -65,7 +85,7 @@ async Task ConsumeMessages()
                  PollingStrategy = MessagePolling.Next,
                  Value = 0,
                  AutoCommit = true
-            }, deserializer)).ToList();
+            }, deserializer, decryptor)).ToList();
             
             
             if (!messages.Any())

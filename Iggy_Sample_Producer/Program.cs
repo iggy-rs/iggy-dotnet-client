@@ -1,4 +1,5 @@
 ﻿using System.Buffers.Binary;
+using System.Security.Cryptography;
 using System.Text;
 using Iggy_Sample_Producer;
 using Iggy_SDK;
@@ -6,7 +7,6 @@ using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
 using Iggy_SDK.Kinds;
-using Iggy_SDK.Messages;
 using Iggy_SDK.MessageStream;
 using Shared;
 
@@ -65,6 +65,29 @@ async Task ProduceMessages(IMessageClient bus, StreamResponse? stream, TopicResp
         Encoding.UTF8.GetBytes(envelope.Payload).CopyTo(buffer[(envelope.MessageType.Length + 4)..]);
         return buffer.ToArray();
     };
+    byte[] key = {
+        0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
+        0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c,
+        0xa8, 0x8d, 0x2d, 0x0a, 0x9f, 0x9d, 0xea, 0x43,
+        0x6c, 0x25, 0x17, 0x13, 0x20, 0x45, 0x78, 0xc8
+    };
+    byte[] iv = {
+        0x5f, 0x8a, 0xe4, 0x78, 0x9c, 0x3d, 0x2b, 0x0f,
+        0x12, 0x6a, 0x7e, 0x45, 0x91, 0xba, 0xdf, 0x33
+    };
+    Func<byte[], byte[]> encryptor = payload =>
+    {
+        using Aes aes = Aes.Create();
+        ICryptoTransform encryptor = aes.CreateEncryptor(key, iv);
+        using MemoryStream memoryStream = new MemoryStream();
+        using CryptoStream cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write);
+        using (BinaryWriter streamWriter = new BinaryWriter(cryptoStream))
+        {
+            streamWriter.Write(payload);
+        }
+        return memoryStream.ToArray();
+    };
+
 
     while (true)
     {
@@ -81,7 +104,8 @@ async Task ProduceMessages(IMessageClient bus, StreamResponse? stream, TopicResp
         }
         try
         {
-            await bus.SendMessagesAsync<Envelope>(streamId, topicId, Partitioning.PartitionId(3), messages, serializer);
+            await bus.SendMessagesAsync<Envelope>(streamId, topicId, Partitioning.PartitionId(3), messages, serializer,
+                encryptor);
         }
         catch (Exception e)
         {
