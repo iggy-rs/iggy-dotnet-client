@@ -19,8 +19,16 @@ for (int i = 0; i < producerCount; i++)
 	{
 		options.BaseAdress = "127.0.0.1:8090";
 		options.Protocol = Protocol.Tcp;
+#if OS_LINUX
 		options.ReceiveBufferSize = Int32.MaxValue;
 		options.SendBufferSize = Int32.MaxValue;
+#elif OS_WINDOWS
+		options.ReceiveBufferSize = Int32.MaxValue;
+		options.SendBufferSize = Int32.MaxValue;
+#elif OS_MAC
+		options.ReceiveBufferSize = 7280*1024;
+		options.SendBufferSize = 7280*1024;
+#endif
 	});
 	clients[i] = bus;
 }

@@ -14,6 +14,7 @@ using Iggy_SDK.Utils;
 
 namespace Iggy_SDK.MessageStream.Implementations;
 
+//TODO - look into changing IEnumerable<T> response types to List<T>, or make them lazy
 public sealed class TcpMessageStream : IMessageStream, IDisposable
 {
 	private const int INITIAL_BYTES_LENGTH = 4;
