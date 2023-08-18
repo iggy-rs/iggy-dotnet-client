@@ -31,7 +31,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	public async Task CreateStreamAsync(StreamRequest request)
 	{
 		var message = TcpContracts.CreateStream(request);
-		var payload = CreatePayload(message,CommandCodes.CREATE_STREAM_CODE);
+		var payload = new byte[4 + INITIAL_BYTES_LENGTH + message.Length];
+		CreatePayload(payload, message,CommandCodes.CREATE_STREAM_CODE);
 
 		await _socket.SendAsync(payload);
 
@@ -48,7 +49,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	public async Task<StreamResponse?> GetStreamByIdAsync(Identifier streamId)
 	{
 		var message = GetBytesFromIdentifier(streamId);
-		var payload = CreatePayload(message, CommandCodes.GET_STREAM_CODE);
+		var payload = new byte[4 + INITIAL_BYTES_LENGTH + message.Length];
+		CreatePayload(payload, message, CommandCodes.GET_STREAM_CODE);
 
 		await _socket.SendAsync(payload);
 
@@ -75,7 +77,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	public async Task<IEnumerable<StreamResponse>> GetStreamsAsync()
 	{
 		var message = Enumerable.Empty<byte>().ToArray();
-		var payload = CreatePayload(message, CommandCodes.GET_STREAMS_CODE);
+		var payload = new byte[4 + INITIAL_BYTES_LENGTH + message.Length];
+		CreatePayload(payload, message, CommandCodes.GET_STREAMS_CODE);
 
 		await _socket.SendAsync(payload);
 
@@ -102,7 +105,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	public async Task DeleteStreamAsync(Identifier streamId)
 	{
 		var message = GetBytesFromIdentifier(streamId);
-		var payload = CreatePayload(message, CommandCodes.DELETE_STREAM_CODE);
+		var payload = new byte[4 + INITIAL_BYTES_LENGTH + message.Length];
+		CreatePayload(payload, message, CommandCodes.DELETE_STREAM_CODE);
 
 		await _socket.SendAsync(payload);
 
@@ -120,7 +124,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	public async Task<IEnumerable<TopicResponse>> GetTopicsAsync(Identifier streamId)
 	{
 		var message = GetBytesFromIdentifier(streamId);
-		var payload = CreatePayload(message, CommandCodes.GET_TOPICS_CODE);
+		var payload = new byte[4 + INITIAL_BYTES_LENGTH + message.Length];
+		CreatePayload(payload, message, CommandCodes.GET_TOPICS_CODE);
 
 		await _socket.SendAsync(payload);
 
@@ -147,7 +152,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	public async Task<TopicResponse?> GetTopicByIdAsync(Identifier streamId, Identifier topicId)
 	{
 		var message = TcpContracts.GetTopicById(streamId, topicId);
-		var payload = CreatePayload(message, CommandCodes.GET_TOPIC_CODE);
+		var payload = new byte[4 + INITIAL_BYTES_LENGTH + message.Length];
+		CreatePayload(payload, message, CommandCodes.GET_TOPIC_CODE);
 
 		await _socket.SendAsync(payload);
 
@@ -175,7 +181,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	public async Task CreateTopicAsync(Identifier streamId, TopicRequest topic)
 	{
 		var message = TcpContracts.CreateTopic(streamId, topic);
-		var payload = CreatePayload(message, CommandCodes.CREATE_TOPIC_CODE);
+		var payload = new byte[4 + INITIAL_BYTES_LENGTH + message.Length];
+		CreatePayload(payload, message, CommandCodes.CREATE_TOPIC_CODE);
 
 		await _socket.SendAsync(payload);
 
@@ -193,7 +200,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	public async Task DeleteTopicAsync(Identifier streamId, Identifier topicId)
 	{
 		var message = TcpContracts.DeleteTopic(streamId, topicId);
-		var payload = CreatePayload(message, CommandCodes.DELETE_TOPIC_CODE);
+		var payload = new byte[4 + INITIAL_BYTES_LENGTH + message.Length];
+		CreatePayload(payload, message, CommandCodes.DELETE_TOPIC_CODE);
 
 		await _socket.SendAsync(payload);
 
@@ -451,7 +459,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	public async Task StoreOffsetAsync(Identifier streamId, Identifier topicId, OffsetContract contract)
 	{
 		var message = TcpContracts.UpdateOffset(streamId, topicId, contract);
-		var payload = CreatePayload(message, CommandCodes.STORE_OFFSET_CODE);
+		var payload = new byte[4 + INITIAL_BYTES_LENGTH + message.Length];
+		CreatePayload(payload, message, CommandCodes.STORE_OFFSET_CODE);
 
 		await _socket.SendAsync(payload);
 
@@ -469,7 +478,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	public async Task<OffsetResponse?> GetOffsetAsync(OffsetRequest request)
 	{
 		var message = TcpContracts.GetOffset(request);
-		var payload = CreatePayload(message, CommandCodes.GET_OFFSET_CODE);
+		var payload = new byte[4 + INITIAL_BYTES_LENGTH + message.Length];
+		CreatePayload(payload, message, CommandCodes.GET_OFFSET_CODE);
 
 		await _socket.SendAsync(payload);
 
@@ -496,7 +506,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	public async Task<IEnumerable<ConsumerGroupResponse>> GetConsumerGroupsAsync(Identifier streamId, Identifier topicId)
 	{
 		var message = TcpContracts.GetGroups(streamId, topicId);
-		var payload = CreatePayload(message, CommandCodes.GET_GROUPS_CODE);
+		var payload = new byte[4 + INITIAL_BYTES_LENGTH + message.Length];
+		CreatePayload(payload, message, CommandCodes.GET_GROUPS_CODE);
 
 		await _socket.SendAsync(payload);
 
@@ -523,7 +534,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	public async Task<ConsumerGroupResponse?> GetConsumerGroupByIdAsync(Identifier streamId, Identifier topicId, int groupId)
 	{
 		var message = TcpContracts.GetGroup(streamId, topicId, groupId);
-		var payload = CreatePayload(message, CommandCodes.GET_GROUP_CODE);
+		var payload = new byte[4 + INITIAL_BYTES_LENGTH + message.Length];
+		CreatePayload(payload, message, CommandCodes.GET_GROUP_CODE);
 
 		await _socket.SendAsync(payload);
 
@@ -550,7 +562,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	public async Task CreateConsumerGroupAsync(Identifier streamId, Identifier topicId, CreateConsumerGroupRequest request)
 	{
 		var message = TcpContracts.CreateGroup(streamId, topicId, request);
-		var payload = CreatePayload(message, CommandCodes.CREATE_GROUP_CODE);
+		var payload = new byte[4 + INITIAL_BYTES_LENGTH + message.Length];
+		CreatePayload(payload, message, CommandCodes.CREATE_GROUP_CODE);
 
 		await _socket.SendAsync(payload);
 
@@ -568,7 +581,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	public async Task DeleteConsumerGroupAsync(Identifier streamId, Identifier topicId, int groupId)
 	{
 		var message = TcpContracts.DeleteGroup(streamId, topicId, groupId);
-		var payload = CreatePayload(message, CommandCodes.DELETE_GROUP_CODE);
+		var payload = new byte[4 + INITIAL_BYTES_LENGTH + message.Length];
+		CreatePayload(payload, message, CommandCodes.DELETE_GROUP_CODE);
 
 		await _socket.SendAsync(payload);
 
@@ -586,7 +600,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	public async Task JoinConsumerGroupAsync(JoinConsumerGroupRequest request)
 	{
 		var message = TcpContracts.JoinGroup(request);
-		var payload = CreatePayload(message, CommandCodes.JOIN_GROUP_CODE);
+		var payload = new byte[4 + INITIAL_BYTES_LENGTH + message.Length];
+		CreatePayload(payload, message, CommandCodes.JOIN_GROUP_CODE);
 
 		await _socket.SendAsync(payload);
 
@@ -604,7 +619,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	public async Task LeaveConsumerGroupAsync(LeaveConsumerGroupRequest request)
 	{
 		var message = TcpContracts.LeaveGroup(request);
-		var payload = CreatePayload(message, CommandCodes.LEAVE_GROUP_CODE);
+		var payload = new byte[4 + INITIAL_BYTES_LENGTH + message.Length];
+		CreatePayload(payload, message, CommandCodes.LEAVE_GROUP_CODE);
 
 		await _socket.SendAsync(payload);
 
@@ -621,7 +637,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	public async Task DeletePartitionsAsync(Identifier streamId, Identifier topicId, DeletePartitionsRequest request)
 	{
 		var message = TcpContracts.DeletePartitions(streamId, topicId, request);
-		var payload = CreatePayload(message, CommandCodes.DELETE_PARTITIONS_CODE);
+		var payload = new byte[4 + INITIAL_BYTES_LENGTH + message.Length];
+		CreatePayload(payload, message, CommandCodes.DELETE_PARTITIONS_CODE);
 		
 		await _socket.SendAsync(payload);
 
@@ -639,7 +656,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	public async Task CreatePartitionsAsync(Identifier streamId, Identifier topicId, CreatePartitionsRequest request)
 	{
 		var message = TcpContracts.CreatePartitions(streamId, topicId, request);
-		var payload = CreatePayload(message, CommandCodes.CREATE_PARTITIONS_CODE);
+		var payload = new byte[4 + INITIAL_BYTES_LENGTH + message.Length];
+		CreatePayload(payload, message, CommandCodes.CREATE_PARTITIONS_CODE);
 		
 		await _socket.SendAsync(payload);
 
@@ -656,7 +674,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	public async Task<Stats?> GetStatsAsync()
 	{
 		var message = Array.Empty<byte>();
-		var payload = CreatePayload(message, CommandCodes.GET_STATS_CODE);
+		var payload = new byte[4 + INITIAL_BYTES_LENGTH + message.Length];
+		CreatePayload(payload, message, CommandCodes.GET_STATS_CODE);
 
 		await _socket.SendAsync(payload);
 
@@ -711,17 +730,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static int GetResponseStatus(Span<byte> buffer) =>
 		BinaryPrimitives.ReadInt32LittleEndian(buffer[..4]);
-		
-	private static byte[] CreatePayload(Span<byte> message, int command)
-	{
-		var messageLength = message.Length + 4;
-		Span<byte> messageBytes = stackalloc byte[INITIAL_BYTES_LENGTH + messageLength];
-		BinaryPrimitives.WriteInt32LittleEndian(messageBytes[..4], messageLength);
-		BinaryPrimitives.WriteInt32LittleEndian(messageBytes[4..8], command);
-		message.CopyTo(messageBytes[8..]);
-		return messageBytes.ToArray();
-	}
-	//TODO - Eventually make this main method for all of the payloads
+	
 	private static void CreatePayload(Span<byte> result, Span<byte> message, int command)
 	{
 		var messageLength = message.Length + 4;
