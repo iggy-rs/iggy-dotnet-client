@@ -161,8 +161,7 @@ public class HttpMessageStream : IMessageStream
         }
     }
 
-    //TODO - maybe this could be made lazy loaded aswell, using streams
-    public async Task<IEnumerable<MessageResponse>> PollMessagesAsync(MessageFetchRequest request, Func<byte[], byte[]>? decryptor = null)
+    public async Task<List<MessageResponse>> PollMessagesAsync(MessageFetchRequest request, Func<byte[], byte[]>? decryptor = null)
     {
         var url = CreateUrl($"/streams/{request.StreamId}/topics/{request.TopicId}/messages?consumer_id={request.Consumer.Id}" +
                             $"&partition_id={request.PartitionId}&kind={request.PollingStrategy}&value={request.Value}&count={request.Count}&auto_commit={request.AutoCommit}");
@@ -170,18 +169,17 @@ public class HttpMessageStream : IMessageStream
         var response =  await _httpClient.GetAsync(url);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<IEnumerable<MessageResponse>>(new JsonSerializerOptions
+            return await response.Content.ReadFromJsonAsync<List<MessageResponse>>(new JsonSerializerOptions
                    {
                        Converters = { new MessageResponseConverter(decryptor) }
                    })
-                   ?? Enumerable.Empty<MessageResponse>();
+                   ?? EmptyList<MessageResponse>.Instance;
         }
         await HandleResponseAsync(response);
         throw new Exception("Unknown error occurred.");
     }
 
-    //TODO - maybe this could be made lazy loaded aswell, using streams
-    public async Task<IEnumerable<MessageResponse<TMessage>>> PollMessagesAsync<TMessage>(MessageFetchRequest request,
+    public async Task<List<MessageResponse<TMessage>>> PollMessagesAsync<TMessage>(MessageFetchRequest request,
         Func<byte[], TMessage> serializer,
         Func<byte[], byte[]>? decryptor = null)
     {
@@ -191,11 +189,12 @@ public class HttpMessageStream : IMessageStream
         var response =  await _httpClient.GetAsync(url);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<IEnumerable<MessageResponse<TMessage>>>(new JsonSerializerOptions
-                   {
-                       Converters = { new MessageResponseGenericConverter<TMessage>(serializer, decryptor) }
-                   })
-                   ?? Enumerable.Empty<MessageResponse<TMessage>>();
+            return await response.Content.ReadFromJsonAsync<List<MessageResponse<TMessage>>>(
+                       new JsonSerializerOptions
+                       {
+                           Converters = { new MessageResponseGenericConverter<TMessage>(serializer, decryptor) }
+                       })
+                   ?? EmptyList<MessageResponse<TMessage>>.Instance;
         }
         await HandleResponseAsync(response);
         throw new Exception("Unknown error occurred.");

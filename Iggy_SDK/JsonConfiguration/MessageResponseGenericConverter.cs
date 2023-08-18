@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Extensions;
+using Iggy_SDK.Utils;
 
 namespace Iggy_SDK.JsonConfiguration;
 
@@ -15,13 +16,12 @@ public sealed class MessageResponseGenericConverter<TMessage> : JsonConverter<IE
 		_serializer = serializer;
 		_decryptor = decryptor;
 	}
-	public override IEnumerable<MessageResponse<TMessage>>? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+	public override List<MessageResponse<TMessage>>? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 	{
-		//TODO - mby get rid of this allocation as well 
-		var messageResponses = new List<MessageResponse<TMessage>>();
 		using var doc = JsonDocument.ParseValue(ref reader);
 		
 		var root = doc.RootElement;
+		var messageResponses = new List<MessageResponse<TMessage>>();
 		foreach (var element in root.EnumerateArray())
 		{
 			var offset = element.GetProperty(nameof(MessageResponse.Offset).ToSnakeCase()).GetUInt64();

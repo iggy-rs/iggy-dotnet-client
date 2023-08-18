@@ -75,17 +75,17 @@ async Task ConsumeMessages()
     {
         try
         {
-             var messages = (await bus.PollMessagesAsync<Envelope>(new MessageFetchRequest
-             {
-                 Consumer = Consumer.New(1),
-                 Count = 1,
-                 TopicId = topicId,
-                 StreamId = streamId,
-                 PartitionId = partitionId,
-                 PollingStrategy = MessagePolling.Next,
-                 Value = 0,
-                 AutoCommit = true
-            }, deserializer, decryptor)).ToList();
+            var messages = await bus.PollMessagesAsync<Envelope>(new MessageFetchRequest
+            {
+                Consumer = Consumer.New(1),
+                Count = 1,
+                TopicId = topicId,
+                StreamId = streamId,
+                PartitionId = partitionId,
+                PollingStrategy = MessagePolling.Next,
+                Value = 0,
+                AutoCommit = true
+            }, deserializer, decryptor);
             
             
             if (!messages.Any())

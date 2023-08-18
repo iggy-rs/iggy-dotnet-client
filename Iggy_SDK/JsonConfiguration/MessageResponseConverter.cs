@@ -12,13 +12,12 @@ internal sealed class MessageResponseConverter : JsonConverter<IEnumerable<Messa
 	{
 		_decryptor = decryptor;	
 	}
-	public override IEnumerable<MessageResponse> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+	public override List<MessageResponse> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 	{
-		//TODO - mby get rid of this allocation by using ArrayPools
-		var messageResponses = new List<MessageResponse>();
 		using var doc = JsonDocument.ParseValue(ref reader);
 		
 		var root = doc.RootElement;
+		var messageResponses = new List<MessageResponse>();
 		foreach (var element in root.EnumerateArray())
 		{
 			var offset = element.GetProperty(nameof(MessageResponse.Offset).ToSnakeCase()).GetUInt64();

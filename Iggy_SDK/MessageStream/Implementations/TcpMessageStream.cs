@@ -341,7 +341,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 		return msgBytesSum;
 	}
-	public async Task<IEnumerable<MessageResponse<TMessage>>> PollMessagesAsync<TMessage>(MessageFetchRequest request,
+	public async Task<List<MessageResponse<TMessage>>> PollMessagesAsync<TMessage>(MessageFetchRequest request,
 		Func<byte[], TMessage> serializer, Func<byte[], byte[]>? decryptor = null)
 	{
 
@@ -376,7 +376,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 
 			if (response.Length <= 1)
 			{
-				return Enumerable.Empty<MessageResponse<TMessage>>();
+				return EmptyList<MessageResponse<TMessage>>.Instance;
 			}
 
 			var responseBuffer = ArrayPool<byte>.Shared.Rent(response.Length);
@@ -398,7 +398,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			ArrayPool<byte>.Shared.Return(buffer);
 		}
 	}
-	public async Task<IEnumerable<MessageResponse>> PollMessagesAsync(MessageFetchRequest request, Func<byte[], byte[]>? decryptor = null)
+	public async Task<List<MessageResponse>> PollMessagesAsync(MessageFetchRequest request, Func<byte[], byte[]>? decryptor = null)
 	{
 		int messageBufferSize = 18 + 5 + 2 + request.StreamId.Length + 2 + request.TopicId.Length;
 		int payloadBufferSize = messageBufferSize + 4 + INITIAL_BYTES_LENGTH;
@@ -432,7 +432,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 
 			if (response.Length <= 1)
 			{
-				return Enumerable.Empty<MessageResponse>();
+				return EmptyList<MessageResponse>.Instance;
 			}
 
 			var responseBuffer = ArrayPool<byte>.Shared.Rent(response.Length);

@@ -1,6 +1,7 @@
 using System.Buffers.Binary;
 using System.Text;
 using Iggy_SDK.Contracts.Http;
+using Iggy_SDK.Utils;
 
 namespace Iggy_SDK.Mappers;
 internal static class BinaryMapper
@@ -17,8 +18,7 @@ internal static class BinaryMapper
         };
     }
     
-    //TODO - look into making this lazy
-    internal static IEnumerable<MessageResponse> MapMessages(ReadOnlySpan<byte> payload, Func<byte[], byte[]>? decryptor = null)
+    internal static List<MessageResponse> MapMessages(ReadOnlySpan<byte> payload, Func<byte[], byte[]>? decryptor = null)
     {
         const int propertiesSize = 36;
         int length = payload.Length;
@@ -61,15 +61,18 @@ internal static class BinaryMapper
 
         return messages;
     }
-    //TODO - look into making this lazy aswell.
-    internal static IEnumerable<MessageResponse<TMessage>> MapMessages<TMessage>(ReadOnlySpan<byte> payload,
+    internal static List<MessageResponse<TMessage>> MapMessages<TMessage>(ReadOnlySpan<byte> payload,
         Func<byte[], TMessage> serializer, Func<byte[], byte[]>? decryptor = null)
     {
         const int propertiesSize = 36;
         int length = payload.Length;
         int position = 4;
+        if (position >= length)
+        {
+            return EmptyList<MessageResponse<TMessage>>.Instance;
+        }
+        
         List<MessageResponse<TMessage>> messages = new();
-
         while (position < length)
         {
             ulong offset = BinaryPrimitives.ReadUInt64LittleEndian(payload[position..(position + 8)]);
