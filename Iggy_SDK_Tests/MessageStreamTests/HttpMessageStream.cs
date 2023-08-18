@@ -247,7 +247,7 @@ public sealed class HttpMessageStream
 		
 		_httpHandler.When(HttpMethod.Get, 
         $"/streams/{request.StreamId}/topics/{request.TopicId}/messages?consumer_id={request.Consumer.Id}" +
-                            $"&partition_id={request.PartitionId}&kind=offset&value={request.Value}&count={request.Count}" +
+                            $"&partition_id={request.PartitionId}&kind=offset&value={request.PollingStrategy.Value}&count={request.Count}" +
 							$"&auto_commit={request.AutoCommit.ToString().ToLower()}")
 					.Respond(HttpStatusCode.OK, "application/json", content);
         
@@ -264,7 +264,7 @@ public sealed class HttpMessageStream
 		
 		_httpHandler.When(HttpMethod.Get, 
         $"/streams/{request.StreamId}/topics/{request.TopicId}/messages?consumer_id={request.Consumer.Id}" +
-                            $"&partition_id={request.PartitionId}&kind=offset&value={request.Value}&count={request.Count}" +
+                            $"&partition_id={request.PartitionId}&kind=offset&value={request.PollingStrategy.Value}&count={request.Count}" +
 							$"&auto_commit={request.AutoCommit.ToString().ToLower()}")
 					.Respond(HttpStatusCode.BadRequest, "application/json", content);
 		

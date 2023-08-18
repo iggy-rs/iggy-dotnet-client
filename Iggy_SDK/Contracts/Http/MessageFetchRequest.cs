@@ -10,8 +10,7 @@ public sealed class MessageFetchRequest
 	public required Identifier TopicId { get; init; }
 	public required int PartitionId { get; init; }
 	//TODO - merge MessagePolling together with value into PollingStrategy
-	public required MessagePolling PollingStrategy { get; init; }
-	public required ulong Value { get; init; }
+	public required PollingStrategy PollingStrategy { get; init; }
 	public required int Count { get; init; }
 	public required bool AutoCommit { get; init; }
 }

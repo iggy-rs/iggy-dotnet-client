@@ -49,8 +49,8 @@ public sealed class TcpContract
                 1 => MessagePolling.Offset, 2 => MessagePolling.Timestamp, 3 => MessagePolling.First,
                 4 => MessagePolling.Last, 5 => MessagePolling.Next,
                 _ => throw new ArgumentOutOfRangeException()
-            }, request.PollingStrategy);
-        Assert.Equal(request.Value, BitConverter.ToUInt64(result[22..30]));
+            }, request.PollingStrategy.Kind);
+        Assert.Equal(request.PollingStrategy.Value, BitConverter.ToUInt64(result[22..30]));
         Assert.Equal(request.Count, BitConverter.ToInt32(result[30..34]));
         Assert.Equal(request.AutoCommit, result[34] switch { 0 => false, 1 => true,
             _ => throw new ArgumentOutOfRangeException()

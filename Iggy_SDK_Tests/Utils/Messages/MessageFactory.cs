@@ -92,11 +92,10 @@ internal static class MessageFactory
 		return new MessageFetchRequest
 		{
 			Count = Random.Shared.Next(1, 10),
-			Value = (ulong)Random.Shared.Next(1, 10),
 			AutoCommit = true,
 			Consumer = Consumer.New(1),
 			PartitionId = Random.Shared.Next(1, 10),
-			PollingStrategy = MessagePolling.Offset,
+			PollingStrategy = PollingStrategy.Offset(69420),
 			StreamId = Identifier.Numeric(Random.Shared.Next(1,10)),
 			TopicId = Identifier.Numeric(Random.Shared.Next(1,10))
 		};

@@ -82,8 +82,7 @@ async Task ConsumeMessages()
                 TopicId = topicId,
                 StreamId = streamId,
                 PartitionId = partitionId,
-                PollingStrategy = MessagePolling.Next,
-                Value = 0,
+                PollingStrategy = PollingStrategy.Next(),
                 AutoCommit = true
             }, deserializer, decryptor);
             

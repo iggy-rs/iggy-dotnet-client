@@ -6,7 +6,7 @@ using Iggy_SDK.Utils;
 
 namespace Iggy_SDK.JsonConfiguration;
 
-public sealed class MessageResponseGenericConverter<TMessage> : JsonConverter<IEnumerable<MessageResponse<TMessage>>>
+public sealed class MessageResponseGenericConverter<TMessage> : JsonConverter<List<MessageResponse<TMessage>>>
 {
 	private readonly Func<byte[], TMessage> _serializer;
 	private readonly Func<byte[], byte[]>? _decryptor;
@@ -18,10 +18,10 @@ public sealed class MessageResponseGenericConverter<TMessage> : JsonConverter<IE
 	}
 	public override List<MessageResponse<TMessage>>? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 	{
+		var messageResponses = new List<MessageResponse<TMessage>>();
 		using var doc = JsonDocument.ParseValue(ref reader);
 		
 		var root = doc.RootElement;
-		var messageResponses = new List<MessageResponse<TMessage>>();
 		foreach (var element in root.EnumerateArray())
 		{
 			var offset = element.GetProperty(nameof(MessageResponse.Offset).ToSnakeCase()).GetUInt64();
@@ -41,7 +41,7 @@ public sealed class MessageResponseGenericConverter<TMessage> : JsonConverter<IE
 		return messageResponses;
 	}
 
-	public override void Write(Utf8JsonWriter writer, IEnumerable<MessageResponse<TMessage>> value, JsonSerializerOptions options)
+	public override void Write(Utf8JsonWriter writer, List<MessageResponse<TMessage>> value, JsonSerializerOptions options)
 	{
 		throw new NotImplementedException();
 	}

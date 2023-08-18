@@ -18,8 +18,8 @@ internal static class TcpContracts
         WriteBytesFromStreamAndTopicIdToSpan(request.StreamId, request.TopicId, bytes, 5);
         var position = 5 + 2 + request.StreamId.Length + 2 + request.TopicId.Length;
         BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], request.PartitionId);
-        bytes[position + 4] = GetPollingStrategyByte(request.PollingStrategy);
-        BinaryPrimitives.WriteUInt64LittleEndian(bytes[(position + 5)..(position + 13)], request.Value);
+        bytes[position + 4] = GetPollingStrategyByte(request.PollingStrategy.Kind);
+        BinaryPrimitives.WriteUInt64LittleEndian(bytes[(position + 5)..(position + 13)], request.PollingStrategy.Value);
         BinaryPrimitives.WriteInt32LittleEndian(bytes[(position + 13)..(position + 17)], request.Count);
         
         bytes[position + 17] = request.AutoCommit ? (byte)1 : (byte)0;
