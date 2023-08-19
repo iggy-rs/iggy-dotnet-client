@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Buffers.Binary;
 using System.Text;
 using Iggy_SDK.Contracts.Http;
@@ -40,18 +41,30 @@ internal static class BinaryMapper
             }
 
             var payloadSlice = payload[payloadRangeStart..payloadRangeEnd];
+            var messagePayload = ArrayPool<byte>.Shared.Rent(payloadSlice.Length);
+            var payloadSliceLen = payloadSlice.Length;
 
-            int totalSize = propertiesSize + (int)messageLength;
-            position += totalSize;
-
-            //TODO - can i omit this allocation somehow aswell ?
-            messages.Add(new MessageResponse
+            try
             {
-                Offset = offset,
-                Timestamp = timestamp,
-                Id = id,
-                Payload = decryptor is not null ? decryptor(payloadSlice.ToArray()) : payloadSlice.ToArray()
-            });
+                payloadSlice.CopyTo(messagePayload.AsSpan()[..payloadSliceLen]);
+
+                int totalSize = propertiesSize + (int)messageLength;
+                position += totalSize;
+                
+                messages.Add(new MessageResponse
+                {
+                    Offset = offset,
+                    Timestamp = timestamp,
+                    Id = id,
+                    Payload = decryptor is not null
+                        ? decryptor(messagePayload[..payloadSliceLen])
+                        : messagePayload[..payloadSliceLen]
+                });
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(messagePayload);    
+            }
 
             if (position + propertiesSize >= length)
             {
@@ -87,20 +100,31 @@ internal static class BinaryMapper
                 break;
             }
 
+
             var payloadSlice = payload[payloadRangeStart..payloadRangeEnd];
-
-            int totalSize = propertiesSize + (int)messageLength;
-            position += totalSize;
-
-            messages.Add(new MessageResponse<TMessage>
+            var messagePayload = ArrayPool<byte>.Shared.Rent(payloadSlice.Length);
+            var payloadSliceLen = payloadSlice.Length;
+            try
             {
-                Offset = offset,
-                Timestamp = timestamp,
-                Id = id,
-                //TODO - can i somehow omit this allocation ?
-                Message =  decryptor is not null ? 
-                    serializer(decryptor(payloadSlice.ToArray())) : serializer(payloadSlice.ToArray())
-            });
+                payloadSlice.CopyTo(messagePayload.AsSpan()[..payloadSliceLen]);
+
+                int totalSize = propertiesSize + (int)messageLength;
+                position += totalSize;
+                
+                messages.Add(new MessageResponse<TMessage>
+                {
+                    Offset = offset,
+                    Timestamp = timestamp,
+                    Id = id,
+                    Message = decryptor is not null
+                        ? serializer(decryptor(messagePayload[..payloadSliceLen]))
+                        : serializer(messagePayload[..payloadSliceLen])
+                });
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(messagePayload);
+            }
 
             if (position + propertiesSize >= length)
             {

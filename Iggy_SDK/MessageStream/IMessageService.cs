@@ -3,6 +3,7 @@ using Iggy_SDK.Kinds;
 
 namespace Iggy_SDK.MessageStream;
 
+//TODO - look into creating another overload for PollMessages method that will use IAsyncEnumerable as return type.
 public interface IMessageClient
 {
 	Task SendMessagesAsync(Identifier streamId, Identifier topicId, MessageSendRequest request, Func<byte[], byte[]>?
