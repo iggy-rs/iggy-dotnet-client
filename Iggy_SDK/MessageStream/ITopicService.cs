@@ -4,8 +4,8 @@ namespace Iggy_SDK.MessageStream;
 
 public interface ITopicClient
 {
-	Task<IEnumerable<TopicResponse>> GetTopicsAsync(Identifier streamId);
-	Task<TopicResponse?> GetTopicByIdAsync(Identifier streamId, Identifier topicId);
-	Task CreateTopicAsync(Identifier streamId, TopicRequest topic);
-	Task DeleteTopicAsync(Identifier streamId, Identifier topicId);
+	Task<List<TopicResponse>> GetTopicsAsync(Identifier streamId, CancellationToken token = default);
+	Task<TopicResponse?> GetTopicByIdAsync(Identifier streamId, Identifier topicId, CancellationToken token = default);
+	Task CreateTopicAsync(Identifier streamId, TopicRequest topic,CancellationToken token = default);
+	Task DeleteTopicAsync(Identifier streamId, Identifier topicId, CancellationToken token = default);
 }

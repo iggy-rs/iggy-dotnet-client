@@ -4,9 +4,9 @@ namespace Iggy_SDK.MessageStream;
 
 public interface IStreamClient
 {
-	Task CreateStreamAsync(StreamRequest request);
-	Task<StreamResponse?> GetStreamByIdAsync(Identifier streamId);
-	Task<IEnumerable<StreamResponse>> GetStreamsAsync();
-	Task DeleteStreamAsync(Identifier streamId);
+	Task CreateStreamAsync(StreamRequest request, CancellationToken token = default);
+	Task<StreamResponse?> GetStreamByIdAsync(Identifier streamId, CancellationToken token = default);
+	Task<List<StreamResponse>> GetStreamsAsync(CancellationToken token = default);
+	Task DeleteStreamAsync(Identifier streamId, CancellationToken token = default);
 
 }

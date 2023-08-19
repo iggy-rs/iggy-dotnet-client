@@ -111,7 +111,7 @@ internal static class BinaryMapper
         return messages;
     }
 
-    internal static IEnumerable<StreamResponse> MapStreams(ReadOnlySpan<byte> payload)
+    internal static List<StreamResponse> MapStreams(ReadOnlySpan<byte> payload)
     {
         List<StreamResponse> streams = new();
         int length = payload.Length;
@@ -191,7 +191,7 @@ internal static class BinaryMapper
         return (stream, readBytes);
     }
 
-    internal static IEnumerable<TopicResponse> MapTopics(ReadOnlySpan<byte> payload)
+    internal static List<TopicResponse> MapTopics(ReadOnlySpan<byte> payload)
     {
         List<TopicResponse> topics = new();
         int length = payload.Length;

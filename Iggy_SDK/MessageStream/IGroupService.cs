@@ -4,11 +4,11 @@ namespace Iggy_SDK.MessageStream;
 
 public interface IConsumerGroupClient
 {
-	Task<IEnumerable<ConsumerGroupResponse>> GetConsumerGroupsAsync(Identifier streamId, Identifier topicId);
-	Task<ConsumerGroupResponse?> GetConsumerGroupByIdAsync(Identifier streamId, Identifier topicId, int groupId);
-	Task CreateConsumerGroupAsync(Identifier streamId, Identifier topicId, CreateConsumerGroupRequest request);
-	Task DeleteConsumerGroupAsync(Identifier streamId, Identifier topicId, int groupId);
-	Task JoinConsumerGroupAsync(JoinConsumerGroupRequest request);
-	Task LeaveConsumerGroupAsync(LeaveConsumerGroupRequest request);
+	Task<List<ConsumerGroupResponse>> GetConsumerGroupsAsync(Identifier streamId, Identifier topicId, CancellationToken token = default);
+	Task<ConsumerGroupResponse?> GetConsumerGroupByIdAsync(Identifier streamId, Identifier topicId, int groupId, CancellationToken token = default);
+	Task CreateConsumerGroupAsync(Identifier streamId, Identifier topicId, CreateConsumerGroupRequest request, CancellationToken token = default);
+	Task DeleteConsumerGroupAsync(Identifier streamId, Identifier topicId, int groupId, CancellationToken token = default);
+	Task JoinConsumerGroupAsync(JoinConsumerGroupRequest request, CancellationToken token = default);
+	Task LeaveConsumerGroupAsync(LeaveConsumerGroupRequest request, CancellationToken token = default);
 
 }
