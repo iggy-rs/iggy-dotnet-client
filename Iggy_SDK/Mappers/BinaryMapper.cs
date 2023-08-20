@@ -2,11 +2,13 @@ using System.Buffers;
 using System.Buffers.Binary;
 using System.Text;
 using Iggy_SDK.Contracts.Http;
+using Iggy_SDK.Headers;
 using Iggy_SDK.Utils;
 
 namespace Iggy_SDK.Mappers;
 internal static class BinaryMapper
 {
+    private const int PROPERTIES_SIZE = 40;
     internal static OffsetResponse MapOffsets(ReadOnlySpan<byte> payload)
     {
         int consumerId = BinaryPrimitives.ReadInt32LittleEndian(payload[0..4]);
@@ -21,7 +23,6 @@ internal static class BinaryMapper
     
     internal static IReadOnlyList<MessageResponse> MapMessages(ReadOnlySpan<byte> payload, Func<byte[], byte[]>? decryptor = null)
     {
-        const int propertiesSize = 36;
         int length = payload.Length;
         int position = 4;
         if (position >= length)
@@ -35,10 +36,19 @@ internal static class BinaryMapper
             ulong offset = BinaryPrimitives.ReadUInt64LittleEndian(payload[position..(position + 8)]);
             ulong timestamp = BinaryPrimitives.ReadUInt64LittleEndian(payload[(position + 8)..(position + 16)]);
             var id = new Guid(payload[(position + 16)..(position + 32)]);
-            uint messageLength = BinaryPrimitives.ReadUInt32LittleEndian(payload[(position + 32)..(position + 36)]);
+            int headersLength = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 32)..(position + 36)]);
 
-            int payloadRangeStart = position + propertiesSize;
-            int payloadRangeEnd = position + propertiesSize + (int)messageLength;
+            var headers = headersLength switch
+            {
+                0 => null,
+                > 0 => MapHeaders(payload[(position + 36)..(position + 36 + headersLength)]),
+                < 0 => throw new ArgumentOutOfRangeException()
+            };
+            position += headersLength;
+            uint messageLength = BinaryPrimitives.ReadUInt32LittleEndian(payload[(position + 36)..(position + 40)]);
+
+            int payloadRangeStart = position + PROPERTIES_SIZE;
+            int payloadRangeEnd = position + PROPERTIES_SIZE + (int)messageLength;
             if (payloadRangeStart > length || payloadRangeEnd > length)
             {
                 break;
@@ -52,7 +62,7 @@ internal static class BinaryMapper
             {
                 payloadSlice.CopyTo(messagePayload.AsSpan()[..payloadSliceLen]);
 
-                int totalSize = propertiesSize + (int)messageLength;
+                int totalSize = PROPERTIES_SIZE + (int)messageLength;
                 position += totalSize;
                 
                 messages.Add(new MessageResponse
@@ -60,6 +70,7 @@ internal static class BinaryMapper
                     Offset = offset,
                     Timestamp = timestamp,
                     Id = id,
+                    Headers = headers,
                     Payload = decryptor is not null
                         ? decryptor(messagePayload[..payloadSliceLen])
                         : messagePayload[..payloadSliceLen]
@@ -70,7 +81,7 @@ internal static class BinaryMapper
                 ArrayPool<byte>.Shared.Return(messagePayload);    
             }
 
-            if (position + propertiesSize >= length)
+            if (position + PROPERTIES_SIZE >= length)
             {
                 break;
             }
@@ -81,7 +92,6 @@ internal static class BinaryMapper
     internal static IReadOnlyList<MessageResponse<TMessage>> MapMessages<TMessage>(ReadOnlySpan<byte> payload,
         Func<byte[], TMessage> serializer, Func<byte[], byte[]>? decryptor = null)
     {
-        const int propertiesSize = 36;
         int length = payload.Length;
         int position = 4;
         if (position >= length)
@@ -95,10 +105,19 @@ internal static class BinaryMapper
             ulong offset = BinaryPrimitives.ReadUInt64LittleEndian(payload[position..(position + 8)]);
             ulong timestamp = BinaryPrimitives.ReadUInt64LittleEndian(payload[(position + 8)..(position + 16)]);
             var id = new Guid(payload[(position + 16)..(position + 32)]);
-            uint messageLength = BinaryPrimitives.ReadUInt32LittleEndian(payload[(position + 32)..(position + 36)]);
+            int headersLength = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 32)..(position + 36)]);
 
-            int payloadRangeStart = position + propertiesSize;
-            int payloadRangeEnd = position + propertiesSize + (int)messageLength;
+            var headers = headersLength switch
+            {
+                0 => null,
+                > 0 => MapHeaders(payload[(position + 36)..(position + 36 + headersLength)]),
+                < 0 => throw new ArgumentOutOfRangeException()
+            };
+            position += headersLength;
+            uint messageLength = BinaryPrimitives.ReadUInt32LittleEndian(payload[(position + 36)..(position + 40)]);
+
+            int payloadRangeStart = position + PROPERTIES_SIZE;
+            int payloadRangeEnd = position + PROPERTIES_SIZE + (int)messageLength;
             if (payloadRangeStart > length || payloadRangeEnd > length)
             {
                 break;
@@ -112,7 +131,7 @@ internal static class BinaryMapper
             {
                 payloadSlice.CopyTo(messagePayload.AsSpan()[..payloadSliceLen]);
 
-                int totalSize = propertiesSize + (int)messageLength;
+                int totalSize = PROPERTIES_SIZE + (int)messageLength;
                 position += totalSize;
                 
                 messages.Add(new MessageResponse<TMessage>
@@ -120,6 +139,7 @@ internal static class BinaryMapper
                     Offset = offset,
                     Timestamp = timestamp,
                     Id = id,
+                    Headers = headers,
                     Message = decryptor is not null
                         ? serializer(decryptor(messagePayload[..payloadSliceLen]))
                         : serializer(messagePayload[..payloadSliceLen])
@@ -130,13 +150,63 @@ internal static class BinaryMapper
                 ArrayPool<byte>.Shared.Return(messagePayload);
             }
 
-            if (position + propertiesSize >= length)
+            if (position + PROPERTIES_SIZE >= length)
             {
                 break;
             }
         }
 
         return messages.AsReadOnly();
+    }
+    private static Dictionary<HeaderKey, HeaderValue> MapHeaders(ReadOnlySpan<byte> payload)
+    {
+        var headers = new Dictionary<HeaderKey, HeaderValue>();
+        int position = 0;
+
+        while (position < payload.Length)
+        {
+            var keyLength = BinaryPrimitives.ReadInt32LittleEndian(payload[position..(position + 4)]);
+            if (keyLength is 0 or > 255)
+            {
+                throw new ArgumentException("Key has incorrect size, must be between 1 and 255", nameof(keyLength)); 
+            }
+            var key = Encoding.UTF8.GetString(payload[(position + 4)..(position + 4 + keyLength)]);
+            position += 4 + keyLength;
+            
+            var headerKind = payload[position] switch
+            {
+                1 => HeaderKind.Raw,
+                2 => HeaderKind.String,
+                3 => HeaderKind.Bool,
+                6 => HeaderKind.Int32,
+                7 => HeaderKind.Int64,
+                8 => HeaderKind.Int128,
+                11 => HeaderKind.Uint32,
+                12 => HeaderKind.Uint64,
+                13 => HeaderKind.Uint128,
+                14 => HeaderKind.Float32,
+                15 => HeaderKind.Float64,
+                _ => throw new ArgumentOutOfRangeException()
+
+            };
+            position++;
+            var valueLength = BinaryPrimitives.ReadInt32LittleEndian(payload[position..(position + 4)]);
+            if (valueLength is 0 or > 255)
+            {
+                throw new ArgumentException("Value has incorrect size, must be between 1 and 255", nameof(valueLength)); 
+            }
+            position += 4;
+            var value = payload[position..(position + valueLength)];
+            position += valueLength;
+            headers.Add(HeaderKey.New(key), new HeaderValue
+                {
+                    Kind = headerKind,
+                    Value = value.ToArray()
+                }
+            );
+        }
+
+        return headers;
     }
 
     internal static IReadOnlyList<StreamResponse> MapStreams(ReadOnlySpan<byte> payload)

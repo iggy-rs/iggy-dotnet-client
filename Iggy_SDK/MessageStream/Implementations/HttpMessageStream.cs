@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Exceptions;
+using Iggy_SDK.Headers;
 using Iggy_SDK.JsonConfiguration;
 using Iggy_SDK.Kinds;
 using Iggy_SDK.Messages;
@@ -116,8 +117,10 @@ public class HttpMessageStream : IMessageStream
         await HandleResponseAsync(response);
         throw new Exception("Unknown error occurred.");
     }
+
     public async Task SendMessagesAsync(Identifier streamId, Identifier topicId, MessageSendRequest request,
-        Func<byte[], byte[]>? encryptor = null, CancellationToken token = default)
+        Func<byte[], byte[]>? encryptor = null, Dictionary<HeaderKey, HeaderValue>? headers = null,
+        CancellationToken token = default)
     {
 		if (encryptor is not null)
 		{
@@ -138,7 +141,8 @@ public class HttpMessageStream : IMessageStream
     }
 
     public async Task SendMessagesAsync<TMessage>(Identifier streamId, Identifier topicId, Partitioning partitioning,
-        IList<TMessage> messages, Func<TMessage, byte[]> serializer, Func<byte[], byte[]>? encryptor = null,
+        IList<TMessage> messages, Func<TMessage, byte[]> serializer,
+        Func<byte[], byte[]>? encryptor = null, Dictionary<HeaderKey, HeaderValue>? headers = null,
         CancellationToken token = default)
     {
         //TODO - maybe get rid of this closure ?

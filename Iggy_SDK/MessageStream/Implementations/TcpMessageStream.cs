@@ -7,6 +7,7 @@ using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Contracts.Tcp;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Exceptions;
+using Iggy_SDK.Headers;
 using Iggy_SDK.Kinds;
 using Iggy_SDK.Mappers;
 using Iggy_SDK.Messages;
@@ -75,7 +76,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 
 	public async Task<IReadOnlyList<StreamResponse>> GetStreamsAsync( CancellationToken token = default)
 	{
-		var message = Enumerable.Empty<byte>().ToArray();
+		var message = Array.Empty<byte>();
 		var payload = new byte[4 + INITIAL_BYTES_LENGTH + message.Length];
 		CreatePayload(payload, message, CommandCodes.GET_STREAMS_CODE);
 
@@ -214,14 +215,16 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			throw new InvalidResponseException($"Invalid response status code: {status}");
 		}
 	}
+
 	public async Task SendMessagesAsync(Identifier streamId, Identifier topicId, MessageSendRequest request,
-		Func<byte[], byte[]>? encryptor = null, CancellationToken token = default)
+		Func<byte[], byte[]>? encryptor = null, Dictionary<HeaderKey, HeaderValue>? headers = null,
+		CancellationToken token = default)
 	{
 		//TODO - explore making fields of Message class mutable, so there is no need to create em from scratch
 		var messages = request.Messages;
 		if (encryptor is not null)
 		{
-			for (var i = 0; i < request.Messages.Count || !token.IsCancellationRequested; i++)
+			for (var i = 0; i < request.Messages.Count || token.IsCancellationRequested; i++)
 			{
 				messages[i] = messages[i] with { Payload = encryptor(messages[i].Payload) };
 			}
@@ -238,7 +241,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		{
 			TcpContracts.CreateMessage(message.AsSpan()[..messageBufferSize], streamId, topicId, request.Partitioning,
 				messages);
-			CreatePayload(payload, message.AsSpan()[..messageBufferSize], CommandCodes.SEND_MESSAGES_CODE);
+			CreatePayload(payload.AsSpan()[..payloadBufferSize], message.AsSpan()[..messageBufferSize], CommandCodes.SEND_MESSAGES_CODE);
 
 			var recv = _socket.ReceiveAsync(_buffer, token);
 			await _socket.SendAsync(payload.AsMemory()[..payloadBufferSize], token);
@@ -260,16 +263,18 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	}
 
 	public async Task SendMessagesAsync<TMessage>(Identifier streamId, Identifier topicId, Partitioning partitioning,
-		IList<TMessage> messages, Func<TMessage, byte[]> serializer, Func<byte[], byte[]>? encryptor = null,
+		IList<TMessage> messages, Func<TMessage, byte[]> serializer,
+		Func<byte[], byte[]>? encryptor = null, Dictionary<HeaderKey, HeaderValue>? headers = null,
 		CancellationToken token = default)
 	{
 		var messagesPool = ArrayPool<Message>.Shared.Rent(messages.Count);
-		for (var i = 0; i < messages.Count || !token.IsCancellationRequested; i++)
+		for (var i = 0; i < messages.Count || token.IsCancellationRequested; i++)
 		{
 			messagesPool[i] = new Message
 			{
 				Payload = encryptor is not null ?
 					encryptor(serializer(messages[i])) : serializer(messages[i]),
+				Headers = headers,
 				Id = Guid.NewGuid()
 			};
 		}
@@ -287,7 +292,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		{
 			TcpContracts.CreateMessage(message.AsSpan()[..messageBufferSize], streamId, topicId, partitioning,
 				messagesToSend);
-			CreatePayload(payload, message.AsSpan()[..messageBufferSize], CommandCodes.SEND_MESSAGES_CODE);
+			CreatePayload(payload.AsSpan()[..payloadBufferSize], message.AsSpan()[..messageBufferSize], CommandCodes.SEND_MESSAGES_CODE);
 
 			var recv = _socket.ReceiveAsync(_buffer, token);
 			await _socket.SendAsync(payload.AsMemory()[..payloadBufferSize], token);
@@ -307,13 +312,16 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			ArrayPool<byte>.Shared.Return(payload);
 		}
 	}
-	private static int CalculateMessageBytesCount(IEnumerable<Message> messages)
+	private static int CalculateMessageBytesCount(IList<Message> messages)
 	{
 		return messages switch
 		{
 			Message[] messagesArray => CalculateMessageBytesCountArray(messagesArray),
 			List<Message> messagesList => CalculateMessageBytesCountList(messagesList),
-			_ => messages.Sum(x => 16 + 4 + x.Payload.Length)
+			_ => messages.Sum(msg => 16 + 4 + msg.Payload.Length + 4 + 
+			                       (msg.Headers?.Sum(header =>
+				                       4 + header.Key.Value.Length + 1 + 4 + header.Value.Value.Length) ?? 0)
+			)
 		};
 	}
 	private static int CalculateMessageBytesCountArray(Message[] messages)
@@ -323,7 +331,18 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var msgBytesSum = 0;
 		while (Unsafe.IsAddressLessThan(ref start, ref end))
 		{
-			msgBytesSum += start.Payload.Length + 16 + 4;
+			if (start.Headers is not null)
+			{
+				msgBytesSum += start.Payload.Length + 16 + 4 + 4;
+				foreach (var (headerKey, headerValue) in start.Headers)
+				{
+					msgBytesSum += 4 + headerKey.Value.Length + 1 + 4 + headerValue.Value.Length;
+				}
+			}
+			else
+			{
+				msgBytesSum += start.Payload.Length + 16 + 4 + 4;
+			}
 			start = ref Unsafe.Add(ref start, 1);
 		}
 		return msgBytesSum;
@@ -336,7 +355,18 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var msgBytesSum = 0;
 		while (Unsafe.IsAddressLessThan(ref start, ref end))
 		{
-			msgBytesSum += start.Payload.Length + 16 + 4;
+			if (start.Headers is not null)
+			{
+				msgBytesSum += start.Payload.Length + 16 + 4 + 4;
+				foreach (var (headerKey, headerValue) in start.Headers)
+				{
+					msgBytesSum += 4 + headerKey.Value.Length + 1 + 4 + headerValue.Value.Length;
+				}
+			}
+			else
+			{
+				msgBytesSum += start.Payload.Length + 16 + 4 + 4;
+			}
 			start = ref Unsafe.Add(ref start, 1);
 		}
 		return msgBytesSum;

@@ -6,6 +6,7 @@ using Iggy_SDK;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
+using Iggy_SDK.Headers;
 using Iggy_SDK.Kinds;
 using Iggy_SDK.MessageStream;
 using Shared;
@@ -24,6 +25,7 @@ var streamId = Identifier.Numeric(streamIdVal);
 var topicId = Identifier.Numeric(topicIdVal);
 
 Console.WriteLine($"Producer has started, selected protocol {protocol.ToString()}");
+
 try
 {
     var stream = await bus.GetStreamByIdAsync(streamId);
@@ -46,8 +48,10 @@ catch
         TopicId = topicIdVal
     });
 }
+
 var actualStream = await bus.GetStreamByIdAsync(streamId);
 var actualTopic = await bus.GetTopicByIdAsync(streamId, topicId); 
+
 
 await ProduceMessages(bus, actualStream, actualTopic);
 
@@ -88,7 +92,18 @@ async Task ProduceMessages(IMessageClient bus, StreamResponse? stream, TopicResp
         return memoryStream.ToArray();
     };
 
+    var byteArray = new byte[] { 6, 9, 4, 2, 0 };
 
+    var headers = new Dictionary<HeaderKey, HeaderValue>();
+    headers.Add(new HeaderKey { Value = "key-1".ToLower() }, HeaderValue.String("test-value-1"));
+    headers.Add(new HeaderKey { Value = "key-2".ToLower() }, HeaderValue.Int32(69));
+    headers.Add(new HeaderKey { Value = "key-3".ToLower() }, HeaderValue.Float32(420.69f));
+    headers.Add(new HeaderKey { Value = "key-4".ToLower() }, HeaderValue.Bool(true));
+    headers.Add(new HeaderKey { Value = "key-5".ToLower() }, HeaderValue.Raw(byteArray));
+    headers.Add(new HeaderKey { Value = "key-6".ToLower() }, HeaderValue.Int128(new Int128(6969696969, 420420420)));
+    headers.Add(new HeaderKey { Value = "key-7".ToLower() }, HeaderValue.Guid(Guid.NewGuid()));
+    
+    
     while (true)
     {
         var debugMessages = new List<ISerializableMessage>();
@@ -105,7 +120,7 @@ async Task ProduceMessages(IMessageClient bus, StreamResponse? stream, TopicResp
         try
         {
             await bus.SendMessagesAsync<Envelope>(streamId, topicId, Partitioning.PartitionId(3), messages, serializer,
-                encryptor);
+                encryptor, headers);
         }
         catch (Exception e)
         {

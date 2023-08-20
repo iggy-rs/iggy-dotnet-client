@@ -1,4 +1,5 @@
 using Iggy_SDK.Contracts.Http;
+using Iggy_SDK.Headers;
 using Iggy_SDK.Kinds;
 
 namespace Iggy_SDK.MessageStream;
@@ -7,9 +8,11 @@ namespace Iggy_SDK.MessageStream;
 public interface IMessageClient
 {
 	Task SendMessagesAsync(Identifier streamId, Identifier topicId, MessageSendRequest request, Func<byte[], byte[]>?
-		encryptor = null, CancellationToken token = default);
+		encryptor = null, Dictionary<HeaderKey, HeaderValue>? headers = null, CancellationToken token = default);
+
 	Task SendMessagesAsync<TMessage>(Identifier streamId, Identifier topicId, Partitioning partitioning,
-		IList<TMessage> messages, Func<TMessage, byte[]> serializer, Func<byte[], byte[]>? encryptor = null,
+		IList<TMessage> messages, Func<TMessage, byte[]> serializer,
+		Func<byte[], byte[]>? encryptor = null, Dictionary<HeaderKey, HeaderValue>? headers = null,
 		CancellationToken token = default);
 	Task<IReadOnlyList<MessageResponse>> PollMessagesAsync(MessageFetchRequest request, Func<byte[], byte[]>? decryptor = null,
 		CancellationToken token = default);

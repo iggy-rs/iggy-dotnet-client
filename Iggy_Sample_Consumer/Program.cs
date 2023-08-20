@@ -105,8 +105,11 @@ async Task ConsumeMessages()
 
 void HandleMessage(MessageResponse<Envelope> messageResponse)
 {
-    
-    Console.Write($"Handling message type: {messageResponse.Message.MessageType} at offset: {messageResponse.Offset} with message Id:{messageResponse.Id.ToString()} ");
+    Console.Write(
+        $"Handling message type: {messageResponse.Message.MessageType} at offset: {messageResponse.Offset} with message Id:{messageResponse.Id.ToString()} ");
+    Console.WriteLine();
+    Console.WriteLine("---------------------------MESSAGE-----------------------------------");
+    Console.WriteLine();
     switch (messageResponse.Message.MessageType)
     {
         case "order_created":
@@ -127,6 +130,18 @@ void HandleMessage(MessageResponse<Envelope> messageResponse)
             Console.WriteLine(orderRejected);
             break;
         }
+    }
+
+    if (messageResponse.Headers is not null)
+    {
+        Console.WriteLine();
+        Console.WriteLine("---------------------------HEADERS-----------------------------------");
+        Console.WriteLine();
+        foreach (var (headerKey, headerValue) in messageResponse.Headers)
+        {
+            Console.WriteLine("Found Header: {0} with value: {1}, ", headerKey, headerValue); 
+        }
+        Console.WriteLine();
     }
 }
 

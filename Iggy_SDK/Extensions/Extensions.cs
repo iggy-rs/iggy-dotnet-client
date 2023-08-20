@@ -35,15 +35,43 @@ internal static class Extensions
    {
 	   Span<byte> array = stackalloc byte[16];
 	   MemoryMarshal.TryWrite(array, ref g);
-	   var hi = BinaryPrimitives.ReadUInt64LittleEndian(array[0..8]);
+	   var hi = BinaryPrimitives.ReadUInt64LittleEndian(array[..8]);
 	   var lo = BinaryPrimitives.ReadUInt64LittleEndian(array[8..16]);
 	   return new UInt128(hi, lo);
    }
+   internal static UInt128 ToUInt128(this byte[] bytes)
+   {
+	   var hi = BinaryPrimitives.ReadUInt64LittleEndian(bytes[..8]);
+	   var lo = BinaryPrimitives.ReadUInt64LittleEndian(bytes[8..16]);
+	   return new UInt128(hi, lo);
+   }
+   internal static Int128 ToInt128(this byte[] bytes)
+   {
+	   var hi = BinaryPrimitives.ReadUInt64LittleEndian(bytes[..8]);
+	   var lo = BinaryPrimitives.ReadUInt64LittleEndian(bytes[8..16]);
+	   return new Int128(hi, lo);
+   }
+   internal static byte[] GetBytesFromGuid(this Guid value)
+   {
+	   Span<byte> bytes = stackalloc byte[16];
+	   MemoryMarshal.TryWrite(bytes, ref value);
+	   return bytes.ToArray();
+   }
+   //TODO - remove result span from this method and return span.ToArray instead
    internal static byte[] GetBytesFromUInt128(this UInt128 value)
    {
-
 	   Span<byte> result = stackalloc byte[16];
 	   var span = MemoryMarshal.Cast<UInt128, byte>(MemoryMarshal.CreateReadOnlySpan(ref value, 1));
+	   for (int i = 0; i < 16; i++)
+	   {
+		   result[i] = span[i];
+	   }
+	   return result.ToArray();
+   }
+   internal static byte[] GetBytesFromInt128(this Int128 value)
+   {
+	   Span<byte> result = stackalloc byte[16];
+	   var span = MemoryMarshal.Cast<Int128, byte>(MemoryMarshal.CreateReadOnlySpan(ref value, 1));
 	   for (int i = 0; i < 16; i++)
 	   {
 		   result[i] = span[i];
