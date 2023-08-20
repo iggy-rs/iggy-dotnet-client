@@ -62,12 +62,12 @@ public class HttpMessageStream : IMessageStream
         await HandleResponseAsync(response);
         throw new Exception("Unknown error occurred.");
     }
-    public async Task<List<StreamResponse>> GetStreamsAsync(CancellationToken token = default)
+    public async Task<IReadOnlyList<StreamResponse>> GetStreamsAsync(CancellationToken token = default)
     {
         var response = await _httpClient.GetAsync($"/streams", token);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<List<StreamResponse>>(_toSnakeCaseOptions, cancellationToken: token)
+            return await response.Content.ReadFromJsonAsync<IReadOnlyList<StreamResponse>>(_toSnakeCaseOptions, cancellationToken: token)
                    ?? EmptyList<StreamResponse>.Instance;
         }
         await HandleResponseAsync(response);
@@ -94,12 +94,12 @@ public class HttpMessageStream : IMessageStream
             throw new Exception("Unknown error occurred.");
         }
     }
-    public async Task<List<TopicResponse>> GetTopicsAsync(Identifier streamId, CancellationToken token = default)
+    public async Task<IReadOnlyList<TopicResponse>> GetTopicsAsync(Identifier streamId, CancellationToken token = default)
     {
         var response = await _httpClient.GetAsync($"/streams/{streamId}/topics", token);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<List<TopicResponse>>(_toSnakeCaseOptions, cancellationToken: token)
+            return await response.Content.ReadFromJsonAsync<IReadOnlyList<TopicResponse>>(_toSnakeCaseOptions, cancellationToken: token)
                    ?? EmptyList<TopicResponse>.Instance;
         }
         await HandleResponseAsync(response);
@@ -162,7 +162,7 @@ public class HttpMessageStream : IMessageStream
         }
     }
 
-    public async Task<List<MessageResponse>> PollMessagesAsync(MessageFetchRequest request,
+    public async Task<IReadOnlyList<MessageResponse>> PollMessagesAsync(MessageFetchRequest request,
         Func<byte[], byte[]>? decryptor = null, CancellationToken token = default)
     {
         var url = CreateUrl($"/streams/{request.StreamId}/topics/{request.TopicId}/messages?consumer_id={request.Consumer.Id}" +
@@ -171,7 +171,7 @@ public class HttpMessageStream : IMessageStream
         var response =  await _httpClient.GetAsync(url, token);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<List<MessageResponse>>(new JsonSerializerOptions
+            return await response.Content.ReadFromJsonAsync<IReadOnlyList<MessageResponse>>(new JsonSerializerOptions
                    {
                        Converters = { new MessageResponseConverter(decryptor) }
                    }, cancellationToken: token)
@@ -181,7 +181,7 @@ public class HttpMessageStream : IMessageStream
         throw new Exception("Unknown error occurred.");
     }
 
-    public async Task<List<MessageResponse<TMessage>>> PollMessagesAsync<TMessage>(MessageFetchRequest request,
+    public async Task<IReadOnlyList<MessageResponse<TMessage>>> PollMessagesAsync<TMessage>(MessageFetchRequest request,
         Func<byte[], TMessage> serializer,
         Func<byte[], byte[]>? decryptor = null, CancellationToken token = default)
     {
@@ -191,7 +191,7 @@ public class HttpMessageStream : IMessageStream
         var response =  await _httpClient.GetAsync(url, token);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<List<MessageResponse<TMessage>>>(new JsonSerializerOptions
+            return await response.Content.ReadFromJsonAsync<IReadOnlyList<MessageResponse<TMessage>>>(new JsonSerializerOptions
                        {
                            Converters = { new MessageResponseGenericConverter<TMessage>(serializer, decryptor) }
                        }, cancellationToken: token)
@@ -226,13 +226,13 @@ public class HttpMessageStream : IMessageStream
         await HandleResponseAsync(response);
         throw new Exception("Unknown error occurred.");
     }
-    public async Task<List<ConsumerGroupResponse>> GetConsumerGroupsAsync(Identifier streamId, Identifier topicId, CancellationToken token = default)
+    public async Task<IReadOnlyList<ConsumerGroupResponse>> GetConsumerGroupsAsync(Identifier streamId, Identifier topicId, CancellationToken token = default)
     {
         var response = await _httpClient.GetAsync($"/streams/{streamId}/topics/{topicId}/consumer-groups", token);
         
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<List<ConsumerGroupResponse>>(_toSnakeCaseOptions, cancellationToken: token)
+            return await response.Content.ReadFromJsonAsync<IReadOnlyList<ConsumerGroupResponse>>(_toSnakeCaseOptions, cancellationToken: token)
                    ?? EmptyList<ConsumerGroupResponse>.Instance;
         }
         await HandleResponseAsync(response);
@@ -298,7 +298,6 @@ public class HttpMessageStream : IMessageStream
         CancellationToken token = default)
     {
         var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
-        var data = new StringContent(json, Encoding.UTF8, "application/json");
         
         var response = await _httpClient.DeleteAsync($"/streams/{streamId}/topics/{topicId}/partitions?stream_id={streamId}&topic_id={topicId}&partitions_count={request.PartitionsCount}", token);
         if (!response.IsSuccessStatusCode)

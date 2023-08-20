@@ -19,11 +19,15 @@ internal static class BinaryMapper
         };
     }
     
-    internal static List<MessageResponse> MapMessages(ReadOnlySpan<byte> payload, Func<byte[], byte[]>? decryptor = null)
+    internal static IReadOnlyList<MessageResponse> MapMessages(ReadOnlySpan<byte> payload, Func<byte[], byte[]>? decryptor = null)
     {
         const int propertiesSize = 36;
         int length = payload.Length;
         int position = 4;
+        if (position >= length)
+        {
+            return EmptyList<MessageResponse>.Instance; 
+        }
         List<MessageResponse> messages = new();
 
         while (position < length)
@@ -72,9 +76,9 @@ internal static class BinaryMapper
             }
         }
 
-        return messages;
+        return messages.AsReadOnly();
     }
-    internal static List<MessageResponse<TMessage>> MapMessages<TMessage>(ReadOnlySpan<byte> payload,
+    internal static IReadOnlyList<MessageResponse<TMessage>> MapMessages<TMessage>(ReadOnlySpan<byte> payload,
         Func<byte[], TMessage> serializer, Func<byte[], byte[]>? decryptor = null)
     {
         const int propertiesSize = 36;
@@ -132,10 +136,10 @@ internal static class BinaryMapper
             }
         }
 
-        return messages;
+        return messages.AsReadOnly();
     }
 
-    internal static List<StreamResponse> MapStreams(ReadOnlySpan<byte> payload)
+    internal static IReadOnlyList<StreamResponse> MapStreams(ReadOnlySpan<byte> payload)
     {
         List<StreamResponse> streams = new();
         int length = payload.Length;
@@ -148,7 +152,7 @@ internal static class BinaryMapper
             position += readBytes;
         }
         
-        return streams;
+        return streams.AsReadOnly();
     }
 
     internal static StreamResponse MapStream(ReadOnlySpan<byte> payload)
@@ -215,7 +219,7 @@ internal static class BinaryMapper
         return (stream, readBytes);
     }
 
-    internal static List<TopicResponse> MapTopics(ReadOnlySpan<byte> payload)
+    internal static IReadOnlyList<TopicResponse> MapTopics(ReadOnlySpan<byte> payload)
     {
         List<TopicResponse> topics = new();
         int length = payload.Length;
@@ -228,7 +232,7 @@ internal static class BinaryMapper
             position += readBytes;
         }
         
-        return topics;
+        return topics.AsReadOnly();
     }
 
     internal static TopicResponse MapTopic(ReadOnlySpan<byte> payload)

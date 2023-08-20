@@ -4,7 +4,7 @@ namespace Iggy_SDK.MessageStream;
 
 public interface IConsumerGroupClient
 {
-	Task<List<ConsumerGroupResponse>> GetConsumerGroupsAsync(Identifier streamId, Identifier topicId,
+	Task<IReadOnlyList<ConsumerGroupResponse>> GetConsumerGroupsAsync(Identifier streamId, Identifier topicId,
 		CancellationToken token = default);
 	Task<ConsumerGroupResponse?> GetConsumerGroupByIdAsync(Identifier streamId, Identifier topicId, int groupId,
 		CancellationToken token = default);

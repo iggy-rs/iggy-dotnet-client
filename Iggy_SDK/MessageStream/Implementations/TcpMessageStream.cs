@@ -73,7 +73,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		return BinaryMapper.MapStream(responseBuffer);
 	}
 
-	public async Task<List<StreamResponse>> GetStreamsAsync( CancellationToken token = default)
+	public async Task<IReadOnlyList<StreamResponse>> GetStreamsAsync( CancellationToken token = default)
 	{
 		var message = Enumerable.Empty<byte>().ToArray();
 		var payload = new byte[4 + INITIAL_BYTES_LENGTH + message.Length];
@@ -120,7 +120,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 	}
 
-	public async Task<List<TopicResponse>> GetTopicsAsync(Identifier streamId, CancellationToken token = default)
+	public async Task<IReadOnlyList<TopicResponse>> GetTopicsAsync(Identifier streamId, CancellationToken token = default)
 	{
 		var message = GetBytesFromIdentifier(streamId);
 		var payload = new byte[4 + INITIAL_BYTES_LENGTH + message.Length];
@@ -341,7 +341,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 		return msgBytesSum;
 	}
-	public async Task<List<MessageResponse<TMessage>>> PollMessagesAsync<TMessage>(MessageFetchRequest request,
+	public async Task<IReadOnlyList<MessageResponse<TMessage>>> PollMessagesAsync<TMessage>(MessageFetchRequest request,
 		Func<byte[], TMessage> serializer, Func<byte[], byte[]>? decryptor = null, CancellationToken token = default)
 	{
 
@@ -398,7 +398,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			ArrayPool<byte>.Shared.Return(buffer);
 		}
 	}
-	public async Task<List<MessageResponse>> PollMessagesAsync(MessageFetchRequest request,
+	public async Task<IReadOnlyList<MessageResponse>> PollMessagesAsync(MessageFetchRequest request,
 		Func<byte[], byte[]>? decryptor = null, CancellationToken token = default)
 	{
 		int messageBufferSize = 18 + 5 + 2 + request.StreamId.Length + 2 + request.TopicId.Length;
@@ -504,7 +504,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		return BinaryMapper.MapOffsets(responseBuffer);
 	}
 
-	public async Task<List<ConsumerGroupResponse>> GetConsumerGroupsAsync(Identifier streamId, Identifier topicId,
+	public async Task<IReadOnlyList<ConsumerGroupResponse>> GetConsumerGroupsAsync(Identifier streamId, Identifier topicId,
 		CancellationToken token = default)
 	{
 		var message = TcpContracts.GetGroups(streamId, topicId);
