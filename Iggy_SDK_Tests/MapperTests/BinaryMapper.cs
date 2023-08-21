@@ -31,7 +31,7 @@ public sealed class BinaryMapper
     }
 
     [Fact]
-    public void MapMessagesTMessage_ReturnsValidMessageResponse()
+    public void MapMessagesTMessage_NoHeaders_ReturnsValidMessageResponse()
     {
         //Arrange
         Func<byte[], DummyMessage> deserializer = bytes =>
@@ -42,12 +42,12 @@ public sealed class BinaryMapper
             return new DummyMessage { Id = id, Text = text };
         };
 
-        var (offset, timestamp, guid, payload) = MessageFactory.CreateMessageResponseFieldsTMessage();
-        byte[] msgOnePayload = BinaryFactory.CreateMessagePayload(offset, timestamp,
+        var (offset, timestamp, guid, headersLength, payload) = MessageFactory.CreateMessageResponseFieldsTMessage();
+        byte[] msgOnePayload = BinaryFactory.CreateMessagePayload(offset, timestamp, 0,
             guid, payload);
         
-        var (offset1, timestamp1, guid1, payload1) = MessageFactory.CreateMessageResponseFieldsTMessage();
-        byte[] msgTwoPayload = BinaryFactory.CreateMessagePayload(offset1, timestamp1,
+        var (offset1, timestamp1, guid1, headersLength1, payload1) = MessageFactory.CreateMessageResponseFieldsTMessage();
+        byte[] msgTwoPayload = BinaryFactory.CreateMessagePayload(offset1, timestamp1, 0,
             guid1, payload1);
 
         byte[] combinedPayload = new byte[4 + msgOnePayload.Length + msgTwoPayload.Length];
@@ -84,14 +84,14 @@ public sealed class BinaryMapper
         
     }
     [Fact]
-    public void MapMessages_ReturnsValidMessageResponses()
+    public void MapMessages_NoHeaders_ReturnsValidMessageResponses()
     {
         // Arrange
-        var (offset, timestamp, guid, payload) = MessageFactory.CreateMessageResponseFields();
-        byte[] msgOnePayload = BinaryFactory.CreateMessagePayload(offset, timestamp,
+        var (offset, timestamp, guid, headersLength, payload) = MessageFactory.CreateMessageResponseFields();
+        byte[] msgOnePayload = BinaryFactory.CreateMessagePayload(offset, timestamp, 0,
             guid, payload);
-        var (offset1, timestamp1, guid1, payload1) = MessageFactory.CreateMessageResponseFields();
-        byte[] msgTwoPayload = BinaryFactory.CreateMessagePayload(offset1, timestamp1,
+        var (offset1, timestamp1, guid1, headersLength2, payload1) = MessageFactory.CreateMessageResponseFields();
+        byte[] msgTwoPayload = BinaryFactory.CreateMessagePayload(offset1, timestamp1, 0,
             guid1, payload1);
 
         byte[] combinedPayload = new byte[4 + msgOnePayload.Length + msgTwoPayload.Length];

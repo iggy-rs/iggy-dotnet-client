@@ -5,6 +5,7 @@ using Iggy_SDK;
 using Iggy_SDK_Tests.Utils.DummyObj;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
+using Iggy_SDK.Headers;
 using Iggy_SDK.Kinds;
 using Iggy_SDK.Messages;
 
@@ -12,15 +13,16 @@ namespace Iggy_SDK_Tests.Utils.Messages;
 
 internal static class MessageFactory
 {
-	internal static (ulong offset, ulong timestamp, Guid guid, byte[] payload) CreateMessageResponseFields()
+	internal static (ulong offset, ulong timestamp, Guid guid, int headersLength, byte[] payload) CreateMessageResponseFields()
 	{
 		ulong offset = (ulong)Random.Shared.Next(6, 69);
 		var timestamp = (ulong)Random.Shared.Next(420, 69420);
 		var guid = Guid.NewGuid();
 		var bytes = Encoding.UTF8.GetBytes(RandomString(Random.Shared.Next(6, 69)));
-		return (offset, timestamp, guid, bytes);
+		int headersLength = Random.Shared.Next(1, 69);
+		return (offset, timestamp, guid, headersLength, bytes);
 	}
-	internal static (ulong offset, ulong timestamp, Guid guid, byte[] payload) CreateMessageResponseFieldsTMessage()
+	internal static (ulong offset, ulong timestamp, Guid guid, int headersLength, byte[] payload) CreateMessageResponseFieldsTMessage()
 	{
 		var msg = new DummyMessage
 		{
@@ -36,10 +38,11 @@ internal static class MessageFactory
 			return bytes.ToArray();
 		};
 		ulong offset = (ulong)Random.Shared.Next(6, 69);
+		int headersLength = Random.Shared.Next(1, 69);
 		var timestamp = (ulong)Random.Shared.Next(420, 69420);
 		var guid = Guid.NewGuid();
 		var bytes = serializer(msg);
-		return (offset, timestamp, guid, bytes);
+		return (offset, timestamp, guid, headersLength, bytes);
 	}
 	internal static (ulong offset, ulong timestamp, Guid guid, byte[] payload) CreateMessageResponseGenerics()
 	{
@@ -76,15 +79,17 @@ internal static class MessageFactory
 				new()
 				{
 					Id = Guid.NewGuid(),
-					Payload = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(DummyObjFactory.CreateDummyObject()))
+					Payload = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(DummyObjFactory.CreateDummyObject())),
+					Headers = null,
 				},
 				new() 
 				{
 					Id = Guid.NewGuid(),
-					Payload =  Encoding.UTF8.GetBytes(JsonSerializer.Serialize(DummyObjFactory.CreateDummyObject()))
+					Payload =  Encoding.UTF8.GetBytes(JsonSerializer.Serialize(DummyObjFactory.CreateDummyObject())),
+					Headers = null,
 				}
 
-			}
+			},
 		};
 	}
 	internal static MessageFetchRequest CreateMessageFetchRequest()
@@ -97,7 +102,7 @@ internal static class MessageFactory
 			PartitionId = Random.Shared.Next(1, 10),
 			PollingStrategy = PollingStrategy.Offset(69420),
 			StreamId = Identifier.Numeric(Random.Shared.Next(1,10)),
-			TopicId = Identifier.Numeric(Random.Shared.Next(1,10))
+			TopicId = Identifier.Numeric(Random.Shared.Next(1,10)),
 		};
 	}
 
@@ -108,7 +113,8 @@ internal static class MessageFactory
 			Offset = (ulong)Random.Shared.Next(1, 10),
 			Payload = Convert.ToBase64String("TROLOLO"u8.ToArray()),
 			Timestamp = 12371237821L,
-			Id = new UInt128(69,420)
+			Id = new UInt128(69,420),
+			Headers = null
 		};
 	}
     private static string RandomString(int length)
@@ -124,6 +130,8 @@ internal class MessageResponseHttp
 	public required ulong Timestamp { get; init; }
 	public UInt128 Id { get; init; }
 	public required string Payload { get; init; }
+
+	public Dictionary<HeaderKey, HeaderValue>? Headers { get; init; }
 }
 internal class DummyObject
 {

@@ -60,13 +60,13 @@ public sealed class TcpContract
     
     
     [Fact]
-    public void TcpContracts_MessageSendRequest_HasCorrectBytes()
+    public void TcpContracts_MessageSendRequest_WithNoHeaders_HasCorrectBytes()
     {
         // Arrange
         var streamId = Identifier.Numeric(1);
         var topicId = Identifier.Numeric(1);
         var request = MessageFactory.CreateMessageSendRequest();
-        var messageBufferSize = request.Messages.Sum(message => 16 + 4 + message.Payload.Length)
+        var messageBufferSize = request.Messages.Sum(message => 16 + 4 + 4 + message.Payload.Length)
 	        + request.Partitioning.Length + 14;
         var result = new byte[messageBufferSize];
         
@@ -92,7 +92,8 @@ public sealed class TcpContract
         {
             // Assert
             Assert.Equal(message.Id, new Guid(result[currentIndex..(currentIndex + 16)]));
-            currentIndex += 16;
+            Assert.Equal(result[(currentIndex + 16)..(currentIndex + 20)], new byte[] {0,0,0,0});
+            currentIndex += 20;
 
             int payloadLength = BitConverter.ToInt32(result[currentIndex..(currentIndex + 4)]);
             currentIndex += 4;
