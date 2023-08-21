@@ -2,21 +2,23 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Extensions;
+using Iggy_SDK.Headers;
 
 namespace Iggy_SDK.JsonConfiguration;
 
-internal sealed class MessageResponseConverter : JsonConverter<List<MessageResponse>>
+internal sealed class MessageResponseConverter : JsonConverter<IReadOnlyList<MessageResponse>>
 {
 	private readonly Func<byte[], byte[]>? _decryptor;
 	public MessageResponseConverter(Func<byte[], byte[]>? decryptor)
 	{
 		_decryptor = decryptor;	
 	}
-	public override List<MessageResponse> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+
+	public override IReadOnlyList<MessageResponse> Read(ref Utf8JsonReader reader, Type typeToConvert,
+		JsonSerializerOptions options)
 	{
 		var messageResponses = new List<MessageResponse>();
 		using var doc = JsonDocument.ParseValue(ref reader);
-		
 		var root = doc.RootElement;
 		foreach (var element in root.EnumerateArray())
 		{
@@ -24,20 +26,54 @@ internal sealed class MessageResponseConverter : JsonConverter<List<MessageRespo
 			var timestamp = element.GetProperty(nameof(MessageResponse.Timestamp).ToSnakeCase()).GetUInt64();
 			var id = element.GetProperty(nameof(MessageResponse.Id).ToSnakeCase()).GetUInt128();
 			var payload = element.GetProperty(nameof(MessageResponse.Payload).ToSnakeCase()).GetBytesFromBase64();
+			var headersElement = element.GetProperty(nameof(MessageResponse.Headers).ToSnakeCase());
 
+			var headers = new Dictionary<HeaderKey, HeaderValue>();
+			if (headersElement.ValueKind != JsonValueKind.Null)
+			{
+				var headersJsonArray = headersElement.EnumerateObject();
+				foreach (var header in headersJsonArray)
+				{
+					//TODO - look into getting rid of this boxing 
+					var headerKey = header.Name;
+					var headerObj = header.Value.EnumerateObject();
+					var headerKind = headerObj.First().Value.GetString();
+					var headerValue = headerObj.Last().Value.GetBytesFromBase64();
+					headers.Add(HeaderKey.New(headerKey), new HeaderValue
+					{
+						Kind = headerKind switch
+						{
+							"bool" => HeaderKind.Bool,
+							"int32" => HeaderKind.Int32,
+							"int64" => HeaderKind.Int64,
+							"int128" => HeaderKind.Int128,
+							"uint32" => HeaderKind.Uint32,
+							"uint64" => HeaderKind.Uint64,
+							"uint128" => HeaderKind.Uint128,
+							"float32" => HeaderKind.Float32,
+							"float64" => HeaderKind.Float64,
+							"string" => HeaderKind.String,
+							"raw" => HeaderKind.Raw,
+							_ => throw new ArgumentOutOfRangeException()
+						},
+						Value = headerValue
+					});
+				}
+			}
 			messageResponses.Add(new MessageResponse
 			{
 				Offset = offset,
 				Timestamp = timestamp,
 				Id = new Guid(id.GetBytesFromUInt128()), 
-				Payload = _decryptor is not null ? _decryptor(payload) : payload
+				Headers = headers.Count > 0 ? headers : null,
+				Payload = payload
 			});
-		}
-
-		return messageResponses;
+		}	
+		return messageResponses.AsReadOnly();
 	}
+	
 
-	public override void Write(Utf8JsonWriter writer, List<MessageResponse> value, JsonSerializerOptions options)
+	public override void Write(Utf8JsonWriter writer, IReadOnlyList<MessageResponse> value, JsonSerializerOptions options)
 	{
 		throw new NotImplementedException();
 	}

@@ -95,14 +95,13 @@ async Task ProduceMessages(IMessageClient bus, StreamResponse? stream, TopicResp
     var byteArray = new byte[] { 6, 9, 4, 2, 0 };
 
     var headers = new Dictionary<HeaderKey, HeaderValue>();
-    headers.Add(new HeaderKey { Value = "key-1".ToLower() }, HeaderValue.String("test-value-1"));
-    headers.Add(new HeaderKey { Value = "key-2".ToLower() }, HeaderValue.Int32(69));
-    headers.Add(new HeaderKey { Value = "key-3".ToLower() }, HeaderValue.Float32(420.69f));
-    headers.Add(new HeaderKey { Value = "key-4".ToLower() }, HeaderValue.Bool(true));
-    headers.Add(new HeaderKey { Value = "key-5".ToLower() }, HeaderValue.Raw(byteArray));
-    headers.Add(new HeaderKey { Value = "key-6".ToLower() }, HeaderValue.Int128(new Int128(6969696969, 420420420)));
-    headers.Add(new HeaderKey { Value = "key-7".ToLower() }, HeaderValue.Guid(Guid.NewGuid()));
-    
+    headers.Add(new HeaderKey { Value = "key_1".ToLower() }, HeaderValue.String("test-value-1"));
+    headers.Add(new HeaderKey { Value = "key_2".ToLower() }, HeaderValue.Int32(69));
+    headers.Add(new HeaderKey { Value = "key_3".ToLower() }, HeaderValue.Float32(420.69f));
+    headers.Add(new HeaderKey { Value = "key_4".ToLower() }, HeaderValue.Bool(true));
+    headers.Add(new HeaderKey { Value = "key_5".ToLower() }, HeaderValue.Raw(byteArray));
+    headers.Add(new HeaderKey { Value = "key_6".ToLower() }, HeaderValue.Int128(new Int128(6969696969, 420420420)));
+    headers.Add(new HeaderKey { Value = "key7".ToLower() }, HeaderValue.Guid(Guid.NewGuid()));
     
     while (true)
     {
@@ -120,7 +119,7 @@ async Task ProduceMessages(IMessageClient bus, StreamResponse? stream, TopicResp
         try
         {
             await bus.SendMessagesAsync<Envelope>(streamId, topicId, Partitioning.PartitionId(3), messages, serializer,
-                encryptor, headers);
+                encryptor, headers );
         }
         catch (Exception e)
         {

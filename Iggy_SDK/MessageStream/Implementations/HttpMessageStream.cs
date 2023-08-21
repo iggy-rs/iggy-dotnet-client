@@ -152,6 +152,7 @@ public class HttpMessageStream : IMessageStream
             Messages = messages.Select(message => new Message
             {
                 Id = Guid.NewGuid(),
+                Headers = headers,
                 Payload = encryptor is not null ? encryptor(serializer(message)) : serializer(message),
             }).ToArray()
         };

@@ -1,6 +1,5 @@
 using System.Buffers.Binary;
 using System.Globalization;
-using System.Runtime.InteropServices.JavaScript;
 using System.Text;
 using Iggy_SDK.Extensions;
 
