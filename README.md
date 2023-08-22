@@ -99,6 +99,43 @@ var messages = await bus.PollMessagesAsync<Product>(new MessageFetchRequest<Prod
 }, deserializer);
 ```
 In version 0.0.6 an optional encryptor/decryptor parameter to `SendMessagesAsync` and `PollMessagesAsync` has been added.
+```c#
+Func<byte[], byte[]> encryptor = payload =>
+{
+    //your encryption logic goes here...
+};
+await bus.SendMessagesAsync<Product>(streamId, topicId, Partitioning.PartitionId(partitionId), messages, serializer, encryptor);
+
+Func<byte[], byte[]> decryptor = payload =>
+{
+    //your decryption logic goes here...
+};
+var messages = await bus.PollMessagesAsync(new MessageFetchRequest
+{
+    Consumer = Consumer.New(1),
+    Count = 1,
+    TopicId = topicId,
+    StreamId = streamId,
+    PartitionId = partitionId,
+    PollingStrategy = PollingStrategy.Next(),
+    AutoCommit = true
+}, deserializer, decryptor);
+```
+As of version 0.0.7 optional headers has been added to `SendMessagesAsync`, You can create an header object with following code:
+```c#
+var headers = new Dictionary<HeaderKey, HeaderValue>();
+headers.Add(new HeaderKey { Value = "key_1".ToLower() }, HeaderValue.String("test-value-1"));
+headers.Add(new HeaderKey { Value = "key_2".ToLower() }, HeaderValue.Int32(69));
+headers.Add(new HeaderKey { Value = "key_3".ToLower() }, HeaderValue.Float32(420.69f));
+headers.Add(new HeaderKey { Value = "key_4".ToLower() }, HeaderValue.Bool(true));
+headers.Add(new HeaderKey { Value = "key_5".ToLower() }, HeaderValue.Raw(byteArray));
+headers.Add(new HeaderKey { Value = "key_6".ToLower() }, HeaderValue.Int128(new Int128(6969696969, 420420420)));
+headers.Add(new HeaderKey { Value = "key7".ToLower() }, HeaderValue.Guid(Guid.NewGuid()));
+```
+and then simply pass them as argument to `SendMessagesAsync` function
+```c#
+await bus.SendMessagesAsync<Product>(streamId, topicId, Partitioning.PartitionId(partitionId), messages, serializer, encryptor, headers);
+```
 
 It is worth noting that every method will throw an `InvalidResponseException` when encountering an error.<br><br>
 If you register `IMessageStream` in a dependency injection container, you will have access to interfaces
