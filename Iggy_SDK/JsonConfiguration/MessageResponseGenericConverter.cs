@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Extensions;
 using Iggy_SDK.Headers;
+using Iggy_SDK.Kinds;
 
 namespace Iggy_SDK.JsonConfiguration;
 
@@ -28,6 +29,15 @@ public sealed class MessageResponseGenericConverter<TMessage> : JsonConverter<IR
 			var timestamp = element.GetProperty(nameof(MessageResponse.Timestamp).ToSnakeCase()).GetUInt64();
 			var id = element.GetProperty(nameof(MessageResponse.Id).ToSnakeCase()).GetUInt128();
 			var payload = element.GetProperty(nameof(MessageResponse.Payload).ToSnakeCase()).GetBytesFromBase64();
+			var checksum = element.GetProperty(nameof(MessageResponse.Checksum).ToSnakeCase()).GetUInt32();
+			var state = element.GetProperty(nameof(MessageResponse.State).ToSnakeCase()).GetString() switch
+			{
+				"available" => MessageState.Available,
+				"unavailable" => MessageState.Unavailable,
+				"poisoned" => MessageState.Poisoned,
+				"marked_for_deletion" => MessageState.MarkedForDeletion,
+				_ => throw new ArgumentOutOfRangeException()
+			};
 			var headersElement = element.GetProperty(nameof(MessageResponse.Headers).ToSnakeCase());
 
 			var headers = new Dictionary<HeaderKey, HeaderValue>();
@@ -64,10 +74,12 @@ public sealed class MessageResponseGenericConverter<TMessage> : JsonConverter<IR
 			}
 			messageResponses.Add(new MessageResponse<TMessage>
 			{
+				Id = new Guid(id.GetBytesFromUInt128()), 
 				Offset = offset,
 				Timestamp = timestamp,
-				Id = new Guid(id.GetBytesFromUInt128()), 
+				Checksum = checksum,
 				Headers = headers.Count > 0 ? headers : null,
+				State = state,
 				Message = _decryptor is not null ? _serializer(_decryptor(payload)) : _serializer(payload)
 			});
 		}

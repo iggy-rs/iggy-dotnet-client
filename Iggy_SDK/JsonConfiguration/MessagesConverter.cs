@@ -27,7 +27,7 @@ internal sealed class MessagesConverter : JsonConverter<MessageSendRequest>
 				{
 					Id = message.Id.ToUInt128(),
 					Payload = base64,
-					Headers = message.Headers
+					Headers = message.Headers,
 				});
 			}
 

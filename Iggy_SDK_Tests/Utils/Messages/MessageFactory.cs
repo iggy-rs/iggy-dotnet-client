@@ -1,4 +1,5 @@
 using System.Buffers.Binary;
+using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Text.Json;
 using Iggy_SDK;
@@ -13,16 +14,17 @@ namespace Iggy_SDK_Tests.Utils.Messages;
 
 internal static class MessageFactory
 {
-	internal static (ulong offset, ulong timestamp, Guid guid, int headersLength, byte[] payload) CreateMessageResponseFields()
+	internal static (ulong offset, ulong timestamp, Guid guid, int headersLength,uint checkSum, byte[] payload) CreateMessageResponseFields()
 	{
 		ulong offset = (ulong)Random.Shared.Next(6, 69);
 		var timestamp = (ulong)Random.Shared.Next(420, 69420);
 		var guid = Guid.NewGuid();
+		var checkSum = (uint)Random.Shared.Next(42069, 69042);
 		var bytes = Encoding.UTF8.GetBytes(RandomString(Random.Shared.Next(6, 69)));
 		int headersLength = Random.Shared.Next(1, 69);
-		return (offset, timestamp, guid, headersLength, bytes);
+		return (offset, timestamp, guid, headersLength, checkSum, bytes);
 	}
-	internal static (ulong offset, ulong timestamp, Guid guid, int headersLength, byte[] payload) CreateMessageResponseFieldsTMessage()
+	internal static (ulong offset, ulong timestamp, Guid guid, int headersLength, uint checkSum, byte[] payload) CreateMessageResponseFieldsTMessage()
 	{
 		var msg = new DummyMessage
 		{
@@ -40,9 +42,10 @@ internal static class MessageFactory
 		ulong offset = (ulong)Random.Shared.Next(6, 69);
 		int headersLength = Random.Shared.Next(1, 69);
 		var timestamp = (ulong)Random.Shared.Next(420, 69420);
+		var checkSum = (uint)Random.Shared.Next(42069, 69420);
 		var guid = Guid.NewGuid();
 		var bytes = serializer(msg);
-		return (offset, timestamp, guid, headersLength, bytes);
+		return (offset, timestamp, guid, headersLength, checkSum, bytes);
 	}
 	internal static (ulong offset, ulong timestamp, Guid guid, byte[] payload) CreateMessageResponseGenerics()
 	{
@@ -113,6 +116,8 @@ internal static class MessageFactory
 			Offset = (ulong)Random.Shared.Next(1, 10),
 			Payload = Convert.ToBase64String("TROLOLO"u8.ToArray()),
 			Timestamp = 12371237821L,
+			State = MessageState.Available,
+			Checksum = (uint)Random.Shared.Next(42069, 69420),
 			Id = new UInt128(69,420),
 			Headers = null
 		};
@@ -127,11 +132,13 @@ internal static class MessageFactory
 internal class MessageResponseHttp
 {
 	public required ulong Offset { get; init; }
+	public required uint Checksum { get; init; }
 	public required ulong Timestamp { get; init; }
 	public UInt128 Id { get; init; }
 	public required string Payload { get; init; }
 
 	public Dictionary<HeaderKey, HeaderValue>? Headers { get; init; }
+	public required MessageState State { get; init; }
 }
 internal class DummyObject
 {

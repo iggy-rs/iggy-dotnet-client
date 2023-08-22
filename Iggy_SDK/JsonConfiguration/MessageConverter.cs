@@ -16,12 +16,11 @@ public sealed class MessageConverter : JsonConverter<HttpMessage>
 	public override void Write(Utf8JsonWriter writer, HttpMessage value, JsonSerializerOptions options)
 	{
 		writer.WriteStartObject();
-		
-		var customOptions = new JsonSerializerOptions();
-		customOptions.Converters.Add(new UInt128Converter());
+		var jsonOptions = new JsonSerializerOptions();
+		jsonOptions.Converters.Add(new UInt128Converter());
 
 		writer.WritePropertyName(nameof(value.Id).ToSnakeCase());
-		var idJson = JsonSerializer.Serialize(value.Id, customOptions);
+		var idJson = JsonSerializer.Serialize(value.Id, jsonOptions);
 		using (JsonDocument doc = JsonDocument.Parse(idJson))
 		{
 			doc.RootElement.WriteTo(writer);

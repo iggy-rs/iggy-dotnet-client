@@ -13,23 +13,22 @@ internal sealed class BinaryFactory
         return payload;
     }
 
-    internal static byte[] CreateMessagePayload(ulong offset, ulong timestamp,int headersLength, Guid guid, ReadOnlySpan<byte> payload)
+    internal static byte[] CreateMessagePayload(ulong offset, ulong timestamp,int headersLength,uint checkSum, Guid guid, ReadOnlySpan<byte> payload)
     {
         var messageLength = payload.Length;
-        var totalSize = 40 + payload.Length;
+        var totalSize = 44 + payload.Length;
         var payloadBuffer = new byte[totalSize];
         
         
         BinaryPrimitives.WriteUInt64LittleEndian(payloadBuffer, (ulong)offset);
-        BinaryPrimitives.WriteUInt64LittleEndian(payloadBuffer.AsSpan(8), (ulong)timestamp);
+        payloadBuffer.AsSpan()[8] = 10;
+        BinaryPrimitives.WriteUInt64LittleEndian(payloadBuffer.AsSpan(9), (ulong)timestamp);
         var idBytes = guid.ToByteArray();
-        for (int i = 16; i < 32; i++)
-        {
-            payloadBuffer[i] = idBytes[i - 16];
-        }
-        BinaryPrimitives.WriteUInt32LittleEndian(payloadBuffer.AsSpan(32), (uint)headersLength);
-        BinaryPrimitives.WriteUInt32LittleEndian(payloadBuffer.AsSpan(36), (uint)messageLength);
-        payload.CopyTo(payloadBuffer.AsSpan(40));
+        idBytes.CopyTo(payloadBuffer.AsSpan()[17..33]);
+        BinaryPrimitives.WriteUInt32LittleEndian(payloadBuffer.AsSpan(33), (uint)checkSum);
+        BinaryPrimitives.WriteUInt32LittleEndian(payloadBuffer.AsSpan(37), (uint)headersLength);
+        BinaryPrimitives.WriteUInt32LittleEndian(payloadBuffer.AsSpan(41), (uint)messageLength);
+        payload.CopyTo(payloadBuffer.AsSpan(44));
         return payloadBuffer;
     }
 
