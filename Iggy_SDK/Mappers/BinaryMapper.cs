@@ -9,7 +9,7 @@ using Iggy_SDK.Utils;
 namespace Iggy_SDK.Mappers;
 internal static class BinaryMapper
 {
-    private const int PROPERTIES_SIZE = 44;
+    private const int PROPERTIES_SIZE = 45;
     internal static OffsetResponse MapOffsets(ReadOnlySpan<byte> payload)
     {
         int consumerId = BinaryPrimitives.ReadInt32LittleEndian(payload[0..4]);
@@ -43,20 +43,19 @@ internal static class BinaryMapper
                 30 => MessageState.MarkedForDeletion,
                 _ => throw new ArgumentOutOfRangeException()
             };
-            position += 1;
-            ulong timestamp = BinaryPrimitives.ReadUInt64LittleEndian(payload[(position + 8)..(position + 16)]);
-            var id = new Guid(payload[(position + 16)..(position + 32)]);
-            var checksum = BinaryPrimitives.ReadUInt32LittleEndian(payload[(position + 32)..(position + 36)]);
-            int headersLength = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 36)..(position + 40)]);
+            ulong timestamp = BinaryPrimitives.ReadUInt64LittleEndian(payload[(position + 9)..(position + 17)]);
+            var id = new Guid(payload[(position + 17)..(position + 33)]);
+            var checksum = BinaryPrimitives.ReadUInt32LittleEndian(payload[(position + 33)..(position + 37)]);
+            int headersLength = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 37)..(position + 41)]);
 
             var headers = headersLength switch
             {
                 0 => null,
-                > 0 => MapHeaders(payload[(position + 40)..(position + 44 + headersLength)]),
+                > 0 => MapHeaders(payload[(position + 41)..(position + 41 + headersLength)]),
                 < 0 => throw new ArgumentOutOfRangeException()
             };
             position += headersLength;
-            uint messageLength = BinaryPrimitives.ReadUInt32LittleEndian(payload[(position + 44)..(position + 48)]);
+            uint messageLength = BinaryPrimitives.ReadUInt32LittleEndian(payload[(position + 41)..(position + 45)]);
 
             int payloadRangeStart = position + PROPERTIES_SIZE;
             int payloadRangeEnd = position + PROPERTIES_SIZE + (int)messageLength;
@@ -124,20 +123,19 @@ internal static class BinaryMapper
                 30 => MessageState.MarkedForDeletion,
                 _ => throw new ArgumentOutOfRangeException()
             };
-            position += 1;
-            ulong timestamp = BinaryPrimitives.ReadUInt64LittleEndian(payload[(position + 8)..(position + 16)]);
-            var id = new Guid(payload[(position + 16)..(position + 32)]);
-            var checksum = BinaryPrimitives.ReadUInt32LittleEndian(payload[(position + 32)..(position + 36)]);
-            int headersLength = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 36)..(position + 40)]);
+            ulong timestamp = BinaryPrimitives.ReadUInt64LittleEndian(payload[(position + 9)..(position + 17)]);
+            var id = new Guid(payload[(position + 17)..(position + 33)]);
+            var checksum = BinaryPrimitives.ReadUInt32LittleEndian(payload[(position + 33)..(position + 37)]);
+            int headersLength = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 37)..(position + 41)]);
 
             var headers = headersLength switch
             {
                 0 => null,
-                > 0 => MapHeaders(payload[(position + 40)..(position + 40 + headersLength)]),
+                > 0 => MapHeaders(payload[(position + 41)..(position + 41 + headersLength)]),
                 < 0 => throw new ArgumentOutOfRangeException()
             };
             position += headersLength;
-            uint messageLength = BinaryPrimitives.ReadUInt32LittleEndian(payload[(position + 40)..(position + 44)]);
+            uint messageLength = BinaryPrimitives.ReadUInt32LittleEndian(payload[(position + 41)..(position + 45)]);
 
             int payloadRangeStart = position + PROPERTIES_SIZE;
             int payloadRangeEnd = position + PROPERTIES_SIZE + (int)messageLength;

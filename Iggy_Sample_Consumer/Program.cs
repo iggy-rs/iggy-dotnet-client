@@ -69,16 +69,16 @@ async Task ConsumeMessages()
     {
         try
         {
-            var messages = await bus.PollMessagesAsync<Envelope>(new MessageFetchRequest
-            {
-                Consumer = Consumer.New(1),
-                Count = 1,
-                TopicId = topicId,
-                StreamId = streamId,
-                PartitionId = partitionId,
-                PollingStrategy = PollingStrategy.Next(),
-                AutoCommit = true
-            }, deserializer, decryptor);
+             var messages = await bus.PollMessagesAsync<Envelope>(new MessageFetchRequest
+             {
+                 Consumer = Consumer.New(1),
+                 Count = 1,
+                 TopicId = topicId,
+                 StreamId = streamId,
+                 PartitionId = partitionId,
+                 PollingStrategy = PollingStrategy.Next(),
+                 AutoCommit = true
+             }, deserializer, decryptor);
             
             
             if (!messages.Any())
@@ -110,6 +110,7 @@ void HandleMessage(MessageResponse<Envelope> messageResponse)
     Console.WriteLine();
     Console.WriteLine("---------------------------MESSAGE-----------------------------------");
     Console.WriteLine();
+    
     switch (messageResponse.Message.MessageType)
     {
         case "order_created":
@@ -120,7 +121,8 @@ void HandleMessage(MessageResponse<Envelope> messageResponse)
         }
         case "order_confirmed":
         {
-            var orderConfirmed = JsonSerializer.Deserialize<OrderConfirmed>(messageResponse.Message.Payload, jsonOptions);
+            var orderConfirmed =
+                JsonSerializer.Deserialize<OrderConfirmed>(messageResponse.Message.Payload, jsonOptions);
             Console.WriteLine(orderConfirmed);
             break;
         }
@@ -131,6 +133,7 @@ void HandleMessage(MessageResponse<Envelope> messageResponse)
             break;
         }
     }
+    
 
     if (messageResponse.Headers is not null)
     {
@@ -185,4 +188,5 @@ async Task ValidateSystem(Identifier streamId, Identifier topicId, int partition
     }
 
 }
+
 

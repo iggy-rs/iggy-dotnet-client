@@ -84,7 +84,7 @@ public sealed class BinaryMapper
         Assert.Equal(response[0].Message.Id, deserializer(payload).Id);
         
     }
-    [Fact(Skip = "Broken test")]
+    [Fact]
     public void MapMessages_NoHeaders_ReturnsValidMessageResponses()
     {
         // Arrange
