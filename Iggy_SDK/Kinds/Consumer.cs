@@ -2,7 +2,7 @@ using Iggy_SDK.Enums;
 
 namespace Iggy_SDK.Kinds;
 
-public sealed class Consumer
+public readonly struct Consumer
 {
 	public required ConsumerType Type { get; init; }
 	public required int Id { get; init; }

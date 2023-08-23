@@ -1,6 +1,6 @@
 namespace Iggy_SDK.Headers;
 
-public sealed class HeaderKey
+public readonly struct HeaderKey
 {
 	public required string Value { get; init; }
 

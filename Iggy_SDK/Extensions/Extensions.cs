@@ -57,26 +57,17 @@ internal static class Extensions
 	   MemoryMarshal.TryWrite(bytes, ref value);
 	   return bytes.ToArray();
    }
-   //TODO - remove result span from this method and return span.ToArray instead
    internal static byte[] GetBytesFromUInt128(this UInt128 value)
    {
 	   Span<byte> result = stackalloc byte[16];
 	   var span = MemoryMarshal.Cast<UInt128, byte>(MemoryMarshal.CreateReadOnlySpan(ref value, 1));
-	   for (int i = 0; i < 16; i++)
-	   {
-		   result[i] = span[i];
-	   }
-	   return result.ToArray();
+	   return span.ToArray();
    }
    internal static byte[] GetBytesFromInt128(this Int128 value)
    {
 	   Span<byte> result = stackalloc byte[16];
 	   var span = MemoryMarshal.Cast<Int128, byte>(MemoryMarshal.CreateReadOnlySpan(ref value, 1));
-	   for (int i = 0; i < 16; i++)
-	   {
-		   result[i] = span[i];
-	   }
-	   return result.ToArray();
+	   return span.ToArray();
    }
 
    internal static UInt128 GetUInt128(this JsonElement jsonElement)

@@ -5,7 +5,7 @@ using Iggy_SDK.Extensions;
 
 namespace Iggy_SDK.Headers;
 
-public sealed class HeaderValue
+public readonly struct HeaderValue
 {
 	public required HeaderKind Kind { get; init; }
 	public required byte[] Value { get; init; }

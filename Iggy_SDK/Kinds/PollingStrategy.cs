@@ -2,7 +2,7 @@ using Iggy_SDK.Enums;
 
 namespace Iggy_SDK.Kinds;
 
-public sealed class PollingStrategy
+public readonly struct PollingStrategy
 {
 	public required MessagePolling Kind { get; init; }
 	public required ulong Value { get; init; }

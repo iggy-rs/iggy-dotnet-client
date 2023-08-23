@@ -4,7 +4,7 @@ using Iggy_SDK.Enums;
 
 namespace Iggy_SDK;
 
-public sealed class Identifier
+public readonly struct Identifier
 {
 	
 	public required IdKind Kind { get; init; }
