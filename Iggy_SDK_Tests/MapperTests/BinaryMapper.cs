@@ -31,7 +31,7 @@ public sealed class BinaryMapper
         Assert.Equal(offset, response.Offset);
     }
 
-    [Fact(Skip = "Broken test")]
+    [Fact]
     public void MapMessagesTMessage_NoHeaders_ReturnsValidMessageResponse()
     {
         //Arrange
