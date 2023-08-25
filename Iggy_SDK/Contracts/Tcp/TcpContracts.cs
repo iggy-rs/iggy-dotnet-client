@@ -25,6 +25,20 @@ internal static class TcpContracts
         
         bytes[position + 17] = request.AutoCommit ? (byte)1 : (byte)0;
     }
+    internal static void GetMessagesLazy(Span<byte> bytes, MessageFetchRequest request)
+    {
+        bytes[0] = GetConsumerTypeByte(request.Consumer.Type);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[1..5], request.Consumer.Id);
+        WriteBytesFromStreamAndTopicIdToSpan(request.StreamId, request.TopicId, bytes, 5);
+        var position = 5 + 2 + request.StreamId.Length + 2 + request.TopicId.Length;
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], request.PartitionId);
+        bytes[position + 4] = GetPollingStrategyByte(request.PollingStrategy.Kind);
+        BinaryPrimitives.WriteUInt64LittleEndian(bytes[(position + 5)..(position + 13)], request.PollingStrategy.Value);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[(position + 13)..(position + 17)], 1);
+        
+        bytes[position + 17] = request.AutoCommit ? (byte)1 : (byte)0;
+    }
+    //TODO - since message is of type IList maybe I can simplife the HandleMessages methods.
     internal static void CreateMessage(Span<byte> bytes, Identifier streamId, Identifier topicId,
         Partitioning partitioning, IList<Message> messages)
     {
@@ -161,6 +175,7 @@ internal static class TcpContracts
         return headersBytes.ToArray();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static byte HeaderKindToByte(HeaderKind kind)
     {
         return kind switch
@@ -188,21 +203,7 @@ internal static class TcpContracts
             var headerKeyBytes = Encoding.UTF8.GetBytes(headerKey.Value);
             headerKeyBytes.CopyTo(headerBytes[4..(4 + headerKey.Value.Length)]);
 
-            headerBytes[4 + headerKey.Value.Length] = headerValue.Kind switch
-            {
-                HeaderKind.Raw => 1,
-                HeaderKind.String => 2,
-                HeaderKind.Bool => 3,
-                HeaderKind.Int32 => 6,
-                HeaderKind.Int64 => 7,
-                HeaderKind.Int128 => 8,
-                HeaderKind.Uint32 => 11,
-                HeaderKind.Uint64 => 12,
-                HeaderKind.Uint128 => 13,
-                HeaderKind.Float32 => 14,
-                HeaderKind.Float64 => 15,
-                _ => throw new ArgumentOutOfRangeException()
-            };
+            headerBytes[4 + headerKey.Value.Length] = HeaderKindToByte(headerValue.Kind);
             
             BinaryPrimitives.WriteInt32LittleEndian(
                 headerBytes[(4 + headerKey.Value.Length + 1)..(4 + headerKey.Value.Length + 1 + 4)],

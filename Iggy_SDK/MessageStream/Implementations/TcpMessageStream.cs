@@ -21,7 +21,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	private const int EXPECTED_RESPONSE_SIZE = 8;
 	private readonly Socket _socket;
 
-	private Memory<byte> _buffer = new(new byte[EXPECTED_RESPONSE_SIZE]);
+	private Memory<byte> _responseBuffer = new(new byte[EXPECTED_RESPONSE_SIZE]);
 
 	internal TcpMessageStream(Socket socket)
 	{
@@ -243,12 +243,12 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 				messages);
 			CreatePayload(payload.AsSpan()[..payloadBufferSize], message.AsSpan()[..messageBufferSize], CommandCodes.SEND_MESSAGES_CODE);
 
-			var recv = _socket.ReceiveAsync(_buffer, token);
+			var recv = _socket.ReceiveAsync(_responseBuffer, token);
 			await _socket.SendAsync(payload.AsMemory()[..payloadBufferSize], token);
 			
 			await recv;
 			
-			var status = GetResponseStatus(_buffer.Span);
+			var status = GetResponseStatus(_responseBuffer.Span);
 			if (status != 0)
 			{
 				throw new InvalidResponseException($"Invalid response status code: {status}");
@@ -294,12 +294,12 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 				messagesToSend);
 			CreatePayload(payload.AsSpan()[..payloadBufferSize], message.AsSpan()[..messageBufferSize], CommandCodes.SEND_MESSAGES_CODE);
 
-			var recv = _socket.ReceiveAsync(_buffer, token);
+			var recv = _socket.ReceiveAsync(_responseBuffer, token);
 			await _socket.SendAsync(payload.AsMemory()[..payloadBufferSize], token);
 			
 			await recv;
 			
-			var status = GetResponseStatus(_buffer.Span);
+			var status = GetResponseStatus(_responseBuffer.Span);
 			if (status != 0)
 			{
 				throw new InvalidResponseException($"Invalid response status code: {status}");
@@ -312,6 +312,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			ArrayPool<byte>.Shared.Return(payload);
 		}
 	}
+	//TODO - explore simplifying this method since messages is of type IList
 	private static int CalculateMessageBytesCount(IList<Message> messages)
 	{
 		return messages switch
@@ -428,6 +429,67 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			ArrayPool<byte>.Shared.Return(buffer);
 		}
 	}
+
+	public async IAsyncEnumerable<MessageResponse> LazyPollMessagesAsync(MessageFetchRequest request, Func<byte[], byte[]>? decryptor = null, CancellationToken token = default)
+	{
+		int messageBufferSize = 18 + 5 + 2 + request.StreamId.Length + 2 + request.TopicId.Length;
+		int payloadBufferSize = messageBufferSize + 4 + INITIAL_BYTES_LENGTH;
+		var message = ArrayPool<byte>.Shared.Rent(messageBufferSize);
+		var payload = ArrayPool<byte>.Shared.Rent(payloadBufferSize);
+		
+		int pollingCount = 0;
+		TcpContracts.GetMessagesLazy(message.AsSpan()[..messageBufferSize], request);
+		CreatePayload(payload, message.AsSpan()[..messageBufferSize], CommandCodes.POLL_MESSAGES_CODE);
+		while (pollingCount < request.Count || token.IsCancellationRequested)
+		{
+			try
+			{
+
+				await _socket.SendAsync(payload.AsMemory()[..payloadBufferSize], token);
+			}
+			finally
+			{
+				ArrayPool<byte>.Shared.Return(message);
+				ArrayPool<byte>.Shared.Return(payload);
+			}
+
+			var buffer = ArrayPool<byte>.Shared.Rent(EXPECTED_RESPONSE_SIZE);
+			try
+			{
+				await _socket.ReceiveAsync(buffer.AsMemory()[..EXPECTED_RESPONSE_SIZE], token);
+
+				var response = GetResponseLengthAndStatus(buffer);
+				if (response.Status != 0)
+				{
+					throw new TcpInvalidResponseException();
+				}
+
+				if (response.Length <= 1)
+				{
+					yield break;
+				}
+
+				var responseBuffer = ArrayPool<byte>.Shared.Rent(response.Length);
+
+				try
+				{
+					await _socket.ReceiveAsync(responseBuffer.AsMemory()[..response.Length], token);
+					yield return BinaryMapper.MapMessage(
+						responseBuffer.AsSpan()[..response.Length], decryptor);
+					pollingCount++;
+				}
+				finally
+				{
+					ArrayPool<byte>.Shared.Return(responseBuffer);
+				}
+			}
+			finally
+			{
+				ArrayPool<byte>.Shared.Return(buffer);
+			}
+		}
+	}
+
 	public async Task<IReadOnlyList<MessageResponse>> PollMessagesAsync(MessageFetchRequest request,
 		Func<byte[], byte[]>? decryptor = null, CancellationToken token = default)
 	{

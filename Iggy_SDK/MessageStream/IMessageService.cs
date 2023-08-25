@@ -5,6 +5,8 @@ using Iggy_SDK.Kinds;
 namespace Iggy_SDK.MessageStream;
 
 //TODO - look into creating another overload for PollMessages method that will use IAsyncEnumerable as return type.
+//TODO - look into making the (de)cryptor and (de)serializer lambdas async
+//TODO - create a SendMessage method that uses polling under the hood to collect batch of messages
 public interface IMessageClient
 {
 	Task SendMessagesAsync(Identifier streamId, Identifier topicId, MessageSendRequest request, Func<byte[], byte[]>?
@@ -18,5 +20,7 @@ public interface IMessageClient
 		CancellationToken token = default);
 	Task<IReadOnlyList<MessageResponse<TMessage>>> PollMessagesAsync<TMessage>(MessageFetchRequest request,
 		Func<byte[], TMessage> serializer, Func<byte[], byte[]>? decryptor = null, CancellationToken token = default);
+	// IAsyncEnumerable<MessageResponse> LazyPollMessagesAsync(MessageFetchRequest request, Func<byte[], byte[]>? decryptor = null,
+	// 	CancellationToken token = default);
 	
 }

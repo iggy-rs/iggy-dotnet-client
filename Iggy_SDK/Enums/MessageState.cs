@@ -1,4 +1,4 @@
-namespace Iggy_SDK.Kinds;
+namespace Iggy_SDK.Enums;
 
 public enum MessageState
 {

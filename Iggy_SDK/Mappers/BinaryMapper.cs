@@ -2,11 +2,12 @@ using System.Buffers;
 using System.Buffers.Binary;
 using System.Text;
 using Iggy_SDK.Contracts.Http;
+using Iggy_SDK.Enums;
 using Iggy_SDK.Headers;
-using Iggy_SDK.Kinds;
 using Iggy_SDK.Utils;
 
 namespace Iggy_SDK.Mappers;
+//TODO - major refactor, look for repeating pieces of code (kind maps, etc..)
 internal static class BinaryMapper
 {
     private const int PROPERTIES_SIZE = 45;
@@ -21,7 +22,69 @@ internal static class BinaryMapper
             ConsumerId = consumerId
         };
     }
-    
+
+    internal static MessageResponse MapMessage(ReadOnlySpan<byte> payload,
+        Func<byte[], byte[]>? decryptor = null)
+    {
+        int length = payload.Length;
+        int position = 4;
+        if (position >= length)
+        {
+            throw new ArgumentOutOfRangeException(); 
+        }
+
+        ulong offset = BinaryPrimitives.ReadUInt64LittleEndian(payload[position..(position + 8)]);
+        var state = payload[position + 8] switch
+        {
+            1 => MessageState.Available,
+            10 => MessageState.Unavailable,
+            20 => MessageState.Poisoned,
+            30 => MessageState.MarkedForDeletion,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+        ulong timestamp = BinaryPrimitives.ReadUInt64LittleEndian(payload[(position + 9)..(position + 17)]);
+        var id = new Guid(payload[(position + 17)..(position + 33)]);
+        var checksum = BinaryPrimitives.ReadUInt32LittleEndian(payload[(position + 33)..(position + 37)]);
+        int headersLength = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 37)..(position + 41)]);
+
+        var headers = headersLength switch
+        {
+            0 => null,
+            > 0 => MapHeaders(payload[(position + 41)..(position + 41 + headersLength)]),
+            < 0 => throw new ArgumentOutOfRangeException()
+        };
+        position += headersLength;
+        uint messageLength = BinaryPrimitives.ReadUInt32LittleEndian(payload[(position + 41)..(position + 45)]);
+
+        int payloadRangeStart = position + PROPERTIES_SIZE;
+        int payloadRangeEnd = position + PROPERTIES_SIZE + (int)messageLength;
+
+        var payloadSlice = payload[payloadRangeStart..payloadRangeEnd];
+        var messagePayload = ArrayPool<byte>.Shared.Rent(payloadSlice.Length);
+        var payloadSliceLen = payloadSlice.Length;
+
+        try
+        {
+            payloadSlice.CopyTo(messagePayload.AsSpan()[..payloadSliceLen]);
+
+            return new MessageResponse
+            {
+                Offset = offset,
+                Timestamp = timestamp,
+                Id = id,
+                Checksum = checksum,
+                State = state,
+                Headers = headers,
+                Payload = decryptor is not null
+                    ? decryptor(messagePayload[..payloadSliceLen])
+                    : messagePayload[..payloadSliceLen]
+            };
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(messagePayload);
+        }
+    }
     internal static IReadOnlyList<MessageResponse> MapMessages(ReadOnlySpan<byte> payload, Func<byte[], byte[]>? decryptor = null)
     {
         int length = payload.Length;
@@ -464,7 +527,6 @@ internal static class BinaryMapper
     internal static ConsumerGroupResponse MapConsumerGroup(ReadOnlySpan<byte> payload)
     {
         (ConsumerGroupResponse consumerGroup, int position) = MapToConsumerGroup(payload, 0);
-        
         return consumerGroup;
     }
     private static (ConsumerGroupResponse consumerGroup, int readBytes) MapToConsumerGroup(ReadOnlySpan<byte> payload,

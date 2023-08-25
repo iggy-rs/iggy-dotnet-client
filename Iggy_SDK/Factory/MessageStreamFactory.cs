@@ -24,8 +24,6 @@ public static class MessageStreamFactory
         };
     }
 
-   
-
     private static TcpMessageStream CreateTcpMessageStream(IMessageStreamConfigurator options)
     {
         var urlPortSplitter = options.BaseAdress.Split(":");
@@ -39,7 +37,6 @@ public static class MessageStreamFactory
         socket.ReceiveBufferSize = options.ReceiveBufferSize;
         return new TcpMessageStream(socket);
     }
-
     
     private static HttpMessageStream CreateHttpMessageStream(IMessageStreamConfigurator options)
     {
