@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Exceptions;
 using Iggy_SDK.Headers;
@@ -28,6 +29,33 @@ public class HttpMessageStream : IMessageStream
         
         _toSnakeCaseOptions.PropertyNamingPolicy = new ToSnakeCaseNamingPolicy();
         _toSnakeCaseOptions.WriteIndented = true;
+
+        //This code makes the source generated JsonSerializer work with JsonIgnore attribute for required properties
+        _toSnakeCaseOptions.TypeInfoResolver = new DefaultJsonTypeInfoResolver
+        {
+            Modifiers =
+            {
+                ti =>
+                {
+                    if (ti.Kind == JsonTypeInfoKind.Object)
+                    {
+                        JsonPropertyInfo[] props = ti.Properties
+                            .Where(prop => prop.AttributeProvider == null || prop.AttributeProvider
+                                .GetCustomAttributes(typeof(JsonIgnoreAttribute), false).Length == 0)
+                            .ToArray();
+
+                        if (props.Length != ti.Properties.Count)
+                        {
+                            ti.Properties.Clear();
+                            foreach (var prop in props)
+                            {
+                                ti.Properties.Add(prop);
+                            }
+                        }
+                    }
+                }
+            }
+        };
         
         _toSnakeCaseOptions.Converters.Add(new UInt128Converter());
         _toSnakeCaseOptions.Converters.Add(new JsonStringEnumConverter(new ToSnakeCaseNamingPolicy()));

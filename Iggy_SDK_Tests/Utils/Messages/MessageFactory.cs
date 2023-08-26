@@ -67,10 +67,14 @@ internal static class MessageFactory
 	internal static MessageSendRequest CreateMessageSendRequest()
 	{
 		var valBytes = new byte[4];
+		var streamId = Identifier.Numeric(1);
+		var topicId = Identifier.Numeric(1);
 		BinaryPrimitives.WriteInt32LittleEndian(valBytes, Random.Shared.Next(1,69));
 		return new MessageSendRequest
 		{
 			
+			StreamId = streamId,
+			TopicId = topicId,
 			Partitioning = new Partitioning
 			{
 				Kind = PartitioningKind.PartitionId,

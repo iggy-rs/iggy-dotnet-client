@@ -30,8 +30,12 @@ internal static class OffsetFactory
 
 	internal static StoreOffsetRequest CreateOffsetContract()
 	{
+        var streamId = Identifier.Numeric(1);
+        var topicId = Identifier.Numeric(1);
 		return new StoreOffsetRequest
 		{
+			StreamId = streamId,
+			TopicId = topicId,
 			Consumer = Consumer.New(1),
 			Offset = (ulong)Random.Shared.Next(1, 10),
 			PartitionId = Random.Shared.Next(1, 10),

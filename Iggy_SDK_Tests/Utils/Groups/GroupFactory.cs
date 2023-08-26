@@ -25,14 +25,6 @@ internal static class GroupFactory
 		};
 	}
 
-	internal static CreateConsumerGroupRequest CreateGroupRequest()
-	{
-		return new CreateConsumerGroupRequest
-		{
-			ConsumerGroupId = Random.Shared.Next(1, 10),
-		};
-	}
-
 	internal static IEnumerable<ConsumerGroupResponse> CreateGroupsResponse(int count)
 	{
 		return Enumerable.Range(1, count)

@@ -2,6 +2,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using Iggy_SDK;
 using Iggy_SDK_Tests.Utils.Errors;
 using Iggy_SDK_Tests.Utils.Groups;
@@ -35,6 +36,32 @@ public sealed class HttpMessageStream
 		_toSnakeCaseOptions = new();
 		_toSnakeCaseOptions.PropertyNamingPolicy = new ToSnakeCaseNamingPolicy();
 		_toSnakeCaseOptions.WriteIndented = true;
+        //This code makes the source generated JsonSerializer work with JsonIgnore attribute for required properties
+        _toSnakeCaseOptions.TypeInfoResolver = new DefaultJsonTypeInfoResolver
+        {
+            Modifiers =
+            {
+                ti =>
+                {
+                    if (ti.Kind == JsonTypeInfoKind.Object)
+                    {
+                        JsonPropertyInfo[] props = ti.Properties
+                            .Where(prop => prop.AttributeProvider == null || prop.AttributeProvider
+                                .GetCustomAttributes(typeof(JsonIgnoreAttribute), false).Length == 0)
+                            .ToArray();
+
+                        if (props.Length != ti.Properties.Count)
+                        {
+                            ti.Properties.Clear();
+                            foreach (var prop in props)
+                            {
+                                ti.Properties.Add(prop);
+                            }
+                        }
+                    }
+                }
+            }
+        };
         _toSnakeCaseOptions.Converters.Add(new UInt128Converter());
         _toSnakeCaseOptions.Converters.Add(new JsonStringEnumConverter(new ToSnakeCaseNamingPolicy()));
         _httpHandler = new MockHttpMessageHandler();
@@ -218,14 +245,12 @@ public sealed class HttpMessageStream
 	[Fact]
 	public async Task SendMessageAsync_ThrowsErrorResponseException_OnFailure()
 	{
-		var streamId = Identifier.Numeric(1);
-		var topicId = Identifier.Numeric(1);
 		var request = MessageFactory.CreateMessageSendRequest();		
 		var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions); 
 		var error = JsonSerializer.Serialize(ErrorModelFactory.CreateErrorModelBadRequest(), _toSnakeCaseOptions);
 
 		
-		_httpHandler.When(HttpMethod.Post, $"/streams/{streamId}/topics/{topicId}/messages")
+		_httpHandler.When(HttpMethod.Post, $"/streams/{request.StreamId}/topics/{request.TopicId}/messages")
 			.With(message =>
 			{
 				message.Content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -233,7 +258,7 @@ public sealed class HttpMessageStream
 			})
 			.Respond(HttpStatusCode.BadRequest, "application/json", error);
 		
-		await Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.SendMessagesAsync(streamId, topicId, request));
+		await Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.SendMessagesAsync(request));
 		_httpHandler.Flush();
 	} 
 	
@@ -276,16 +301,14 @@ public sealed class HttpMessageStream
 	[Fact]
 	public async Task UpdateOffsetAsync_ThrowsErrorResponseException_OnFailure()
 	{
-		var streamId = Identifier.Numeric(1);
-		var topicId = Identifier.Numeric(1);
 		var contract = OffsetFactory.CreateOffsetContract();
 		var error = JsonSerializer.Serialize(ErrorModelFactory.CreateErrorModelBadRequest(), _toSnakeCaseOptions);
 
 
-		_httpHandler.When(HttpMethod.Put, $"/streams/{streamId}/topics/{topicId}/consumer-offsets")
+		_httpHandler.When(HttpMethod.Put, $"/streams/{contract.StreamId}/topics/{contract.TopicId}/consumer-offsets")
 			.Respond(HttpStatusCode.BadRequest, "application/json", error);
 		
-		await Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.StoreOffsetAsync(streamId, topicId, contract));
+		await Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.StoreOffsetAsync(contract));
 		_httpHandler.Flush();
 	}
 
@@ -362,14 +385,12 @@ public sealed class HttpMessageStream
 	[Fact]
 	public async Task CreatePartitions_ThrowsErrorResponseException_OnFailure()
 	{
-		var streamId = Identifier.Numeric(1);
-		var topicId = Identifier.Numeric(1);
 		var request = PartitionFactory.CreatePartitionsRequest();
 		var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions); 
 		
 		var error = ErrorModelFactory.CreateErrorModelBadRequest();
 		
-		_httpHandler.When(HttpMethod.Post, $"/streams/{streamId}/topics/{topicId}/partitions")
+		_httpHandler.When(HttpMethod.Post, $"/streams/{request.StreamId}/topics/{request.TopicId}/partitions")
 			.With(message =>
 			{
 				message.Content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -377,22 +398,20 @@ public sealed class HttpMessageStream
 			})
 			.Respond(HttpStatusCode.BadRequest, "application/json", JsonSerializer.Serialize(error, _toSnakeCaseOptions));
 		
-		await Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.CreatePartitionsAsync(streamId, topicId, request));
+		await Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.CreatePartitionsAsync(request));
 	}
 
 	[Fact]
 	public async Task DeletePartitions_ThrowsErrorResponseException_OnFailure()
 	{
-		var streamId = Identifier.Numeric(1);
-		var topicId = Identifier.Numeric(1);
 		var request = PartitionFactory.CreateDeletePartitionsRequest();
 		
 		var error = ErrorModelFactory.CreateErrorModelBadRequest();
 		
 		_httpHandler.When(HttpMethod.Delete,
-				$"/streams/{streamId}/topics/{topicId}/partitions?stream_id={streamId}&topic_id={topicId}&partitions_count={request.PartitionsCount}")
+				$"/streams/{request.StreamId}/topics/{request.TopicId}/partitions?partitions_count={request.PartitionsCount}")
 			.Respond(HttpStatusCode.BadRequest, "application/json", JsonSerializer.Serialize(error, _toSnakeCaseOptions));
-		await Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.DeletePartitionsAsync(streamId, topicId, request));
+		await Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.DeletePartitionsAsync(request));
 	}
 	
 }

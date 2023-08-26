@@ -25,8 +25,10 @@ public static class SendMessage
 		for (int i = 0; i < messagesBatch; i++)
 		{
 			var startTime = Stopwatch.GetTimestamp();
-			await bus.SendMessagesAsync(streamId, topicId, new MessageSendRequest
+			await bus.SendMessagesAsync(new MessageSendRequest
 			{
+				StreamId = streamId,
+				TopicId = topicId,
 				Partitioning = Partitioning.PartitionId(1),
 				Messages = messages,
 			});
