@@ -21,13 +21,14 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	private const int EXPECTED_RESPONSE_SIZE = 8;
 	private readonly Socket _socket;
 
+
+	//TODO - make this readonly
 	private Memory<byte> _responseBuffer = new(new byte[EXPECTED_RESPONSE_SIZE]);
 
 	internal TcpMessageStream(Socket socket)
 	{
 		_socket = socket;
 	}
-
 	public async Task CreateStreamAsync(StreamRequest request, CancellationToken token = default)
 	{
 		var message = TcpContracts.CreateStream(request);
@@ -216,7 +217,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 	}
 
-	public async Task SendMessagesAsync(Identifier streamId, Identifier topicId, MessageSendRequest request,
+	public async Task SendMessagesAsync(MessageSendRequest request,
 		Func<byte[], byte[]>? encryptor = null, Dictionary<HeaderKey, HeaderValue>? headers = null,
 		CancellationToken token = default)
 	{
@@ -230,7 +231,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			}
 		}
 		
-		var streamTopicIdLength = 2 + streamId.Length + 2 + topicId.Length;
+		var streamTopicIdLength = 2 + request.StreamId.Length + 2 + request.TopicId.Length;
 		var messageBufferSize = CalculateMessageBytesCount(messages)
 		               + request.Partitioning.Length + streamTopicIdLength + 2;
         var payloadBufferSize = messageBufferSize + 4 + INITIAL_BYTES_LENGTH;
@@ -239,7 +240,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		var payload = ArrayPool<byte>.Shared.Rent(payloadBufferSize);
 		try
 		{
-			TcpContracts.CreateMessage(message.AsSpan()[..messageBufferSize], streamId, topicId, request.Partitioning,
+			TcpContracts.CreateMessage(message.AsSpan()[..messageBufferSize], request.StreamId, request.TopicId,
+				request.Partitioning,
 				messages);
 			CreatePayload(payload.AsSpan()[..payloadBufferSize], message.AsSpan()[..messageBufferSize], CommandCodes.SEND_MESSAGES_CODE);
 
@@ -549,9 +551,9 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 	}
 
 
-	public async Task StoreOffsetAsync(Identifier streamId, Identifier topicId, OffsetContract contract, CancellationToken token = default)
+	public async Task StoreOffsetAsync(StoreOffsetRequest request, CancellationToken token = default)
 	{
-		var message = TcpContracts.UpdateOffset(streamId, topicId, contract);
+		var message = TcpContracts.UpdateOffset(request);
 		var payload = new byte[4 + INITIAL_BYTES_LENGTH + message.Length];
 		CreatePayload(payload, message, CommandCodes.STORE_OFFSET_CODE);
 
@@ -654,10 +656,9 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		return BinaryMapper.MapConsumerGroup(responseBuffer);
 	}
 
-	public async Task CreateConsumerGroupAsync(Identifier streamId, Identifier topicId,
-		CreateConsumerGroupRequest request, CancellationToken token = default)
+	public async Task CreateConsumerGroupAsync(CreateConsumerGroupRequest request, CancellationToken token = default)
 	{
-		var message = TcpContracts.CreateGroup(streamId, topicId, request);
+		var message = TcpContracts.CreateGroup(request);
 		var payload = new byte[4 + INITIAL_BYTES_LENGTH + message.Length];
 		CreatePayload(payload, message, CommandCodes.CREATE_GROUP_CODE);
 
@@ -674,10 +675,10 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 	}
 
-	public async Task DeleteConsumerGroupAsync(Identifier streamId, Identifier topicId, int groupId,
-		CancellationToken token = default)
+	public async Task DeleteConsumerGroupAsync(DeleteConsumerGroup request, CancellationToken token = default)
+		
 	{
-		var message = TcpContracts.DeleteGroup(streamId, topicId, groupId);
+		var message = TcpContracts.DeleteGroup(request.StreamId, request.TopicId, request.ConsumerGroupId);
 		var payload = new byte[4 + INITIAL_BYTES_LENGTH + message.Length];
 		CreatePayload(payload, message, CommandCodes.DELETE_GROUP_CODE);
 
@@ -731,10 +732,10 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			throw new InvalidResponseException($"Invalid response status code: {status}");
 		}
 	}
-	public async Task DeletePartitionsAsync(Identifier streamId, Identifier topicId, DeletePartitionsRequest request,
+	public async Task DeletePartitionsAsync(DeletePartitionsRequest request,
 		CancellationToken token = default)
 	{
-		var message = TcpContracts.DeletePartitions(streamId, topicId, request);
+		var message = TcpContracts.DeletePartitions(request);
 		var payload = new byte[4 + INITIAL_BYTES_LENGTH + message.Length];
 		CreatePayload(payload, message, CommandCodes.DELETE_PARTITIONS_CODE);
 		
@@ -751,10 +752,10 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		}
 	}
 
-	public async Task CreatePartitionsAsync(Identifier streamId, Identifier topicId, CreatePartitionsRequest request,
+	public async Task CreatePartitionsAsync(CreatePartitionsRequest request,
 		CancellationToken token = default)
 	{
-		var message = TcpContracts.CreatePartitions(streamId, topicId, request);
+		var message = TcpContracts.CreatePartitions(request);
 		var payload = new byte[4 + INITIAL_BYTES_LENGTH + message.Length];
 		CreatePayload(payload, message, CommandCodes.CREATE_PARTITIONS_CODE);
 		

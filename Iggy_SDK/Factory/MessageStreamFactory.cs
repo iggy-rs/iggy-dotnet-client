@@ -1,8 +1,10 @@
 using System.ComponentModel;
 using System.Net.Sockets;
+using System.Threading.Channels;
 using Iggy_SDK.Configuration;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Exceptions;
+using Iggy_SDK.HostedService;
 using Iggy_SDK.MessageStream;
 using Iggy_SDK.MessageStream.Implementations;
 
@@ -35,7 +37,12 @@ public static class MessageStreamFactory
         socket.Connect(urlPortSplitter[0], int.Parse(urlPortSplitter[1]));
         socket.SendBufferSize = options.SendBufferSize;
         socket.ReceiveBufferSize = options.ReceiveBufferSize;
-        return new TcpMessageStream(socket);
+        
+        var messageStream = new TcpMessageStream(socket);
+        var sendMessageDispatcher = new MessageSenderDispatcher(TimeSpan.FromMilliseconds(100), messageStream);
+        
+        sendMessageDispatcher.Start();
+        return messageStream;
     }
     
     private static HttpMessageStream CreateHttpMessageStream(IMessageStreamConfigurator options)

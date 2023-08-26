@@ -8,9 +8,8 @@ public interface IConsumerGroupClient
 		CancellationToken token = default);
 	Task<ConsumerGroupResponse?> GetConsumerGroupByIdAsync(Identifier streamId, Identifier topicId, int groupId,
 		CancellationToken token = default);
-	Task CreateConsumerGroupAsync(Identifier streamId, Identifier topicId, CreateConsumerGroupRequest request,
-		CancellationToken token = default);
-	Task DeleteConsumerGroupAsync(Identifier streamId, Identifier topicId, int groupId, CancellationToken token = default);
+	Task CreateConsumerGroupAsync(CreateConsumerGroupRequest request, CancellationToken token = default);
+	Task DeleteConsumerGroupAsync(DeleteConsumerGroup request, CancellationToken token = default);
 	Task JoinConsumerGroupAsync(JoinConsumerGroupRequest request, CancellationToken token = default);
 	Task LeaveConsumerGroupAsync(LeaveConsumerGroupRequest request, CancellationToken token = default);
 

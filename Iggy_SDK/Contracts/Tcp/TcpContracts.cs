@@ -220,11 +220,11 @@ internal static class TcpContracts
         return bytes.ToArray();
     }
 
-    internal static byte[] CreateGroup(Identifier streamId, Identifier topicId, CreateConsumerGroupRequest request)
+    internal static byte[] CreateGroup(CreateConsumerGroupRequest request)
     {
-        Span<byte> bytes = stackalloc byte[2 + streamId.Length + 2 + topicId.Length + sizeof(int)];
-        WriteBytesFromStreamAndTopicIdToSpan(streamId, topicId, bytes);
-        int position = 2 + streamId.Length + 2 + topicId.Length;
+        Span<byte> bytes = stackalloc byte[2 + request.StreamId.Length + 2 + request.TopicId.Length + sizeof(int)];
+        WriteBytesFromStreamAndTopicIdToSpan(request.StreamId, request.TopicId, bytes);
+        int position = 2 + request.StreamId.Length + 2 + request.TopicId.Length;
         BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], request.ConsumerGroupId);
         return bytes.ToArray();
     }
@@ -297,16 +297,16 @@ internal static class TcpContracts
         return bytes.ToArray();
     }
 
-    internal static byte[] UpdateOffset(Identifier streamId, Identifier topicId, OffsetContract contract)
+    internal static byte[] UpdateOffset(StoreOffsetRequest request)
     {
         Span<byte> bytes =
-            stackalloc byte[2 + streamId.Length + 2 + topicId.Length + 17];
-        bytes[0] = GetConsumerTypeByte(contract.Consumer.Type);
-        BinaryPrimitives.WriteInt32LittleEndian(bytes[1..5], contract.Consumer.Id);
-        WriteBytesFromStreamAndTopicIdToSpan(streamId , topicId, bytes, 5);
-        var position = 5 + 2 + streamId.Length + 2 + topicId.Length; 
-        BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], contract.PartitionId);
-        BinaryPrimitives.WriteUInt64LittleEndian(bytes[(position + 4)..(position + 12)], contract.Offset);
+            stackalloc byte[2 + request.StreamId.Length + 2 + request.TopicId.Length + 17];
+        bytes[0] = GetConsumerTypeByte(request.Consumer.Type);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[1..5], request.Consumer.Id);
+        WriteBytesFromStreamAndTopicIdToSpan(request.StreamId , request.TopicId, bytes, 5);
+        var position = 5 + 2 + request.StreamId.Length + 2 + request.TopicId.Length; 
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], request.PartitionId);
+        BinaryPrimitives.WriteUInt64LittleEndian(bytes[(position + 4)..(position + 12)], request.Offset);
         return bytes.ToArray();
     }
 
@@ -322,20 +322,20 @@ internal static class TcpContracts
         return bytes.ToArray();
     }
 
-    internal static byte[] CreatePartitions(Identifier streamId, Identifier topicId, CreatePartitionsRequest request)
+    internal static byte[] CreatePartitions(CreatePartitionsRequest request)
     {
-        Span<byte> bytes = stackalloc byte[2 + streamId.Length + 2 + topicId.Length + sizeof(int)];
-        WriteBytesFromStreamAndTopicIdToSpan(streamId, topicId, bytes);
-        int position = 2 + streamId.Length + 2 + topicId.Length;
+        Span<byte> bytes = stackalloc byte[2 + request.StreamId.Length + 2 + request.TopicId.Length + sizeof(int)];
+        WriteBytesFromStreamAndTopicIdToSpan(request.StreamId, request.TopicId, bytes);
+        int position = 2 + request.StreamId.Length + 2 + request.TopicId.Length;
         BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], request.PartitionsCount);
         return bytes.ToArray();
     }
     
-    internal static byte[] DeletePartitions(Identifier streamId, Identifier topicId, DeletePartitionsRequest request)
+    internal static byte[] DeletePartitions(DeletePartitionsRequest request)
     {
-        Span<byte> bytes = stackalloc byte[2 + streamId.Length + 2 + topicId.Length + sizeof(int)];
-        WriteBytesFromStreamAndTopicIdToSpan(streamId, topicId, bytes);
-        int position = 2 + streamId.Length + 2 + topicId.Length;
+        Span<byte> bytes = stackalloc byte[2 + request.StreamId.Length + 2 + request.TopicId.Length + sizeof(int)];
+        WriteBytesFromStreamAndTopicIdToSpan(request.StreamId, request.TopicId, bytes);
+        int position = 2 + request.StreamId.Length + 2 + request.TopicId.Length;
         BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], request.PartitionsCount);
         return bytes.ToArray();
     }

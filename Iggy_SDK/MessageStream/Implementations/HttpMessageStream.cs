@@ -118,7 +118,7 @@ public class HttpMessageStream : IMessageStream
         throw new Exception("Unknown error occurred.");
     }
 
-    public async Task SendMessagesAsync(Identifier streamId, Identifier topicId, MessageSendRequest request,
+    public async Task SendMessagesAsync(MessageSendRequest request,
         Func<byte[], byte[]>? encryptor = null, Dictionary<HeaderKey, HeaderValue>? headers = null,
         CancellationToken token = default)
     {
@@ -132,7 +132,7 @@ public class HttpMessageStream : IMessageStream
         var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
         
-        var response = await _httpClient.PostAsync($"/streams/{streamId}/topics/{topicId}/messages", data, token);
+        var response = await _httpClient.PostAsync($"/streams/{request.StreamId}/topics/{request.TopicId}/messages", data, token);
         if (!response.IsSuccessStatusCode)
         {
             await HandleResponseAsync(response);
@@ -148,6 +148,8 @@ public class HttpMessageStream : IMessageStream
         //TODO - maybe get rid of this closure ?
         var request = new MessageSendRequest
         {
+            StreamId = streamId,
+            TopicId = topicId,
             Partitioning = partitioning,
             Messages = messages.Select(message => new Message
             {
@@ -206,13 +208,12 @@ public class HttpMessageStream : IMessageStream
         throw new Exception("Unknown error occurred.");
     }
 
-    public async Task StoreOffsetAsync(Identifier streamId, Identifier topicId, OffsetContract contract,
-        CancellationToken token = default)
+    public async Task StoreOffsetAsync(StoreOffsetRequest request,CancellationToken token = default)
     {
-        var json = JsonSerializer.Serialize(contract, _toSnakeCaseOptions);
+        var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
         
-        var response = await _httpClient.PutAsync($"/streams/{streamId}/topics/{topicId}/consumer-offsets", data, token);
+        var response = await _httpClient.PutAsync($"/streams/{request.StreamId}/topics/{request.TopicId}/consumer-offsets", data, token);
         if (!response.IsSuccessStatusCode)
         {
             await HandleResponseAsync(response);
@@ -256,23 +257,21 @@ public class HttpMessageStream : IMessageStream
         await HandleResponseAsync(response);
         throw new Exception("Unknown error occurred.");
     }
-    public async Task CreateConsumerGroupAsync(Identifier streamId, Identifier topicId,
-        CreateConsumerGroupRequest request, CancellationToken token = default)
+    public async Task CreateConsumerGroupAsync(CreateConsumerGroupRequest request, CancellationToken token = default)
     {
         var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
         
-        var response = await _httpClient.PostAsync($"/streams/{streamId}/topics/{topicId}/consumer-groups", data, token);
+        var response = await _httpClient.PostAsync($"/streams/{request.StreamId}/topics/{request.TopicId}/consumer-groups", data, token);
         if (!response.IsSuccessStatusCode)
         {
             await HandleResponseAsync(response);
             throw new Exception("Unknown error occurred.");
         }
     }
-    public async Task DeleteConsumerGroupAsync(Identifier streamId, Identifier topicId, int groupId,
-        CancellationToken token = default)
+    public async Task DeleteConsumerGroupAsync(DeleteConsumerGroup request,CancellationToken token = default)
     {
-        var response = await _httpClient.DeleteAsync($"/streams/{streamId}/topics/{topicId}/consumer-groups/{groupId}", token);
+        var response = await _httpClient.DeleteAsync($"/streams/{request.StreamId}/topics/{request.TopicId}/consumer-groups/{request.ConsumerGroupId}", token);
         await HandleResponseAsync(response);
     }
     public async Task<Stats?> GetStatsAsync( CancellationToken token = default)
@@ -299,12 +298,10 @@ public class HttpMessageStream : IMessageStream
         throw new FeatureUnavailableException();
     }
 
-    public async Task DeletePartitionsAsync(Identifier streamId, Identifier topicId, DeletePartitionsRequest request,
+    public async Task DeletePartitionsAsync(DeletePartitionsRequest request,
         CancellationToken token = default)
     {
-        var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
-        
-        var response = await _httpClient.DeleteAsync($"/streams/{streamId}/topics/{topicId}/partitions?stream_id={streamId}&topic_id={topicId}&partitions_count={request.PartitionsCount}", token);
+        var response = await _httpClient.DeleteAsync($"/streams/{request.StreamId}/topics/{request.TopicId}/partitions?partitions_count={request.PartitionsCount}", token);
         if (!response.IsSuccessStatusCode)
         {
             await HandleResponseAsync(response);
@@ -312,12 +309,12 @@ public class HttpMessageStream : IMessageStream
         }
     }
 
-    public async Task CreatePartitionsAsync(Identifier streamId, Identifier topicId, CreatePartitionsRequest request, CancellationToken token = default)
+    public async Task CreatePartitionsAsync(CreatePartitionsRequest request, CancellationToken token = default)
     {
         var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
         
-        var response = await _httpClient.PostAsync($"/streams/{streamId}/topics/{topicId}/partitions", data, token);
+        var response = await _httpClient.PostAsync($"/streams/{request.StreamId}/topics/{request.TopicId}/partitions", data, token);
         if (!response.IsSuccessStatusCode)
         {
             await HandleResponseAsync(response);

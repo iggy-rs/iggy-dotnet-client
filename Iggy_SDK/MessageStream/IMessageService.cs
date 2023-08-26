@@ -9,9 +9,8 @@ namespace Iggy_SDK.MessageStream;
 //TODO - create a SendMessage method that uses polling under the hood to collect batch of messages
 public interface IMessageClient
 {
-	Task SendMessagesAsync(Identifier streamId, Identifier topicId, MessageSendRequest request, Func<byte[], byte[]>?
+	Task SendMessagesAsync(MessageSendRequest request, Func<byte[], byte[]>?
 		encryptor = null, Dictionary<HeaderKey, HeaderValue>? headers = null, CancellationToken token = default);
-
 	Task SendMessagesAsync<TMessage>(Identifier streamId, Identifier topicId, Partitioning partitioning,
 		IList<TMessage> messages, Func<TMessage, byte[]> serializer,
 		Func<byte[], byte[]>? encryptor = null, Dictionary<HeaderKey, HeaderValue>? headers = null,

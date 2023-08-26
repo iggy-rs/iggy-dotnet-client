@@ -28,9 +28,9 @@ internal static class OffsetFactory
 		};
 	}
 
-	internal static OffsetContract CreateOffsetContract()
+	internal static StoreOffsetRequest CreateOffsetContract()
 	{
-		return new OffsetContract
+		return new StoreOffsetRequest
 		{
 			Consumer = Consumer.New(1),
 			Offset = (ulong)Random.Shared.Next(1, 10),
