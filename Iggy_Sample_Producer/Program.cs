@@ -8,13 +8,14 @@ using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
 using Iggy_SDK.Headers;
 using Iggy_SDK.Kinds;
+using Iggy_SDK.Messages;
 using Iggy_SDK.MessageStream;
 using Shared;
 
-var protocol = Protocol.Http;
+var protocol = Protocol.Tcp;
 var bus = MessageStreamFactory.CreateMessageStream(options =>
 {
-    options.BaseAdress = "http://localhost:3000";
+    options.BaseAdress = "127.0.0.1:8090";
     options.Protocol = protocol;
 });
 
@@ -58,7 +59,7 @@ await ProduceMessages(bus, actualStream, actualTopic);
 async Task ProduceMessages(IMessageClient bus, StreamResponse? stream, TopicResponse? topic)
 {
     var messageBatchCount = 1;
-    int intervalInMs = 1000;
+    int intervalInMs = 100;
     Console.WriteLine($"Messages will be sent to stream {stream!.Id}, topic {topic!.Id}, partition {topic.PartitionsCount} with interval {intervalInMs} ms");
     Func<Envelope, byte[]> serializer = envelope =>
     {
@@ -116,10 +117,28 @@ async Task ProduceMessages(IMessageClient bus, StreamResponse? stream, TopicResp
             debugMessages.Add(message);
             messages[i] = envelope;
         }
+
+        var messagesSerialized = new List<Message>();
+        foreach (var message in messages)
+        {
+            messagesSerialized.Add(new Message
+            {
+                Id = Guid.NewGuid(),
+                Headers = headers,
+                Payload = serializer(message)
+            });
+        }
         try
         {
-            await bus.SendMessagesAsync<Envelope>(streamId, topicId, Partitioning.PartitionId(3), messages, serializer,
-                encryptor, headers );
+            await bus.SendMessagesAsync(new MessageSendRequest
+            {
+                StreamId = streamId,
+                TopicId = topicId,
+                Partitioning = Partitioning.PartitionId(3),
+                Messages = messagesSerialized
+            },encryptor);
+            // await bus.SendMessagesAsync<Envelope>(streamId, topicId, Partitioning.PartitionId(3), messages, serializer,
+            //     encryptor, headers);
         }
         catch (Exception e)
         {

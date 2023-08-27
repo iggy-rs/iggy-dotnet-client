@@ -10,7 +10,7 @@ namespace Iggy_SDK.MessageStream;
 public interface IMessageClient
 {
 	Task SendMessagesAsync(MessageSendRequest request, Func<byte[], byte[]>?
-		encryptor = null, Dictionary<HeaderKey, HeaderValue>? headers = null, CancellationToken token = default);
+		encryptor = null, CancellationToken token = default);
 	Task SendMessagesAsync<TMessage>(Identifier streamId, Identifier topicId, Partitioning partitioning,
 		IList<TMessage> messages, Func<TMessage, byte[]> serializer,
 		Func<byte[], byte[]>? encryptor = null, Dictionary<HeaderKey, HeaderValue>? headers = null,

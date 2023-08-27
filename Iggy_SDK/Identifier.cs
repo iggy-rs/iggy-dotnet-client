@@ -4,7 +4,7 @@ using Iggy_SDK.Enums;
 
 namespace Iggy_SDK;
 
-public readonly struct Identifier
+public readonly struct Identifier : IEquatable<Identifier>
 {
 	
 	public required IdKind Kind { get; init; }
@@ -46,6 +46,21 @@ public readonly struct Identifier
 			IdKind.String => Encoding.UTF8.GetString(Value),
 			_ => throw new ArgumentOutOfRangeException()
 		};
+	}
+
+	public bool Equals(Identifier other)
+	{
+		return Kind == other.Kind && Value.Equals(other.Value);
+	}
+
+	public override bool Equals(object? obj)
+	{
+		return obj is Identifier other && Equals(other);
+	}
+
+	public override int GetHashCode()
+	{
+		return HashCode.Combine((int)Kind, Value);
 	}
 }
 

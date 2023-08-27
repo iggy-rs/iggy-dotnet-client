@@ -147,7 +147,7 @@ public class HttpMessageStream : IMessageStream
     }
 
     public async Task SendMessagesAsync(MessageSendRequest request,
-        Func<byte[], byte[]>? encryptor = null, Dictionary<HeaderKey, HeaderValue>? headers = null,
+        Func<byte[], byte[]>? encryptor = null, 
         CancellationToken token = default)
     {
 		if (encryptor is not null)

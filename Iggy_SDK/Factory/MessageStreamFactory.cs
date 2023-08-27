@@ -2,9 +2,10 @@ using System.ComponentModel;
 using System.Net.Sockets;
 using System.Threading.Channels;
 using Iggy_SDK.Configuration;
+using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Exceptions;
-using Iggy_SDK.HostedService;
+using Iggy_SDK.MessagesDispatcher;
 using Iggy_SDK.MessageStream;
 using Iggy_SDK.MessageStream.Implementations;
 
@@ -37,11 +38,20 @@ public static class MessageStreamFactory
         socket.Connect(urlPortSplitter[0], int.Parse(urlPortSplitter[1]));
         socket.SendBufferSize = options.SendBufferSize;
         socket.ReceiveBufferSize = options.ReceiveBufferSize;
+
+        //TODO - explore making this bounded ?
+        var channel = Channel.CreateUnbounded<MessageSendRequest>(new UnboundedChannelOptions
+        {
+            //TODO - turn those on, for the benchmark, to see if it will work with multi threaded tasks
+            //SingleWriter = true,
+            //SingleReader = true,
+        });
         
-        var messageStream = new TcpMessageStream(socket);
-        var sendMessageDispatcher = new MessageSenderDispatcher(TimeSpan.FromMilliseconds(100), messageStream);
+        var messageStream = new TcpMessageStream(socket, channel);
+        var messageBus = new MessageBus(socket);
+        var messageDispatcher = new MessageSenderDispatcher(TimeSpan.FromMilliseconds(500), 1000, channel, messageBus);
         
-        sendMessageDispatcher.Start();
+        messageDispatcher.Start();
         return messageStream;
     }
     

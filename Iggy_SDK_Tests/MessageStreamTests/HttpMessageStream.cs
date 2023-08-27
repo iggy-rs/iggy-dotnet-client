@@ -29,8 +29,6 @@ public sealed class HttpMessageStream
 	private JsonSerializerOptions _toSnakeCaseOptions;
 	
 	private const string URL = "http://localhost:3000";
-	
-	
 	public HttpMessageStream()
 	{
 		_toSnakeCaseOptions = new();
