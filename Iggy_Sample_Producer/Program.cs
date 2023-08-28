@@ -17,6 +17,11 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
 {
     options.BaseAdress = "127.0.0.1:8090";
     options.Protocol = protocol;
+    options.SendMessagesOptions = x =>
+    {
+        x.MaxMessagesPerBatch = 1000;
+        x.PollingInterval = TimeSpan.FromMilliseconds(100);
+    };
 });
 
 Console.WriteLine("Using protocol : {0}", protocol.ToString());
@@ -59,7 +64,7 @@ await ProduceMessages(bus, actualStream, actualTopic);
 async Task ProduceMessages(IMessageClient bus, StreamResponse? stream, TopicResponse? topic)
 {
     var messageBatchCount = 1;
-    int intervalInMs = 100;
+    int intervalInMs = 1000;
     Console.WriteLine($"Messages will be sent to stream {stream!.Id}, topic {topic!.Id}, partition {topic.PartitionsCount} with interval {intervalInMs} ms");
     Func<Envelope, byte[]> serializer = envelope =>
     {
@@ -130,15 +135,8 @@ async Task ProduceMessages(IMessageClient bus, StreamResponse? stream, TopicResp
         }
         try
         {
-            await bus.SendMessagesAsync(new MessageSendRequest
-            {
-                StreamId = streamId,
-                TopicId = topicId,
-                Partitioning = Partitioning.PartitionId(3),
-                Messages = messagesSerialized
-            },encryptor);
-            // await bus.SendMessagesAsync<Envelope>(streamId, topicId, Partitioning.PartitionId(3), messages, serializer,
-            //     encryptor, headers);
+             await bus.SendMessagesAsync<Envelope>(streamId, topicId, Partitioning.PartitionId(3), messages, serializer,
+                 encryptor, headers);
         }
         catch (Exception e)
         {

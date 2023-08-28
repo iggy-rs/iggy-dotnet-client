@@ -242,50 +242,40 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 		Func<byte[], byte[]>? encryptor = null, Dictionary<HeaderKey, HeaderValue>? headers = null,
 		CancellationToken token = default)
 	{
-		var messagesPool = ArrayPool<Message>.Shared.Rent(messages.Count);
-		for (var i = 0; i < messages.Count || token.IsCancellationRequested; i++)
+		if (messages.Count == 0)
 		{
-			messagesPool[i] = new Message
-			{
-				Payload = encryptor is not null ?
-					encryptor(serializer(messages[i])) : serializer(messages[i]),
-				Headers = headers,
-				Id = Guid.NewGuid()
-			};
+			return;
 		}
-
-		var messagesToSend = messagesPool[..messages.Count];
-		var msgBytesSum = TcpMessageStreamHelpers.CalculateMessageBytesCount(messagesToSend);
-
-		var streamTopicIdLength = 2 + streamId.Length + 2 + topicId.Length;
-		var messageBufferSize = msgBytesSum + partitioning.Length + streamTopicIdLength + 2;
-        var payloadBufferSize = messageBufferSize + 4 + BufferSizes.InitialBytesLength;
-        
-		var message = ArrayPool<byte>.Shared.Rent(messageBufferSize);
-		var payload = ArrayPool<byte>.Shared.Rent(payloadBufferSize);
+		
+		//TODO - explore making fields of Message class mutable, so there is no need to create em from scratch
+		var messagesPool = ArrayPool<Message>.Shared.Rent(messages.Count);
 		try
 		{
-			TcpContracts.CreateMessage(message.AsSpan()[..messageBufferSize], streamId, topicId, partitioning,
-				messagesToSend);
-			TcpMessageStreamHelpers.CreatePayload(payload.AsSpan()[..payloadBufferSize], message.AsSpan()[..messageBufferSize], CommandCodes.SEND_MESSAGES_CODE);
-
-			var recv = _socket.ReceiveAsync(_responseBuffer, token);
-			await _socket.SendAsync(payload.AsMemory()[..payloadBufferSize], token);
-			
-			await recv;
-			
-			var status = TcpMessageStreamHelpers.GetResponseStatus(_responseBuffer.Span);
-			if (status != 0)
+			for (var i = 0; i < messages.Count || token.IsCancellationRequested; i++)
 			{
-				throw new InvalidResponseException($"Invalid response status code: {status}");
+				messagesPool[i] = new Message
+				{
+					Payload = encryptor is not null ? encryptor(serializer(messages[i])) : serializer(messages[i]),
+					Headers = headers,
+					Id = Guid.NewGuid()
+				};
 			}
+
+			var request = new MessageSendRequest
+			{
+				StreamId = streamId,
+				TopicId = topicId,
+				Partitioning = partitioning,
+				//TODO - get rid of this allocation
+				Messages = messagesPool[..messages.Count]
+			};
+			await _channel.Writer.WriteAsync(request, token);
 		}
 		finally
 		{
 			ArrayPool<Message>.Shared.Return(messagesPool);
-			ArrayPool<byte>.Shared.Return(message);
-			ArrayPool<byte>.Shared.Return(payload);
 		}
+
 	}
 	
 	public async Task<IReadOnlyList<MessageResponse<TMessage>>> PollMessagesAsync<TMessage>(MessageFetchRequest request,

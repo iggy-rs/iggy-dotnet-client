@@ -2,6 +2,7 @@ using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Channels;
+using Iggy_SDK.Configuration;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Messages;
@@ -17,12 +18,12 @@ internal sealed class MessageSenderDispatcher
 	private readonly Channel<MessageSendRequest> _channel;
 	private readonly int _maxMessages;
 
-	internal MessageSenderDispatcher(TimeSpan interval, int maxMessages, Channel<MessageSendRequest> channel,
+	internal MessageSenderDispatcher(SendMessageConfigurator sendMessagesOptions, Channel<MessageSendRequest> channel,
 		MessageBus bus)
 	{
-		_timer = new PeriodicTimer(interval);
+		_timer = new PeriodicTimer(sendMessagesOptions.PollingInterval);
 		_bus = bus;
-		_maxMessages = maxMessages;
+		_maxMessages = sendMessagesOptions.MaxMessagesPerBatch;
 		_channel = channel;
 	}
 

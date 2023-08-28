@@ -29,6 +29,9 @@ public static class MessageStreamFactory
 
     private static TcpMessageStream CreateTcpMessageStream(IMessageStreamConfigurator options)
     {
+        var sendMessagesOptions = new SendMessageConfigurator();
+        options.SendMessagesOptions.Invoke(sendMessagesOptions);
+        
         var urlPortSplitter = options.BaseAdress.Split(":");
         if (urlPortSplitter.Length > 2)
         {
@@ -49,7 +52,7 @@ public static class MessageStreamFactory
         
         var messageStream = new TcpMessageStream(socket, channel);
         var messageBus = new MessageBus(socket);
-        var messageDispatcher = new MessageSenderDispatcher(TimeSpan.FromMilliseconds(500), 1000, channel, messageBus);
+        var messageDispatcher = new MessageSenderDispatcher(sendMessagesOptions, channel, messageBus);
         
         messageDispatcher.Start();
         return messageStream;
