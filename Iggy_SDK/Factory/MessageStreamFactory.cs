@@ -51,7 +51,7 @@ public static class MessageStreamFactory
         });
         
         var messageStream = new TcpMessageStream(socket, channel);
-        var messageBus = new MessageBus(socket);
+        var messageBus = new MessageInvoker(socket);
         var messageDispatcher = new MessageSenderDispatcher(sendMessagesOptions, channel, messageBus);
         
         messageDispatcher.Start();

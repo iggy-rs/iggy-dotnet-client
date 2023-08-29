@@ -43,13 +43,13 @@ catch
     await bus.CreateStreamAsync(new StreamRequest
     {
         StreamId = streamIdVal,
-        Name = "Test Producer Stream",
+        Name = "producer-stream",
     });
 
     Console.WriteLine($"Creating topic with id:{topicId}");
     await bus.CreateTopicAsync(streamId, new TopicRequest
     {
-        Name = "Test Topic From Producer Sample",
+        Name = "producer-topic",
         PartitionsCount = 3,
         TopicId = topicIdVal
     });

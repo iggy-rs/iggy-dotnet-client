@@ -7,13 +7,14 @@ using Iggy_SDK.Utils;
 
 namespace Iggy_SDK.MessagesDispatcher;
 
-internal sealed class MessageBus
+internal sealed class MessageInvoker
 {
 	private readonly Socket _socket;
 
+	//TODO - make this readonly
 	private Memory<byte> _responseBuffer = new(new byte[BufferSizes.ExpectedResponseSize]);
 	
-	public MessageBus(Socket socket)
+	public MessageInvoker(Socket socket)
 	{
 		_socket = socket;
 	}

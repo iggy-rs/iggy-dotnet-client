@@ -14,12 +14,12 @@ internal sealed class MessageSenderDispatcher
 	private readonly PeriodicTimer _timer;
 	private Task? _timerTask;
 	private readonly CancellationTokenSource _cts = new();
-	private readonly MessageBus _bus;
+	private readonly MessageInvoker _bus;
 	private readonly Channel<MessageSendRequest> _channel;
 	private readonly int _maxMessages;
 
 	internal MessageSenderDispatcher(SendMessageConfigurator sendMessagesOptions, Channel<MessageSendRequest> channel,
-		MessageBus bus)
+		MessageInvoker bus)
 	{
 		_timer = new PeriodicTimer(sendMessagesOptions.PollingInterval);
 		_bus = bus;
@@ -142,6 +142,7 @@ internal sealed class MessageSenderDispatcher
 		{
 			return;
 		}
+		_timer.Dispose();
 		_cts.Cancel();
 		await _timerTask;
 		_cts.Dispose();

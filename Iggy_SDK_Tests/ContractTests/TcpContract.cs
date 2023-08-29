@@ -118,11 +118,11 @@ public sealed class TcpContract
         var result = TcpContracts.CreateStream(request).AsSpan();
 
         // Assert
-        int expectedBytesLength = sizeof(int) + request.Name.Length;
+        int expectedBytesLength = sizeof(int) + request.Name.Length + 1;
 
         Assert.Equal(expectedBytesLength, result.Length);
-        Assert.Equal(request.StreamId, BitConverter.ToInt32(result[..4]));
-        Assert.Equal(request.Name, Encoding.UTF8.GetString(result[4..]));
+        Assert.Equal(request.StreamId, BitConverter.ToInt32(result[..5]));
+        Assert.Equal(request.Name, Encoding.UTF8.GetString(result[5..]));
     }
 
     [Fact]
@@ -283,7 +283,7 @@ public sealed class TcpContract
         var result = TcpContracts.CreateTopic(streamId, request).AsSpan();
 
         // Assert
-        int expectedBytesLength = 2 + streamId.Length + 8 + request.Name.Length;
+        int expectedBytesLength = 2 + streamId.Length + 8 + request.Name.Length + 4 + 1;
 
         Assert.Equal(expectedBytesLength, result.Length);
         Assert.Equal(streamId.Value, BytesToIdentifierNumeric(result, 0).Value);
@@ -291,7 +291,9 @@ public sealed class TcpContract
         Assert.Equal(streamId.Kind, BytesToIdentifierNumeric(result, 0).Kind);
         Assert.Equal(request.TopicId, BitConverter.ToInt32(result[6..10]));
         Assert.Equal(request.PartitionsCount, BitConverter.ToInt32(result[10..14]));
-        Assert.Equal(request.Name, Encoding.UTF8.GetString(result[14..]));
+        Assert.Equal(request.MessageExpiry, BitConverter.ToInt32(result[14..18]));
+        Assert.Equal(request.Name.Length , (int)result[18]);
+        Assert.Equal(request.Name, Encoding.UTF8.GetString(result[19..]));
     }
 
     
