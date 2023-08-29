@@ -51,7 +51,7 @@ public static class MessageStreamFactory
         });
         
         var messageStream = new TcpMessageStream(socket, channel);
-        var messageBus = new MessageInvoker(socket);
+        var messageBus = new TcpMessageInvoker(socket);
         var messageDispatcher = new MessageSenderDispatcher(sendMessagesOptions, channel, messageBus);
         
         messageDispatcher.Start();
@@ -60,6 +60,9 @@ public static class MessageStreamFactory
     
     private static HttpMessageStream CreateHttpMessageStream(IMessageStreamConfigurator options)
     {
+        var sendMessagesOptions = new SendMessageConfigurator();
+        options.SendMessagesOptions.Invoke(sendMessagesOptions);
+        
         var client = new HttpClient();
         client.BaseAddress = new Uri(options.BaseAdress);
         if (options.Headers is not null)
@@ -70,6 +73,20 @@ public static class MessageStreamFactory
             }
         }
         
-        return new HttpMessageStream(client);
+        //TODO - explore making this bounded ?
+        var channel = Channel.CreateUnbounded<MessageSendRequest>(new UnboundedChannelOptions
+        {
+            //TODO - turn those on, for the benchmark, to see if it will work with multi threaded tasks
+            //SingleWriter = true,
+            //SingleReader = true,
+        });
+        
+        var messageStream = new HttpMessageStream(client, channel);
+        var messageBus = new MessagesDispatcher.HttpMessageInvoker(client);
+        var messageDispatcher = new MessageSenderDispatcher(sendMessagesOptions, channel, messageBus);
+        
+        messageDispatcher.Start();
+
+        return messageStream;
     }
 }

@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
+using System.Threading.Channels;
 using Iggy_SDK;
 using Iggy_SDK_Tests.Utils.Errors;
 using Iggy_SDK_Tests.Utils.Groups;
@@ -25,12 +26,14 @@ public sealed class HttpMessageStream
 {
 	private readonly MockHttpMessageHandler _httpHandler;
 	private readonly IMessageStream _sut;
+	private readonly Channel<MessageSendRequest> _channel;
 	
 	private JsonSerializerOptions _toSnakeCaseOptions;
 	
 	private const string URL = "http://localhost:3000";
 	public HttpMessageStream()
 	{
+		_channel = Channel.CreateUnbounded<MessageSendRequest>();
 		_toSnakeCaseOptions = new();
 		_toSnakeCaseOptions.PropertyNamingPolicy = new ToSnakeCaseNamingPolicy();
 		_toSnakeCaseOptions.WriteIndented = true;
@@ -67,7 +70,7 @@ public sealed class HttpMessageStream
         
 		var client = _httpHandler.ToHttpClient();
 		client.BaseAddress = new Uri(URL);
-		_sut = new Iggy_SDK.MessageStream.Implementations.HttpMessageStream(client);
+		_sut = new Iggy_SDK.MessageStream.Implementations.HttpMessageStream(client, _channel);
 	}
 	
 	[Fact]
@@ -240,25 +243,6 @@ public sealed class HttpMessageStream
 		_httpHandler.Flush();
 	}
 
-	[Fact]
-	public async Task SendMessageAsync_ThrowsErrorResponseException_OnFailure()
-	{
-		var request = MessageFactory.CreateMessageSendRequest();		
-		var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions); 
-		var error = JsonSerializer.Serialize(ErrorModelFactory.CreateErrorModelBadRequest(), _toSnakeCaseOptions);
-
-		
-		_httpHandler.When(HttpMethod.Post, $"/streams/{request.StreamId}/topics/{request.TopicId}/messages")
-			.With(message =>
-			{
-				message.Content = new StringContent(json, Encoding.UTF8, "application/json");
-				return true;
-			})
-			.Respond(HttpStatusCode.BadRequest, "application/json", error);
-		
-		await Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.SendMessagesAsync(request));
-		_httpHandler.Flush();
-	} 
 	
 	[Fact]
 	public async Task GetMessagesAsync_ReturnsMessages_WhenFound()

@@ -130,13 +130,20 @@ async Task ProduceMessages(IMessageClient bus, StreamResponse? stream, TopicResp
             {
                 Id = Guid.NewGuid(),
                 Headers = headers,
-                Payload = serializer(message)
+                Payload = encryptor(serializer(message))
             });
         }
         try
         {
              await bus.SendMessagesAsync<Envelope>(streamId, topicId, Partitioning.PartitionId(3), messages, serializer,
-                 encryptor, headers);
+                  encryptor, headers);
+             // await bus.SendMessagesAsync(new MessageSendRequest
+             // {
+             //     Partitioning = Partitioning.PartitionId(3),
+             //     StreamId = streamId,
+             //     TopicId = topicId,
+             //     Messages = messagesSerialized
+             // });
         }
         catch (Exception e)
         {

@@ -335,67 +335,6 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			ArrayPool<byte>.Shared.Return(buffer);
 		}
 	}
-
-	public async IAsyncEnumerable<MessageResponse> LazyPollMessagesAsync(MessageFetchRequest request, Func<byte[], byte[]>? decryptor = null, CancellationToken token = default)
-	{
-		int messageBufferSize = 18 + 5 + 2 + request.StreamId.Length + 2 + request.TopicId.Length;
-		int payloadBufferSize = messageBufferSize + 4 + BufferSizes.InitialBytesLength;
-		var message = ArrayPool<byte>.Shared.Rent(messageBufferSize);
-		var payload = ArrayPool<byte>.Shared.Rent(payloadBufferSize);
-		
-		int pollingCount = 0;
-		TcpContracts.GetMessagesLazy(message.AsSpan()[..messageBufferSize], request);
-		TcpMessageStreamHelpers.CreatePayload(payload, message.AsSpan()[..messageBufferSize], CommandCodes.POLL_MESSAGES_CODE);
-		while (pollingCount < request.Count || token.IsCancellationRequested)
-		{
-			try
-			{
-
-				await _socket.SendAsync(payload.AsMemory()[..payloadBufferSize], token);
-			}
-			finally
-			{
-				ArrayPool<byte>.Shared.Return(message);
-				ArrayPool<byte>.Shared.Return(payload);
-			}
-
-			var buffer = ArrayPool<byte>.Shared.Rent(BufferSizes.ExpectedResponseSize);
-			try
-			{
-				await _socket.ReceiveAsync(buffer.AsMemory()[..BufferSizes.ExpectedResponseSize], token);
-
-				var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
-				if (response.Status != 0)
-				{
-					throw new TcpInvalidResponseException();
-				}
-
-				if (response.Length <= 1)
-				{
-					yield break;
-				}
-
-				var responseBuffer = ArrayPool<byte>.Shared.Rent(response.Length);
-
-				try
-				{
-					await _socket.ReceiveAsync(responseBuffer.AsMemory()[..response.Length], token);
-					yield return BinaryMapper.MapMessage(
-						responseBuffer.AsSpan()[..response.Length], decryptor);
-					pollingCount++;
-				}
-				finally
-				{
-					ArrayPool<byte>.Shared.Return(responseBuffer);
-				}
-			}
-			finally
-			{
-				ArrayPool<byte>.Shared.Return(buffer);
-			}
-		}
-	}
-
 	public async Task<IReadOnlyList<MessageResponse>> PollMessagesAsync(MessageFetchRequest request,
 		Func<byte[], byte[]>? decryptor = null, CancellationToken token = default)
 	{
@@ -453,7 +392,6 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			ArrayPool<byte>.Shared.Return(buffer);
 		}
 	}
-
 
 	public async Task StoreOffsetAsync(StoreOffsetRequest request, CancellationToken token = default)
 	{

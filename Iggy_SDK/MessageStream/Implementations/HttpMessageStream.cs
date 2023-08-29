@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
+using System.Threading.Channels;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Exceptions;
 using Iggy_SDK.Headers;
@@ -20,11 +21,13 @@ public class HttpMessageStream : IMessageStream
 {
     //TODO - replace the HttpClient with IHttpClientFactory, when implementing support for ASP.NET Core DI
     private readonly HttpClient _httpClient;
+    private readonly Channel<MessageSendRequest> _channel;
     private readonly JsonSerializerOptions _toSnakeCaseOptions;
     
-    internal HttpMessageStream(HttpClient httpClient)
+    internal HttpMessageStream(HttpClient httpClient, Channel<MessageSendRequest> channel)
     {
         _httpClient = httpClient;
+        _channel = channel;
         _toSnakeCaseOptions = new();
         
         _toSnakeCaseOptions.PropertyNamingPolicy = new ToSnakeCaseNamingPolicy();
@@ -157,15 +160,7 @@ public class HttpMessageStream : IMessageStream
 				request.Messages[i]= request.Messages[i] with { Payload = encryptor(request.Messages[i].Payload) };
 			}
 		}
-        var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
-        var data = new StringContent(json, Encoding.UTF8, "application/json");
-        
-        var response = await _httpClient.PostAsync($"/streams/{request.StreamId}/topics/{request.TopicId}/messages", data, token);
-        if (!response.IsSuccessStatusCode)
-        {
-            await HandleResponseAsync(response);
-            throw new Exception("Unknown error occurred.");
-        }
+		await _channel.Writer.WriteAsync(request, token);
     }
 
     public async Task SendMessagesAsync<TMessage>(Identifier streamId, Identifier topicId, Partitioning partitioning,
@@ -186,15 +181,7 @@ public class HttpMessageStream : IMessageStream
                 Payload = encryptor is not null ? encryptor(serializer(message)) : serializer(message),
             }).ToArray()
         };
-        var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
-        var data = new StringContent(json, Encoding.UTF8, "application/json");
-        
-        var response = await _httpClient.PostAsync($"/streams/{streamId}/topics/{topicId}/messages", data, token);
-        if (!response.IsSuccessStatusCode)
-        {
-            await HandleResponseAsync(response);
-            throw new Exception("Unknown error occurred.");
-        }
+		await _channel.Writer.WriteAsync(request, token);
     }
 
     public async Task<IReadOnlyList<MessageResponse>> PollMessagesAsync(MessageFetchRequest request,

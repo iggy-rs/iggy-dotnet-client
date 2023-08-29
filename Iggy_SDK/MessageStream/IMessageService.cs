@@ -19,7 +19,5 @@ public interface IMessageClient
 		CancellationToken token = default);
 	Task<IReadOnlyList<MessageResponse<TMessage>>> PollMessagesAsync<TMessage>(MessageFetchRequest request,
 		Func<byte[], TMessage> serializer, Func<byte[], byte[]>? decryptor = null, CancellationToken token = default);
-	// IAsyncEnumerable<MessageResponse> LazyPollMessagesAsync(MessageFetchRequest request, Func<byte[], byte[]>? decryptor = null,
-	// 	CancellationToken token = default);
 	
 }
