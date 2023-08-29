@@ -6,7 +6,6 @@ namespace Iggy_SDK.MessageStream;
 
 //TODO - look into creating another overload for PollMessages method that will use IAsyncEnumerable as return type.
 //TODO - look into making the (de)cryptor and (de)serializer lambdas async
-//TODO - create a SendMessage method that uses polling under the hood to collect batch of messages
 public interface IMessageClient
 {
 	Task SendMessagesAsync(MessageSendRequest request, Func<byte[], byte[]>?

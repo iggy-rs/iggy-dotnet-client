@@ -3,7 +3,6 @@ using Iggy_SDK.Enums;
 
 namespace Iggy_SDK.Configuration;
 
-//TODO - refactor this to be more expressive (e.g nested configurators etc..)
 public interface IMessageStreamConfigurator
 {
     public string BaseAdress { get; set; } 
