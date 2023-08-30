@@ -58,15 +58,15 @@ catch
 var actualStream = await bus.GetStreamByIdAsync(streamId);
 var actualTopic = await bus.GetTopicByIdAsync(streamId, topicId); 
 
-
 await ProduceMessages(bus, actualStream, actualTopic);
 
 async Task ProduceMessages(IMessageClient bus, StreamResponse? stream, TopicResponse? topic)
 {
     var messageBatchCount = 1;
     int intervalInMs = 1000;
-    Console.WriteLine($"Messages will be sent to stream {stream!.Id}, topic {topic!.Id}, partition {topic.PartitionsCount} with interval {intervalInMs} ms");
-    Func<Envelope, byte[]> serializer = envelope =>
+    Console.WriteLine(
+        $"Messages will be sent to stream {stream!.Id}, topic {topic!.Id}, partition {topic.PartitionsCount} with interval {intervalInMs} ms");
+    Func<Envelope, byte[]> serializer = static envelope =>
     {
         Span<byte> buffer = stackalloc byte[envelope.MessageType.Length + 4 + envelope.Payload.Length];
         BinaryPrimitives.WriteInt32LittleEndian(
@@ -75,18 +75,21 @@ async Task ProduceMessages(IMessageClient bus, StreamResponse? stream, TopicResp
         Encoding.UTF8.GetBytes(envelope.Payload).CopyTo(buffer[(envelope.MessageType.Length + 4)..]);
         return buffer.ToArray();
     };
-    byte[] key = {
-        0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
-        0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c,
-        0xa8, 0x8d, 0x2d, 0x0a, 0x9f, 0x9d, 0xea, 0x43,
-        0x6c, 0x25, 0x17, 0x13, 0x20, 0x45, 0x78, 0xc8
-    };
-    byte[] iv = {
-        0x5f, 0x8a, 0xe4, 0x78, 0x9c, 0x3d, 0x2b, 0x0f,
-        0x12, 0x6a, 0x7e, 0x45, 0x91, 0xba, 0xdf, 0x33
-    };
-    Func<byte[], byte[]> encryptor = payload =>
+    //can this be optimized ? this lambda doesn't seem to get cached
+    Func<byte[], byte[]> encryptor = static payload =>
     {
+        byte[] key =
+        {
+            0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
+            0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c,
+            0xa8, 0x8d, 0x2d, 0x0a, 0x9f, 0x9d, 0xea, 0x43,
+            0x6c, 0x25, 0x17, 0x13, 0x20, 0x45, 0x78, 0xc8
+        };
+        byte[] iv =
+        {
+            0x5f, 0x8a, 0xe4, 0x78, 0x9c, 0x3d, 0x2b, 0x0f,
+            0x12, 0x6a, 0x7e, 0x45, 0x91, 0xba, 0xdf, 0x33
+        };
         using Aes aes = Aes.Create();
         ICryptoTransform encryptor = aes.CreateEncryptor(key, iv);
         using MemoryStream memoryStream = new MemoryStream();
@@ -108,17 +111,17 @@ async Task ProduceMessages(IMessageClient bus, StreamResponse? stream, TopicResp
     headers.Add(new HeaderKey { Value = "key_5".ToLower() }, HeaderValue.Raw(byteArray));
     headers.Add(new HeaderKey { Value = "key_6".ToLower() }, HeaderValue.Int128(new Int128(6969696969, 420420420)));
     headers.Add(new HeaderKey { Value = "key7".ToLower() }, HeaderValue.Guid(Guid.NewGuid()));
-    
+
     while (true)
     {
         var debugMessages = new List<ISerializableMessage>();
         var messages = new Envelope[messageBatchCount];
-        
+
         for (int i = 0; i < messageBatchCount; i++)
         {
             var message = MessageGenerator.GenerateMessage();
             var envelope = message.ToEnvelope();
-            
+
             debugMessages.Add(message);
             messages[i] = envelope;
         }
@@ -133,24 +136,46 @@ async Task ProduceMessages(IMessageClient bus, StreamResponse? stream, TopicResp
                 Payload = encryptor(serializer(message))
             });
         }
+
         try
         {
-             await bus.SendMessagesAsync<Envelope>(streamId, topicId, Partitioning.PartitionId(3), messages, serializer,
-                  encryptor, headers);
-             // await bus.SendMessagesAsync(new MessageSendRequest
-             // {
-             //     Partitioning = Partitioning.PartitionId(3),
-             //     StreamId = streamId,
-             //     TopicId = topicId,
-             //     Messages = messagesSerialized
-             // });
+            await bus.SendMessagesAsync<Envelope>(streamId, topicId, Partitioning.PartitionId(3), messages,
+                serializer,
+                encryptor, headers);
+            // await bus.SendMessagesAsync(new MessageSendRequest
+            // {
+            //     Partitioning = Partitioning.PartitionId(3),
+            //     StreamId = streamId,
+            //     TopicId = topicId,
+            //     Messages = messagesSerialized
+            // });
         }
         catch (Exception e)
         {
             Console.WriteLine(e.Message);
             throw;
         }
-        Console.WriteLine($"Sent messages: {string.Join(Environment.NewLine, debugMessages.ConvertAll(m => m.ToString()))}");
+
+        Console.WriteLine(
+            $"Sent messages: {string.Join(Environment.NewLine, debugMessages.ConvertAll(m => m.ToString()))}");
         await Task.Delay(intervalInMs);
     }
+}
+
+
+public static class EncryptorData 
+{
+    private static byte[] key = {
+        0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
+        0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c,
+        0xa8, 0x8d, 0x2d, 0x0a, 0x9f, 0x9d, 0xea, 0x43,
+        0x6c, 0x25, 0x17, 0x13, 0x20, 0x45, 0x78, 0xc8
+    };
+    private static byte[] iv = {
+        0x5f, 0x8a, 0xe4, 0x78, 0x9c, 0x3d, 0x2b, 0x0f,
+        0x12, 0x6a, 0x7e, 0x45, 0x91, 0xba, 0xdf, 0x33
+    };
+    public static byte[] GetKey() => key;
+    public static byte[] GetIv() => iv;
+
 }

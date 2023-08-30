@@ -63,6 +63,10 @@ internal sealed class MessageSenderDispatcher
 			var messagesBatches = BatchMessages(messagesSendRequests.Memory.Span[..idx]);
 			foreach (var message in messagesBatches)
 			{
+				if (message is null)
+				{
+					break;
+				}
 				await _bus.SendMessagesAsync(message, token: _cts.Token);
 			}
 			
@@ -89,13 +93,22 @@ internal sealed class MessageSenderDispatcher
 
         return true;
 	}
-	private List<MessageSendRequest> BatchMessages(Span<MessageSendRequest> requests)
+	//I return the whole rented buffer, therefore there will be elements that are not filled (nulls)
+	private MessageSendRequest?[] BatchMessages(Span<MessageSendRequest> requests)
 	{
+		int messagesCount = 0;
+		for (int i = 0; i < requests.Length; i++)
+		{
+			messagesCount += requests[i].Messages.Count;
+		}
+		int batchesCount = (int)Math.Ceiling((decimal)messagesCount / _maxMessages);
+		
 		var messagesBuffer = ArrayPool<Message>.Shared.Rent(_maxMessages);
 		var messages = messagesBuffer.AsSpan()[.._maxMessages];
-		//TODO - can this allocation be omitted ? 
-		var messagesBatches = new List<MessageSendRequest>();
+		var messagesBatches = ArrayPool<MessageSendRequest>.Shared.Rent(batchesCount);
+		
 		int idx = 0;
+		int batchCounter = 0;
 		try
 		{
 			foreach (var request in requests)
@@ -105,13 +118,15 @@ internal sealed class MessageSenderDispatcher
 					messages[idx++] = message;
 					if (idx >= _maxMessages)
 					{
-						messagesBatches.Add(new MessageSendRequest
+						var messageSendRequest = new MessageSendRequest
 						{
 							Partitioning = request.Partitioning,
 							StreamId = request.StreamId,
 							TopicId = request.TopicId,
 							Messages = messages.ToArray()
-						});
+						};
+						messagesBatches[batchCounter] = messageSendRequest;
+						batchCounter++;
 						idx = 0;
 						messages.Clear();
 					}
@@ -120,18 +135,20 @@ internal sealed class MessageSenderDispatcher
 
 			if (!messages.IsEmpty)
 			{
-				messagesBatches.Add(new MessageSendRequest
+				var messageSendRequest = new MessageSendRequest
 				{
 					Partitioning = requests[0].Partitioning,
 					StreamId = requests[0].StreamId,
 					TopicId = requests[0].TopicId,
 					Messages = messages[..idx].ToArray()
-				});
+				};
+				messagesBatches[batchCounter] = messageSendRequest;
 			}
 		}
 		finally
 		{
 			ArrayPool<Message>.Shared.Return(messagesBuffer);
+			ArrayPool<MessageSendRequest>.Shared.Return(messagesBatches);
 		}
 
 		return messagesBatches;
