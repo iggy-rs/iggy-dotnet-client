@@ -19,6 +19,11 @@ for (int i = 0; i < producerCount; i++)
 	{
 		options.BaseAdress = "127.0.0.1:8090";
 		options.Protocol = Protocol.Tcp;
+		options.SendMessagesOptions = x =>
+		{
+			x.MaxMessagesPerBatch = 1000;
+			x.PollingInterval = TimeSpan.FromMilliseconds(0);
+		};
 #if OS_LINUX
 		options.ReceiveBufferSize = Int32.MaxValue;
 		options.SendBufferSize = Int32.MaxValue;

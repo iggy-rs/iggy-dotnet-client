@@ -22,14 +22,14 @@ public readonly struct Partitioning
 
 	public static Partitioning PartitionId(int value)
 	{
-		Span<byte> bytes = stackalloc byte[4];
+		byte[] bytes = new byte[4];
 		BinaryPrimitives.WriteInt32LittleEndian(bytes, value);
 
 		return new Partitioning
 		{
 			Kind = PartitioningKind.PartitionId,
 			Length = 4,
-			Value = bytes.ToArray(),
+			Value = bytes,
 		};
 	}
 

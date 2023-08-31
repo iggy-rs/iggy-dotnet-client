@@ -6,7 +6,7 @@ using Iggy_SDK.Extensions;
 
 namespace Iggy_SDK.JsonConfiguration;
 
-public sealed class TopicResponseConverter : JsonConverter<TopicResponse>
+internal sealed class TopicResponseConverter : JsonConverter<TopicResponse>
 {
 	private readonly JsonSerializerOptions _options;
 	public TopicResponseConverter()

@@ -4,7 +4,6 @@ using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Extensions;
 using Iggy_SDK.Headers;
-using Iggy_SDK.Kinds;
 
 namespace Iggy_SDK.JsonConfiguration;
 

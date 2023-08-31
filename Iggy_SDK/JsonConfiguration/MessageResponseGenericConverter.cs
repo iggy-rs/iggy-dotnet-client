@@ -8,7 +8,7 @@ using Iggy_SDK.Kinds;
 
 namespace Iggy_SDK.JsonConfiguration;
 
-public sealed class MessageResponseGenericConverter<TMessage> : JsonConverter<IReadOnlyList<MessageResponse<TMessage>>>
+internal sealed class MessageResponseGenericConverter<TMessage> : JsonConverter<IReadOnlyList<MessageResponse<TMessage>>>
 {
 	private readonly Func<byte[], TMessage> _serializer;
 	private readonly Func<byte[], byte[]>? _decryptor;

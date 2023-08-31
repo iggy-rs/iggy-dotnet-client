@@ -13,14 +13,14 @@ public readonly struct Identifier : IEquatable<Identifier>
 
 	public static Identifier Numeric(int value)
 	{
-		Span<byte> bytes = stackalloc byte[4];
+		byte[] bytes = new byte[4];
 		BinaryPrimitives.WriteInt32LittleEndian(bytes, value);
 
 		return new Identifier
 		{
 			Kind = IdKind.Numeric,
 			Length = 4,
-			Value = bytes.ToArray()
+			Value = bytes
 		};
 	}
 

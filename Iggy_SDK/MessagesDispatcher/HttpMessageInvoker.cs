@@ -73,7 +73,7 @@ internal sealed class HttpMessageInvoker : MessageInvoker
         }
         if (response.StatusCode == HttpStatusCode.InternalServerError)
         {
-            throw new Exception("Internal server error");
+            throw new Exception("HTTP Internal server error");
         }
     }
 }

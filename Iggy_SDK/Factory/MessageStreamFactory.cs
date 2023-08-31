@@ -49,6 +49,7 @@ public static class MessageStreamFactory
             //SingleWriter = true,
             //SingleReader = true,
         });
+        //TODO - make another dispatcher for an PollingInterval of 0, that will send messages asynchronously
         
         var messageStream = new TcpMessageStream(socket, channel);
         var messageBus = new TcpMessageInvoker(socket);

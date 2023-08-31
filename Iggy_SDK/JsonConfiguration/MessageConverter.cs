@@ -6,7 +6,7 @@ using Iggy_SDK.Messages;
 
 namespace Iggy_SDK.JsonConfiguration;
 
-public sealed class MessageConverter : JsonConverter<HttpMessage>
+internal sealed class MessageConverter : JsonConverter<HttpMessage>
 {
 	public override HttpMessage Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 	{

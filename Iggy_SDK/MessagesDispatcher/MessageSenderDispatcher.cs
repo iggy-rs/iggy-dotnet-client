@@ -1,6 +1,4 @@
 using System.Buffers;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Threading.Channels;
 using Iggy_SDK.Configuration;
 using Iggy_SDK.Contracts.Http;
@@ -74,11 +72,10 @@ internal sealed class MessageSenderDispatcher
 	}
 	private static bool CanBatchMessages(Span<MessageSendRequest> requests)
 	{
-        ref var start = ref MemoryMarshal.GetReference(requests);
-        ref var end = ref Unsafe.Add(ref start, requests.Length - 1);
-        while (Unsafe.IsAddressLessThan(ref start, ref end))
+        for (int i = 0; i < requests.Length - 1; i++)
         {
-	        ref var next = ref Unsafe.Add(ref start, 1);
+	        var start = requests[i];
+	        var next = requests[i + 1];
 
 	        if (!start.StreamId.Equals(next.StreamId)
 	            || !start.TopicId.Equals(next.TopicId)
@@ -87,12 +84,10 @@ internal sealed class MessageSenderDispatcher
 	        {
 		        return false;
 	        }
-
-	        start = ref Unsafe.Add(ref start, 1);
         }
-
         return true;
 	}
+	
 	//I return the whole rented buffer, therefore there will be elements that are not filled (nulls)
 	private MessageSendRequest?[] BatchMessages(Span<MessageSendRequest> requests)
 	{
