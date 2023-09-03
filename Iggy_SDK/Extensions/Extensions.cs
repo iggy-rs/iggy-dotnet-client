@@ -87,3 +87,11 @@ internal static class Extensions
 	   }
    }
 }
+
+internal static class DateTimeOffsetUtils
+{
+	internal static DateTimeOffset FromUnixTimeMicroSeconds(ulong microSeconds)
+	{
+		return DateTimeOffset.FromUnixTimeSeconds((long)(microSeconds / 1e+6));
+	}
+}

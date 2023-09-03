@@ -12,10 +12,10 @@ using Iggy_SDK.Messages;
 using Iggy_SDK.MessageStream;
 using Shared;
 
-var protocol = Protocol.Http;
+var protocol = Protocol.Tcp;
 var bus = MessageStreamFactory.CreateMessageStream(options =>
 {
-    options.BaseAdress = "http://localhost:3000";
+    options.BaseAdress = "127.0.0.1:8090";
     options.Protocol = protocol;
     options.SendMessagesOptions = x =>
     {
@@ -31,7 +31,6 @@ var streamId = Identifier.Numeric(streamIdVal);
 var topicId = Identifier.Numeric(topicIdVal);
 
 Console.WriteLine($"Producer has started, selected protocol {protocol.ToString()}");
-
 try
 {
     var stream = await bus.GetStreamByIdAsync(streamId);

@@ -55,7 +55,6 @@ internal static class TcpContracts
             List<Message> messagesList => HandleMessagesList(position, messagesList, bytes),
             _ => HandleMessagesEnumerable(position, messages, bytes),
         };
-        //bytes = HandleMessagesArray(position, messages, bytes);
     }
     private static Span<byte> HandleMessagesEnumerable(int position, IEnumerable<Message> messages, Span<byte> bytes)
     {
@@ -94,42 +93,6 @@ internal static class TcpContracts
         
         ref var start = ref MemoryMarshal.GetArrayDataReference(messages);
         ref var end = ref Unsafe.Add(ref start, messages.Length);
-        while (Unsafe.IsAddressLessThan(ref start, ref end))
-        {
-            var idSlice = bytes[position..(position + 16)];
-            Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(idSlice), start.Id);
-
-            if (start.Headers is not null)
-            {
-                var headersBytes = GetHeadersBytes(start.Headers);
-                BinaryPrimitives.WriteInt32LittleEndian(bytes[(position + 16)..(position + 20)], headersBytes.Length);
-                headersBytes.CopyTo(bytes[(position + 20)..(position + 20 + headersBytes.Length)]);
-                position += headersBytes.Length + 20; 
-            }
-            else
-            {
-                emptyHeaders.CopyTo(bytes[(position + 16)..(position + 16 + emptyHeaders.Length)]);
-                position += 20;
-            }
-            
-            BinaryPrimitives.WriteInt32LittleEndian(bytes[(position )..(position + 4)], start.Payload.Length);
-            var payloadBytes = start.Payload;
-            var slice = bytes[(position + 4)..];
-            payloadBytes.CopyTo(slice);
-            position += payloadBytes.Length + 4;
-
-            start = ref Unsafe.Add(ref start, 1);
-        }
-
-        return bytes;
-    }
-    private static Span<byte> HandleMessages(int position, IList<Message> messages, Span<byte> bytes)
-    {
-        Span<byte> emptyHeaders = stackalloc byte[4];
-
-        Span<Message> span = CollectionsMarshal.AsSpan(messages);
-        ref var start = ref MemoryMarshal.GetArrayDataReference(messages);
-        ref var end = ref Unsafe.Add(ref start, messages.Count);
         while (Unsafe.IsAddressLessThan(ref start, ref end))
         {
             var idSlice = bytes[position..(position + 16)];

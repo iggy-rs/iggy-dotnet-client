@@ -7,7 +7,7 @@ namespace Iggy_SDK_Tests.Utils.Streams;
 internal static class StreamFactory
 {
 	
-	internal static (int id, int topicsCount, ulong sizeBytes, ulong messagesCount, string name)
+	internal static (int id, int topicsCount, ulong sizeBytes, ulong messagesCount, string name, ulong createdAt)
 		CreateStreamsResponseFields()
 	{
 		int id = Random.Shared.Next(1,69);
@@ -15,7 +15,8 @@ internal static class StreamFactory
 		var sizeBytes = (ulong)Random.Shared.Next(69, 42069);
 		var messageCount = (ulong)Random.Shared.Next(2,3);
 		var name = "Stream "+Random.Shared.Next(1,4);
-		return (id, topicsCount, sizeBytes, messageCount, name);
+		var createdAt = (ulong)Random.Shared.Next(69, 42069);
+		return (id, topicsCount, sizeBytes, messageCount, name, createdAt);
 	}
 	internal static StreamRequest CreateStreamRequest()
 	{
@@ -37,6 +38,7 @@ internal static class StreamFactory
 			SizeBytes = (ulong)Random.Shared.Next(1, 10),
 			MessagesCount = (ulong)Random.Shared.Next(1, 10),
 			Name = "Test Topic" + Random.Shared.Next(1, 69),
+			CreatedAt = DateTimeOffset.UtcNow,
 			TopicsCount = Random.Shared.Next(1, 10),
 			Topics = responses
 		};
@@ -48,6 +50,7 @@ internal static class StreamFactory
 			Id = Random.Shared.Next(1, 10),
 			SizeBytes = (ulong)Random.Shared.Next(1, 10),
 			MessagesCount = (ulong)Random.Shared.Next(1, 10),
+			CreatedAt = DateTimeOffset.UtcNow,
 			Name = "Test Topic" + Random.Shared.Next(1, 69),
 			TopicsCount = Random.Shared.Next(1, 10),
 		};

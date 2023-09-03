@@ -20,6 +20,7 @@ namespace Iggy_SDK.MessageStream.Implementations;
 public class HttpMessageStream : IMessageStream
 {
     //TODO - replace the HttpClient with IHttpClientFactory, when implementing support for ASP.NET Core DI
+    //TODO - create a builder for all the custom JsonOptions serializers that will be used
     private readonly HttpClient _httpClient;
     private readonly Channel<MessageSendRequest> _channel;
     private readonly JsonSerializerOptions _toSnakeCaseOptions;
@@ -89,7 +90,10 @@ public class HttpMessageStream : IMessageStream
         var response = await _httpClient.GetAsync($"/streams/{streamId}", token);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<StreamResponse>(_toSnakeCaseOptions, cancellationToken: token);
+            return await response.Content.ReadFromJsonAsync<StreamResponse>(new JsonSerializerOptions
+            {
+                Converters = { new StreamResponseConverter() }
+            }, cancellationToken: token);
         }
         await HandleResponseAsync(response);
         throw new Exception("Unknown error occurred.");
@@ -99,7 +103,10 @@ public class HttpMessageStream : IMessageStream
         var response = await _httpClient.GetAsync($"/streams", token);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<IReadOnlyList<StreamResponse>>(_toSnakeCaseOptions, cancellationToken: token)
+            return await response.Content.ReadFromJsonAsync<IReadOnlyList<StreamResponse>>(new JsonSerializerOptions
+                   {
+                       Converters = { new StreamResponseConverter() }
+                   }, cancellationToken: token)
                    ?? EmptyList<StreamResponse>.Instance;
         }
         await HandleResponseAsync(response);
@@ -184,7 +191,7 @@ public class HttpMessageStream : IMessageStream
 		await _channel.Writer.WriteAsync(request, token);
     }
 
-    public async Task<IReadOnlyList<MessageResponse>> PollMessagesAsync(MessageFetchRequest request,
+    public async Task<PolledMessages> PollMessagesAsync(MessageFetchRequest request,
         Func<byte[], byte[]>? decryptor = null, CancellationToken token = default)
     {
         var url = CreateUrl($"/streams/{request.StreamId}/topics/{request.TopicId}/messages?consumer_id={request.Consumer.Id}" +
@@ -193,17 +200,18 @@ public class HttpMessageStream : IMessageStream
         var response =  await _httpClient.GetAsync(url, token);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<IReadOnlyList<MessageResponse>>(new JsonSerializerOptions
+            return await response.Content.ReadFromJsonAsync<PolledMessages>(new JsonSerializerOptions
                    {
                        Converters = { new MessageResponseConverter(decryptor) }
                    }, cancellationToken: token)
-                   ?? EmptyList<MessageResponse>.Instance;
+                   ?? PolledMessages.Empty;
+
         }
         await HandleResponseAsync(response);
         throw new Exception("Unknown error occurred.");
     }
 
-    public async Task<IReadOnlyList<MessageResponse<TMessage>>> PollMessagesAsync<TMessage>(MessageFetchRequest request,
+    public async Task<PolledMessages<TMessage>> PollMessagesAsync<TMessage>(MessageFetchRequest request,
         Func<byte[], TMessage> serializer,
         Func<byte[], byte[]>? decryptor = null, CancellationToken token = default)
     {
@@ -213,11 +221,11 @@ public class HttpMessageStream : IMessageStream
         var response =  await _httpClient.GetAsync(url, token);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<IReadOnlyList<MessageResponse<TMessage>>>(new JsonSerializerOptions
-                       {
-                           Converters = { new MessageResponseGenericConverter<TMessage>(serializer, decryptor) }
-                       }, cancellationToken: token)
-                   ?? EmptyList<MessageResponse<TMessage>>.Instance;
+            return await response.Content.ReadFromJsonAsync<PolledMessages<TMessage>>(new JsonSerializerOptions
+                   {
+                       Converters = { new MessageResponseGenericConverter<TMessage>(serializer, decryptor) }
+                   }, cancellationToken: token)
+                   ?? PolledMessages<TMessage>.Empty;
         }
         await HandleResponseAsync(response);
         throw new Exception("Unknown error occurred.");

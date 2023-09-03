@@ -23,8 +23,9 @@ internal static class OffsetFactory
 	{
 		return new OffsetResponse
 		{
-			Offset = Random.Shared.Next(1, 10),
-			ConsumerId = Random.Shared.Next(1, 10),
+			CurrentOffset = (ulong)Random.Shared.Next(420, 69420),
+			PartitionId = Random.Shared.Next(1, 10),
+			StoredOffset = (ulong)Random.Shared.Next(69, 420),
 		};
 	}
 

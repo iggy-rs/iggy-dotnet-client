@@ -12,10 +12,10 @@ using Shared;
 var jsonOptions = new JsonSerializerOptions();
 jsonOptions.PropertyNamingPolicy = new ToSnakeCaseNamingPolicy();
 jsonOptions.WriteIndented = true;
-var protocol = Protocol.Http;
+var protocol = Protocol.Tcp;
 var bus = MessageStreamFactory.CreateMessageStream(options =>
 {
-    options.BaseAdress = "http://localhost:3000";
+    options.BaseAdress = "127.0.0.1:8090";
     options.Protocol = protocol;
 });
 
@@ -83,14 +83,14 @@ async Task ConsumeMessages()
              }, deserializer, decryptor);
             
             
-            if (!messages.Any())
+            if (!messages.Messages.Any())
             {
                 Console.WriteLine("No messages were found");
                 await Task.Delay(intervalInMs);
                 continue;
             }
 
-            foreach (var message in messages)
+            foreach (var message in messages.Messages)
             {
                 HandleMessage(message);
             }

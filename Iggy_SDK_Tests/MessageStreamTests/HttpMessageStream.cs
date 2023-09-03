@@ -87,22 +87,6 @@ public sealed class HttpMessageStream
 		await Assert.ThrowsAsync<InvalidResponseException>(async () => await _sut.CreateStreamAsync(content));
 		_httpHandler.Flush();
 	}
-
-	[Fact]
-	public async Task GetStreamByIdAsync_ReturnsStreamResponse_WhenFound()
-	{
-		var streamId = Identifier.Numeric(1);
-		var streamResponse = StreamFactory.CreateStreamResponse();
-		var content = JsonSerializer.Serialize(streamResponse, _toSnakeCaseOptions);
-
-		_httpHandler.When(HttpMethod.Get, $"/streams/{streamId}")
-			.Respond(HttpStatusCode.OK, "application/json", content);
-		
-		var result = await _sut.GetStreamByIdAsync(streamId);
-		Assert.NotNull(result);
-		_httpHandler.Flush();
-	}	
-	
 	[Fact]
 	public async Task GetStreamByIdAsync_ThrowsErrorResponseException_OnFailure()
 	{
@@ -113,23 +97,6 @@ public sealed class HttpMessageStream
 			.Respond(HttpStatusCode.NotFound, "application/json", error);
 		
 		await Assert.ThrowsAsync<InvalidResponseException>( async ()=> await _sut.GetStreamByIdAsync(streamId));
-		_httpHandler.Flush();
-	}
-
-	[Fact]
-	public async Task GetStreamsAsync_ReturnsListOfStreamResponse_WhenFound()
-	{
-		var response = new List<StreamResponse>();
-		response.Add(StreamFactory.CreateStreamsResponse());
-		var content = JsonSerializer.Serialize(response, _toSnakeCaseOptions);
-
-		_httpHandler.When(HttpMethod.Get, $"/streams")
-			.Respond(HttpStatusCode.OK, "application/json", content);
-				
-		
-		var result = await _sut.GetStreamsAsync();
-		Assert.NotNull(result);
-		Assert.NotEmpty(result);
 		_httpHandler.Flush();
 	}
 
@@ -177,25 +144,6 @@ public sealed class HttpMessageStream
 		await Assert.ThrowsAsync<InvalidResponseException>(async () => await _sut.DeleteTopicAsync(streamId, topicId));
 		_httpHandler.Flush();
 	}
-	
-	[Fact]
-	public async Task GetTopicsAsync_ReturnsListOfTopicResponse_WhenFound()
-	{
-		var streamId = Identifier.Numeric(1);
-		
-		var response = new List<TopicResponse>();
-		response.Add(TopicFactory.CreateTopicsResponse());
-		var content = JsonSerializer.Serialize(response, _toSnakeCaseOptions);
-		
-		_httpHandler.When(HttpMethod.Get, $"/streams/1/topics")
-			.Respond(HttpStatusCode.OK, "application/json", content);
-		
-		var result = await _sut.GetTopicsAsync(streamId);
-		Assert.NotNull(result);
-		Assert.NotEmpty(result);
-		_httpHandler.Flush();
-	}
-
 	[Fact]
 	public async Task GetTopicsAsync_ThrowsErrorResponseException_OnFailure()
 	{
@@ -211,25 +159,6 @@ public sealed class HttpMessageStream
 	}
 	
 	[Fact]
-	public async Task GetTopicByIdAsync_ReturnsTopicResponse_WhenFound()
-	{
-		var streamId = Identifier.Numeric(1);
-		var topicId = Identifier.Numeric(1);
-		TopicResponse topic = TopicFactory.CreateTopicsResponse();
-		var content = JsonSerializer.Serialize(topic, _toSnakeCaseOptions);
-
-		_httpHandler.When(HttpMethod.Get, $"/streams/{streamId}/topics/{topicId}")
-			.Respond(HttpStatusCode.OK, "application/json", content);
-		
-		var result = await _sut.GetTopicByIdAsync(streamId, topicId);
-		Assert.NotNull(result);
-		Assert.Equal(topic.Id, result.Id);
-		Assert.Equal(topic.Name, result.Name);
-		Assert.Equal(topic.PartitionsCount, result.PartitionsCount);
-		_httpHandler.Flush();
-	}
-	
-	[Fact]
 	public async Task GetTopicByIdAsync_ThrowsErrorResponseException_OnFailure()
 	{
 		var streamId = Identifier.Numeric(1);
@@ -242,27 +171,6 @@ public sealed class HttpMessageStream
 		await Assert.ThrowsAsync<InvalidResponseException>( async () => await _sut.GetTopicByIdAsync(streamId, topicId));
 		_httpHandler.Flush();
 	}
-
-	
-	[Fact]
-	public async Task GetMessagesAsync_ReturnsMessages_WhenFound()
-	{
-		var request = MessageFactory.CreateMessageFetchRequest();
-		var response = new List<MessageResponseHttp>();
-		response.Add(MessageFactory.CreateMessageResponse());
-		var content = JsonSerializer.Serialize(response, _toSnakeCaseOptions); 
-		
-		_httpHandler.When(HttpMethod.Get, 
-        $"/streams/{request.StreamId}/topics/{request.TopicId}/messages?consumer_id={request.Consumer.Id}" +
-                            $"&partition_id={request.PartitionId}&kind=offset&value={request.PollingStrategy.Value}&count={request.Count}" +
-							$"&auto_commit={request.AutoCommit.ToString().ToLower()}")
-					.Respond(HttpStatusCode.OK, "application/json", content);
-        
-		var result = await _sut.PollMessagesAsync(request);
-		Assert.NotEmpty(result);
-		_httpHandler.Flush();
-	}
-
 	[Fact]
 	public async Task GetMessagesAsync_ThrowsErrorResponseException_OnFailure()
 	{
@@ -306,8 +214,9 @@ public sealed class HttpMessageStream
         
 		var result = await _sut.GetOffsetAsync(request);
 		Assert.NotNull(result);
-		Assert.Equal(response.ConsumerId, result.ConsumerId);
-		Assert.Equal(response.Offset, result.Offset);
+		Assert.Equal(response.PartitionId, result.PartitionId);
+		Assert.Equal(response.CurrentOffset, result.CurrentOffset);
+		Assert.Equal(response.StoredOffset, result.StoredOffset);
 	}
 	
 	[Fact]

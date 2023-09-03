@@ -13,9 +13,9 @@ public interface IMessageClient
 		IList<TMessage> messages, Func<TMessage, byte[]> serializer,
 		Func<byte[], byte[]>? encryptor = null, Dictionary<HeaderKey, HeaderValue>? headers = null,
 		CancellationToken token = default);
-	Task<IReadOnlyList<MessageResponse>> PollMessagesAsync(MessageFetchRequest request, Func<byte[], byte[]>? decryptor = null,
+	Task<PolledMessages> PollMessagesAsync(MessageFetchRequest request, Func<byte[], byte[]>? decryptor = null,
 		CancellationToken token = default);
-	Task<IReadOnlyList<MessageResponse<TMessage>>> PollMessagesAsync<TMessage>(MessageFetchRequest request,
+	Task<PolledMessages<TMessage>> PollMessagesAsync<TMessage>(MessageFetchRequest request,
 		Func<byte[], TMessage> serializer, Func<byte[], byte[]>? decryptor = null, CancellationToken token = default);
 	
 }

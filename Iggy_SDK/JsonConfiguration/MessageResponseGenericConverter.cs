@@ -4,11 +4,10 @@ using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Extensions;
 using Iggy_SDK.Headers;
-using Iggy_SDK.Kinds;
 
 namespace Iggy_SDK.JsonConfiguration;
 
-internal sealed class MessageResponseGenericConverter<TMessage> : JsonConverter<IReadOnlyList<MessageResponse<TMessage>>>
+internal sealed class MessageResponseGenericConverter<TMessage> : JsonConverter<PolledMessages<TMessage>>
 {
 	private readonly Func<byte[], TMessage> _serializer;
 	private readonly Func<byte[], byte[]>? _decryptor;
@@ -18,13 +17,19 @@ internal sealed class MessageResponseGenericConverter<TMessage> : JsonConverter<
 		_serializer = serializer;
 		_decryptor = decryptor;
 	}
-	public override IReadOnlyList<MessageResponse<TMessage>>? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+	public override PolledMessages<TMessage>? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 	{
-		var messageResponses = new List<MessageResponse<TMessage>>();
 		using var doc = JsonDocument.ParseValue(ref reader);
 		
 		var root = doc.RootElement;
-		foreach (var element in root.EnumerateArray())
+		
+		var partitionId = root.GetProperty(nameof(PolledMessages.PartitionId).ToSnakeCase()).GetUInt32();
+		var currentOffset = root.GetProperty(nameof(PolledMessages.CurrentOffset).ToSnakeCase()).GetUInt64();
+		var messages = root.GetProperty(nameof(PolledMessages.Messages).ToSnakeCase());
+		//var messagesCount = BinaryPrimitives.ReadUInt32LittleEndian(payload[12..16]);
+		
+		var messageResponses = new List<MessageResponse<TMessage>>();
+		foreach (var element in messages.EnumerateArray())
 		{
 			var offset = element.GetProperty(nameof(MessageResponse.Offset).ToSnakeCase()).GetUInt64();
 			var timestamp = element.GetProperty(nameof(MessageResponse.Timestamp).ToSnakeCase()).GetUInt64();
@@ -85,10 +90,15 @@ internal sealed class MessageResponseGenericConverter<TMessage> : JsonConverter<
 			});
 		}
 
-		return messageResponses.AsReadOnly();
+		return new PolledMessages<TMessage>
+		{
+			Messages = messageResponses.AsReadOnly(),
+			CurrentOffset = currentOffset,
+			PartitionId = partitionId
+		};
 	}
 
-	public override void Write(Utf8JsonWriter writer, IReadOnlyList<MessageResponse<TMessage>> value, JsonSerializerOptions options)
+	public override void Write(Utf8JsonWriter writer, PolledMessages<TMessage> value, JsonSerializerOptions options)
 	{
 		throw new NotImplementedException();
 	}

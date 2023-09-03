@@ -278,7 +278,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 
 	}
 	
-	public async Task<IReadOnlyList<MessageResponse<TMessage>>> PollMessagesAsync<TMessage>(MessageFetchRequest request,
+	public async Task<PolledMessages<TMessage>> PollMessagesAsync<TMessage>(MessageFetchRequest request,
 		Func<byte[], TMessage> serializer, Func<byte[], byte[]>? decryptor = null, CancellationToken token = default)
 	{
 
@@ -313,7 +313,12 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 
 			if (response.Length <= 1)
 			{
-				return EmptyList<MessageResponse<TMessage>>.Instance;
+				return new PolledMessages<TMessage>
+				{
+					Messages = EmptyList<MessageResponse<TMessage>>.Instance,
+					CurrentOffset = 0,
+					PartitionId = 0
+				};
 			}
 
 			var responseBuffer = ArrayPool<byte>.Shared.Rent(response.Length);
@@ -335,7 +340,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 			ArrayPool<byte>.Shared.Return(buffer);
 		}
 	}
-	public async Task<IReadOnlyList<MessageResponse>> PollMessagesAsync(MessageFetchRequest request,
+	public async Task<PolledMessages> PollMessagesAsync(MessageFetchRequest request,
 		Func<byte[], byte[]>? decryptor = null, CancellationToken token = default)
 	{
 		int messageBufferSize = 18 + 5 + 2 + request.StreamId.Length + 2 + request.TopicId.Length;
@@ -370,7 +375,13 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 
 			if (response.Length <= 1)
 			{
-				return EmptyList<MessageResponse>.Instance;
+				return new PolledMessages
+				{
+					Messages = EmptyList<MessageResponse>.Instance,
+					CurrentOffset = 0,
+					PartitionId = 0
+				};
+				
 			}
 
 			var responseBuffer = ArrayPool<byte>.Shared.Rent(response.Length);

@@ -50,13 +50,16 @@
     &lt;TestId&gt;xUnit::8514D555-35CF-4538-97D3-DC42A182B694::net7.0::Iggy_SDK_Tests.MessageStreamTests.MessageStreamUnitTests.CreateTopicAsync_Returns201Created_WhenSuccessfullyCreated&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=84f674e3_002D0649_002D4ca4_002D8b7f_002D4077673c82b2/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Session" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=84f674e3_002D0649_002D4ca4_002D8b7f_002D4077673c82b2/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Session" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;Project Location="/home/numinex/projects/Iggy_SDK/Iggy_SDK_Tests" Presentation="&amp;lt;Iggy_SDK_Tests&amp;gt;" /&gt;
 &lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=940baf9d_002D8d34_002D4b30_002D94a7_002Dbe4712069236/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="SendMessageAsync_ReturnsNull_Failure" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
     &lt;TestId&gt;xUnit::8514D555-35CF-4538-97D3-DC42A182B694::net7.0::Iggy_SDK_Tests.MessageStreamTests.MessageStreamUnitTests&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=b18afe3e_002Dabde_002D4595_002Dacb6_002D9abd2e18d3c8/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="MapStream_ReturnsValidStreamResponse" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;Project Location="/home/numinex/projects/Iggy_SDK/Iggy_SDK_Tests" Presentation="&amp;lt;Iggy_SDK_Tests&amp;gt;" /&gt;
 &lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=be76a793_002D1a58_002D4171_002D970f_002D2f5c4c31c5d6/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Read_DeserializeValidJson_ReturnsMessageResponseList #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;

@@ -7,7 +7,7 @@ using Iggy_SDK.Headers;
 
 namespace Iggy_SDK.JsonConfiguration;
 
-internal sealed class MessageResponseConverter : JsonConverter<IReadOnlyList<MessageResponse>>
+internal sealed class MessageResponseConverter : JsonConverter<PolledMessages>
 {
 	private readonly Func<byte[], byte[]>? _decryptor;
 	public MessageResponseConverter(Func<byte[], byte[]>? decryptor)
@@ -15,13 +15,20 @@ internal sealed class MessageResponseConverter : JsonConverter<IReadOnlyList<Mes
 		_decryptor = decryptor;	
 	}
 
-	public override IReadOnlyList<MessageResponse> Read(ref Utf8JsonReader reader, Type typeToConvert,
+	public override PolledMessages Read(ref Utf8JsonReader reader, Type typeToConvert,
 		JsonSerializerOptions options)
 	{
-		var messageResponses = new List<MessageResponse>();
 		using var doc = JsonDocument.ParseValue(ref reader);
+		
 		var root = doc.RootElement;
-		foreach (var element in root.EnumerateArray())
+		
+		var partitionId = root.GetProperty(nameof(PolledMessages.PartitionId).ToSnakeCase()).GetUInt32();
+		var currentOffset = root.GetProperty(nameof(PolledMessages.CurrentOffset).ToSnakeCase()).GetUInt64();
+		var messages = root.GetProperty(nameof(PolledMessages.Messages).ToSnakeCase());
+		//var messagesCount = BinaryPrimitives.ReadUInt32LittleEndian(payload[12..16]);
+		
+		var messageResponses = new List<MessageResponse>();
+		foreach (var element in messages.EnumerateArray())
 		{
 			var offset = element.GetProperty(nameof(MessageResponse.Offset).ToSnakeCase()).GetUInt64();
 			var timestamp = element.GetProperty(nameof(MessageResponse.Timestamp).ToSnakeCase()).GetUInt64();
@@ -80,12 +87,18 @@ internal sealed class MessageResponseConverter : JsonConverter<IReadOnlyList<Mes
 				State = state,
 				Payload = payload
 			});
-		}	
-		return messageResponses.AsReadOnly();
+		}
+
+		return new PolledMessages
+		{
+			Messages = messageResponses.AsReadOnly(),
+			CurrentOffset = currentOffset,
+			PartitionId = partitionId
+		};
 	}
 	
 
-	public override void Write(Utf8JsonWriter writer, IReadOnlyList<MessageResponse> value, JsonSerializerOptions options)
+	public override void Write(Utf8JsonWriter writer, PolledMessages value, JsonSerializerOptions options)
 	{
 		throw new NotImplementedException();
 	}

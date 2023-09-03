@@ -5,7 +5,7 @@ namespace Iggy_SDK_Tests.Utils.Topics;
 
 internal static class TopicFactory
 {
-	internal static (int topicId, int partitionsCount, string topicName,int messageExpriy, ulong sizeBytes, ulong messagesCount)
+	internal static (int topicId, int partitionsCount, string topicName,int messageExpriy, ulong sizeBytes, ulong messagesCount, ulong createdAt)
 		CreateTopicResponseFields()
 	{
 		int topicId = Random.Shared.Next(1,69);
@@ -14,7 +14,8 @@ internal static class TopicFactory
 		int messageExpiry = Random.Shared.Next(1,69);
 		ulong sizeBytes = (ulong)Random.Shared.Next(1, 69);
 		ulong messagesCount = (ulong)Random.Shared.Next(69, 42069);
-		return (topicId, partitionsCount, topicName, messageExpiry, sizeBytes, messagesCount);
+		ulong createdAt = (ulong)Random.Shared.Next(69, 42069);
+		return (topicId, partitionsCount, topicName, messageExpiry, sizeBytes, messagesCount, createdAt);
 	}
 	internal static TopicRequest CreateTopicRequest()
 	{
@@ -38,6 +39,7 @@ internal static class TopicFactory
 			MessageExpiry = Random.Shared.Next(1,69),
 			PartitionsCount = Random.Shared.Next(1, 10),
 			SizeBytes = (ulong)Random.Shared.Next(1, 10),
+			CreatedAt = DateTimeOffset.UtcNow,
 			Partitions = new List<PartitionContract>
 			{
 				new PartitionContract
@@ -47,6 +49,7 @@ internal static class TopicFactory
 					CurrentOffset = (ulong)Random.Shared.Next(1, 10),
 					SegmentsCount = Random.Shared.Next(1, 10),
 					SizeBytes = (ulong)Random.Shared.Next(1, 10),
+					CreatedAt = DateTimeOffset.UtcNow
 				}
 			}
 

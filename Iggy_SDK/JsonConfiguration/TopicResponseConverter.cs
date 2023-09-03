@@ -21,6 +21,7 @@ internal sealed class TopicResponseConverter : JsonConverter<TopicResponse>
 		var root = doc.RootElement;
 		var id = root.GetProperty(nameof(TopicResponse.Id).ToSnakeCase()).GetInt32();
 		var name = root.GetProperty(nameof(TopicResponse.Name).ToSnakeCase()).GetString();
+		var createdAt = root.GetProperty(nameof(TopicResponse.CreatedAt).ToSnakeCase()).GetUInt64();
 		var sizeBytes = root.GetProperty(nameof(TopicResponse.SizeBytes).ToSnakeCase()).GetUInt64();
 		var messageExpiryProperty = root.GetProperty(nameof(TopicResponse.MessageExpiry).ToSnakeCase());
 		
@@ -46,6 +47,7 @@ internal sealed class TopicResponseConverter : JsonConverter<TopicResponse>
 			Name = name!,
 			SizeBytes = sizeBytes,
 			MessageExpiry = messageExpiry,
+			CreatedAt = DateTimeOffsetUtils.FromUnixTimeMicroSeconds(createdAt),
 			MessagesCount = messagesCount,
 			PartitionsCount = partitionsCount,
 			Partitions = partitions
@@ -54,7 +56,32 @@ internal sealed class TopicResponseConverter : JsonConverter<TopicResponse>
 	}
 	private IEnumerable<PartitionContract> DeserializePartitions(JsonElement partitionsElement)
 	{
-		return JsonSerializer.Deserialize<IEnumerable<PartitionContract>>(partitionsElement.GetRawText(), _options)!;
+		var partitions = new List<PartitionContract>();
+		var partitionObjects = partitionsElement.GetProperty(nameof(PartitionContract).ToSnakeCase()).EnumerateArray();
+		foreach (var partition in partitionObjects)
+		{
+			var id = partition.GetProperty(nameof(PartitionContract.Id).ToSnakeCase()).GetInt32();
+			var createdAt = partition.GetProperty(nameof(PartitionContract.CreatedAt).ToSnakeCase())
+				.GetUInt64();
+			var segmentsCount = partition.GetProperty(nameof(PartitionContract.SegmentsCount).ToSnakeCase())
+				.GetInt32();
+			var currentOffset = partition.GetProperty(nameof(PartitionContract.CurrentOffset).ToSnakeCase())
+				.GetUInt64();
+			var sizeBytes = partition.GetProperty(nameof(PartitionContract.SizeBytes).ToSnakeCase())
+				.GetUInt64();
+			var messagesCount = partition.GetProperty(nameof(PartitionContract.MessagesCount).ToSnakeCase())
+				.GetUInt64();
+			partitions.Add(new PartitionContract
+			{
+				Id	= id,
+				CreatedAt = DateTimeOffsetUtils.FromUnixTimeMicroSeconds(createdAt),
+				CurrentOffset = currentOffset,
+				MessagesCount = messagesCount,
+				SegmentsCount = segmentsCount,
+				SizeBytes = sizeBytes
+			});
+		}
+		return partitions; 
 	}
 
 	public override void Write(Utf8JsonWriter writer, TopicResponse value, JsonSerializerOptions options)
