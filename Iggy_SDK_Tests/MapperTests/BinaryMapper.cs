@@ -1,21 +1,19 @@
-using System.Buffers.Binary;
-using System.Runtime.InteropServices.Marshalling;
-using System.Text;
+using Iggy_SDK.Contracts.Http;
 using Iggy_SDK_Tests.Utils;
 using Iggy_SDK_Tests.Utils.DummyObj;
 using Iggy_SDK_Tests.Utils.Groups;
 using Iggy_SDK_Tests.Utils.Messages;
 using Iggy_SDK_Tests.Utils.Stats;
 using Iggy_SDK_Tests.Utils.Topics;
-using Iggy_SDK.Contracts.Http;
-using Xunit.Sdk;
+using System.Buffers.Binary;
+using System.Text;
 using StreamFactory = Iggy_SDK_Tests.Utils.Streams.StreamFactory;
 
 namespace Iggy_SDK_Tests.MapperTests;
 
 public sealed class BinaryMapper
 {
-	[Fact]
+    [Fact]
     public void MapOffsets_ReturnsValidOffsetResponse()
     {
         // Arrange
@@ -49,7 +47,7 @@ public sealed class BinaryMapper
         var (offset, timestamp, guid, headersLength, checkSum, payload) = MessageFactory.CreateMessageResponseFieldsTMessage();
         byte[] msgOnePayload = BinaryFactory.CreateMessagePayload(offset, timestamp, 0, checkSum,
             guid, payload);
-        
+
         var (offset1, timestamp1, guid1, headersLength1, checkSum2, payload1) = MessageFactory.CreateMessageResponseFieldsTMessage();
         byte[] msgTwoPayload = BinaryFactory.CreateMessagePayload(offset1, timestamp1, 0, checkSum2,
             guid1, payload1);
@@ -78,24 +76,24 @@ public sealed class BinaryMapper
         //Assert 
         Assert.NotEmpty(response.Messages);
         Assert.Equal(2, response.Messages.Count);
-        Assert.Equal(response.Messages[0].Id , guid);
+        Assert.Equal(response.Messages[0].Id, guid);
         Assert.Equal(response.Messages[0].Offset, offset);
         Assert.Equal(response.Messages[0].Timestamp, timestamp);
         Assert.Equal(response.Messages[1].Id, guid1);
         Assert.Equal(response.Messages[1].Offset, offset1);
         Assert.Equal(response.Messages[1].Timestamp, timestamp1);
         Assert.Equal(response.Messages[0].Message.Id, deserializer(payload).Id);
-        
+
     }
     [Fact]
     public void MapMessages_NoHeaders_ReturnsValidMessageResponses()
     {
         // Arrange
-        var (offset, timestamp, guid, headersLength,checkSum , payload) = MessageFactory.CreateMessageResponseFields();
+        var (offset, timestamp, guid, headersLength, checkSum, payload) = MessageFactory.CreateMessageResponseFields();
         byte[] msgOnePayload = BinaryFactory.CreateMessagePayload(offset, timestamp, 0, checkSum,
             guid, payload);
-        var (offset1, timestamp1, guid1, headersLength2,checkSum2, payload1) = MessageFactory.CreateMessageResponseFields();
-        byte[] msgTwoPayload = BinaryFactory.CreateMessagePayload(offset1, timestamp1, 0,checkSum2,
+        var (offset1, timestamp1, guid1, headersLength2, checkSum2, payload1) = MessageFactory.CreateMessageResponseFields();
+        byte[] msgTwoPayload = BinaryFactory.CreateMessagePayload(offset1, timestamp1, 0, checkSum2,
             guid1, payload1);
 
         byte[] combinedPayload = new byte[16 + msgOnePayload.Length + msgTwoPayload.Length];
@@ -107,7 +105,7 @@ public sealed class BinaryMapper
         {
             combinedPayload[16 + msgOnePayload.Length + i] = msgTwoPayload[i];
         }
-        
+
         // Act
         var responses = Iggy_SDK.Mappers.BinaryMapper.MapMessages(combinedPayload);
 
@@ -132,7 +130,7 @@ public sealed class BinaryMapper
     {
         // Arrange
         var (id1, topicsCount1, sizeBytes, messagesCount, name1, createdAt) = StreamFactory.CreateStreamsResponseFields();
-            byte[] payload1 = BinaryFactory.CreateStreamPayload(id1, topicsCount1, name1, sizeBytes, messagesCount, createdAt);
+        byte[] payload1 = BinaryFactory.CreateStreamPayload(id1, topicsCount1, name1, sizeBytes, messagesCount, createdAt);
         var (id2, topicsCount2, sizeBytes2, messagesCount2, name2, createdAt2) = StreamFactory.CreateStreamsResponseFields();
         byte[] payload2 = BinaryFactory.CreateStreamPayload(id2, topicsCount2, name2, sizeBytes2, messagesCount2, createdAt2);
 
@@ -150,7 +148,7 @@ public sealed class BinaryMapper
         var response1 = responses.ElementAt(0);
         Assert.Equal(id1, response1.Id);
         Assert.Equal(topicsCount1, response1.TopicsCount);
-        Assert.Equal(sizeBytes , response1.SizeBytes);
+        Assert.Equal(sizeBytes, response1.SizeBytes);
         Assert.Equal(messagesCount, response1.MessagesCount);
         Assert.Equal(name1, response1.Name);
 
@@ -166,9 +164,9 @@ public sealed class BinaryMapper
     public void MapStream_ReturnsValidStreamResponse()
     {
         // Arrange
-        var ( id, topicsCount, sizeBytes, messagesCount, name, createdAt) = StreamFactory.CreateStreamsResponseFields();
+        var (id, topicsCount, sizeBytes, messagesCount, name, createdAt) = StreamFactory.CreateStreamsResponseFields();
         byte[] streamPayload = BinaryFactory.CreateStreamPayload(id, topicsCount, name, sizeBytes, messagesCount, createdAt);
-        var (topicId1, partitionsCount1, topicName1, messageExpiry1, topicSizeBytes1 ,messagesCountTopic1, createdAtTopic) =
+        var (topicId1, partitionsCount1, topicName1, messageExpiry1, topicSizeBytes1, messagesCountTopic1, createdAtTopic) =
             TopicFactory.CreateTopicResponseFields();
         byte[] topicPayload1 = BinaryFactory.CreateTopicPayload(topicId1,
             partitionsCount1,
@@ -177,7 +175,7 @@ public sealed class BinaryMapper
             topicSizeBytes1,
             messagesCountTopic1, createdAt);
 
-        byte[] topicCombinedPayload = new byte[topicPayload1.Length ];
+        byte[] topicCombinedPayload = new byte[topicPayload1.Length];
         topicPayload1.CopyTo(topicCombinedPayload.AsSpan());
 
         byte[] streamCombinedPayload = new byte[streamPayload.Length + topicCombinedPayload.Length];
@@ -213,7 +211,7 @@ public sealed class BinaryMapper
         byte[] payload1 = BinaryFactory.CreateTopicPayload(id1, partitionsCount1, messageExpiry1, name1, sizeBytesTopic1, messagesCountTopic1, createdAt);
         var (id2, partitionsCount2, name2, messageExpiry2, sizeBytesTopic2, messagesCountTopic2, createdAt2) =
             TopicFactory.CreateTopicResponseFields();
-        byte[] payload2 = BinaryFactory.CreateTopicPayload(id2, partitionsCount2, messageExpiry2, name2, sizeBytesTopic2, messagesCountTopic2, createdAt2 );
+        byte[] payload2 = BinaryFactory.CreateTopicPayload(id2, partitionsCount2, messageExpiry2, name2, sizeBytesTopic2, messagesCountTopic2, createdAt2);
 
         byte[] combinedPayload = new byte[payload1.Length + payload2.Length];
         payload1.CopyTo(combinedPayload.AsSpan());
@@ -267,9 +265,9 @@ public sealed class BinaryMapper
     public void MapConsumerGroups_ReturnsValidConsumerGroupsResponses()
     {
         // Arrange
-        var(id1, membersCount1, partitionsCount1) = GroupFactory.CreateConsumerGroupResponseFields();
+        var (id1, membersCount1, partitionsCount1) = GroupFactory.CreateConsumerGroupResponseFields();
         byte[] payload1 = BinaryFactory.CreateGroupPayload(id1, membersCount1, partitionsCount1);
-        var(id2, membersCount2, partitionsCount2) = GroupFactory.CreateConsumerGroupResponseFields();
+        var (id2, membersCount2, partitionsCount2) = GroupFactory.CreateConsumerGroupResponseFields();
         byte[] payload2 = BinaryFactory.CreateGroupPayload(id2, membersCount2, partitionsCount2);
 
         byte[] combinedPayload = new byte[payload1.Length + payload2.Length];
@@ -317,10 +315,10 @@ public sealed class BinaryMapper
         //Arrange
         var stats = StatsFactory.CreateFakeStatsObject();
         var payload = BinaryFactory.CreateStatsPayload(stats);
-        
+
         //Act
         var response = Iggy_SDK.Mappers.BinaryMapper.MapStats(payload);
-        
+
         //Assert
         Assert.Equal(stats.ProcessId, response.ProcessId);
         Assert.Equal(stats.MessagesCount, response.MessagesCount);
@@ -344,6 +342,6 @@ public sealed class BinaryMapper
         Assert.Equal(stats.OsName, response.OsName);
         Assert.Equal(stats.OsVersion, stats.OsVersion);
         Assert.Equal(stats.KernelVersion, response.KernelVersion);
-    
+
     }
 }

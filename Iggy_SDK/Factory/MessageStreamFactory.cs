@@ -1,6 +1,3 @@
-using System.ComponentModel;
-using System.Net.Sockets;
-using System.Threading.Channels;
 using Iggy_SDK.Configuration;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
@@ -8,6 +5,9 @@ using Iggy_SDK.Exceptions;
 using Iggy_SDK.MessagesDispatcher;
 using Iggy_SDK.MessageStream;
 using Iggy_SDK.MessageStream.Implementations;
+using System.ComponentModel;
+using System.Net.Sockets;
+using System.Threading.Channels;
 
 namespace Iggy_SDK.Factory;
 
@@ -31,7 +31,7 @@ public static class MessageStreamFactory
     {
         var sendMessagesOptions = new SendMessageConfigurator();
         options.SendMessagesOptions.Invoke(sendMessagesOptions);
-        
+
         var urlPortSplitter = options.BaseAdress.Split(":");
         if (urlPortSplitter.Length > 2)
         {
@@ -50,20 +50,20 @@ public static class MessageStreamFactory
             //SingleReader = true,
         });
         //TODO - make another dispatcher for an PollingInterval of 0, that will send messages asynchronously
-        
+
         var messageStream = new TcpMessageStream(socket, channel);
         var messageBus = new TcpMessageInvoker(socket);
         var messageDispatcher = new MessageSenderDispatcher(sendMessagesOptions, channel, messageBus);
-        
+
         messageDispatcher.Start();
         return messageStream;
     }
-    
+
     private static HttpMessageStream CreateHttpMessageStream(IMessageStreamConfigurator options)
     {
         var sendMessagesOptions = new SendMessageConfigurator();
         options.SendMessagesOptions.Invoke(sendMessagesOptions);
-        
+
         var client = new HttpClient();
         client.BaseAddress = new Uri(options.BaseAdress);
         if (options.Headers is not null)
@@ -73,7 +73,7 @@ public static class MessageStreamFactory
                 client.DefaultRequestHeaders.Add(header.Name, header.Values);
             }
         }
-        
+
         //TODO - explore making this bounded ?
         var channel = Channel.CreateUnbounded<MessageSendRequest>(new UnboundedChannelOptions
         {
@@ -81,11 +81,11 @@ public static class MessageStreamFactory
             //SingleWriter = true,
             //SingleReader = true,
         });
-        
+
         var messageStream = new HttpMessageStream(client, channel);
         var messageBus = new MessagesDispatcher.HttpMessageInvoker(client);
         var messageDispatcher = new MessageSenderDispatcher(sendMessagesOptions, channel, messageBus);
-        
+
         messageDispatcher.Start();
 
         return messageStream;

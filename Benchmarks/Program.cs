@@ -15,70 +15,70 @@ Dictionary<int, IMessageStream> clients = new();
 
 for (int i = 0; i < producerCount; i++)
 {
-	var bus = MessageStreamFactory.CreateMessageStream(options =>
-	{
-		options.BaseAdress = "127.0.0.1:8090";
-		options.Protocol = Protocol.Tcp;
-		options.SendMessagesOptions = x =>
-		{
-			x.MaxMessagesPerBatch = 1000;
-			x.PollingInterval = TimeSpan.FromMilliseconds(0);
-		};
+    var bus = MessageStreamFactory.CreateMessageStream(options =>
+    {
+        options.BaseAdress = "127.0.0.1:8090";
+        options.Protocol = Protocol.Tcp;
+        options.SendMessagesOptions = x =>
+        {
+            x.MaxMessagesPerBatch = 1000;
+            x.PollingInterval = TimeSpan.FromMilliseconds(0);
+        };
 #if OS_LINUX
 		options.ReceiveBufferSize = Int32.MaxValue;
 		options.SendBufferSize = Int32.MaxValue;
 #elif OS_WINDOWS
-		options.ReceiveBufferSize = Int32.MaxValue;
-		options.SendBufferSize = Int32.MaxValue;
+        options.ReceiveBufferSize = Int32.MaxValue;
+        options.SendBufferSize = Int32.MaxValue;
 #elif OS_MAC
 		options.ReceiveBufferSize = 7280*1024;
 		options.SendBufferSize = 7280*1024;
 #endif
-	});
-	clients[i] = bus;
+    });
+    clients[i] = bus;
 }
 
 try
 {
-	for (int i = 0; i < producerCount; i++)
-	{
-		await clients[0].CreateStreamAsync(new StreamRequest
-		{
-			Name = $"Test bench stream_{i}",
-			StreamId = startingStreamId + i
-		});
-		await clients[0].CreateTopicAsync(Identifier.Numeric(startingStreamId + i), new TopicRequest
-		{
-			Name = $"Test bench topic_{i}",
-			PartitionsCount = 1,
-			TopicId = topicId
-		});
-	}
+    for (int i = 0; i < producerCount; i++)
+    {
+        await clients[0].CreateStreamAsync(new StreamRequest
+        {
+            Name = $"Test bench stream_{i}",
+            StreamId = startingStreamId + i
+        });
+        await clients[0].CreateTopicAsync(Identifier.Numeric(startingStreamId + i), new TopicRequest
+        {
+            Name = $"Test bench topic_{i}",
+            PartitionsCount = 1,
+            TopicId = topicId
+        });
+    }
 }
 catch
 {
-	Console.WriteLine("Failed to create streams, they already exist.");
+    Console.WriteLine("Failed to create streams, they already exist.");
 }
 
 List<Task> tasks = new();
 
 for (int i = 0; i < producerCount; i++)
 {
-	tasks.Add(SendMessage.Create(clients[i], i, producerCount, messagesBatch, messagesCount, messageSize,
-		Identifier.Numeric(startingStreamId + i),
-		Identifier.Numeric(topicId)));
+    tasks.Add(SendMessage.Create(clients[i], i, producerCount, messagesBatch, messagesCount, messageSize,
+        Identifier.Numeric(startingStreamId + i),
+        Identifier.Numeric(topicId)));
 }
 
 await Task.WhenAll(tasks);
 
 try
 {
-	for (int i = 0; i < producerCount; i++)
-	{
-		await clients[0].DeleteStreamAsync(Identifier.Numeric(startingStreamId + i));
-	}
+    for (int i = 0; i < producerCount; i++)
+    {
+        await clients[0].DeleteStreamAsync(Identifier.Numeric(startingStreamId + i));
+    }
 }
 catch
 {
-	Console.WriteLine("Failed to delete streams");
+    Console.WriteLine("Failed to delete streams");
 }
