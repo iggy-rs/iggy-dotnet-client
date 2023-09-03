@@ -3,18 +3,21 @@ using IContainer = DotNet.Testcontainers.Containers.IContainer;
 
 namespace Iggy_SDK_Tests.IntegrationTests;
 
-
 public sealed class IggyFixture : IAsyncLifetime
 {
-	private readonly IContainer _container = new ContainerBuilder().WithImage("iggyrs/iggy:latest").Build();
-	
+	public readonly IContainer Container = new ContainerBuilder().WithImage("iggyrs/iggy:latest")
+		//.WithPortBinding(3000, true)
+		.WithPortBinding(8090, true)
+		//.WithPortBinding(8080, true)
+		.Build();
+
 	public async Task InitializeAsync()
 	{
-		await _container.StartAsync();
+		await Container.StartAsync();
 	}
 
 	public async Task DisposeAsync()
 	{
-		await _container.StopAsync();
+		await Container.StopAsync();
 	}
 }

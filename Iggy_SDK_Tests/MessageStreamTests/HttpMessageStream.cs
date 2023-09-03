@@ -22,6 +22,7 @@ using RichardSzalay.MockHttp;
 
 namespace Iggy_SDK_Tests.MessageStreamTests;
 
+//TODO - get rid of those tests once integration tests are fully setup.
 public sealed class HttpMessageStream
 {
 	private readonly MockHttpMessageHandler _httpHandler;
