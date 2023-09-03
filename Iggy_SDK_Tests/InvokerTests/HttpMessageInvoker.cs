@@ -11,6 +11,7 @@ using RichardSzalay.MockHttp;
 
 namespace Iggy_SDK_Tests.InvokerTests;
 
+//TODO - legacy remove when E2E tests are done.
 public sealed class HttpMessageInvoker
 {
 	private readonly Iggy_SDK.MessagesDispatcher.HttpMessageInvoker _sut;

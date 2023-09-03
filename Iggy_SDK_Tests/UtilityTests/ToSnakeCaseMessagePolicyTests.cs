@@ -3,7 +3,7 @@ using Iggy_SDK.Extensions;
 
 namespace Iggy_SDK_Tests.UtilityTests;
 
-public sealed class ToSnakeCaseMessagePolicy
+public sealed class ToSnakeCaseMessagePolicyTests
 {
 	[Theory]
 	[ClassData(typeof(MyTestDataClass))]	

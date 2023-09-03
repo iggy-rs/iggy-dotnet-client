@@ -22,7 +22,7 @@ using RichardSzalay.MockHttp;
 
 namespace Iggy_SDK_Tests.MessageStreamTests;
 
-//TODO - get rid of those tests once integration tests are fully setup.
+//TODO - legacy, remove it when E2E tests are done
 public sealed class HttpMessageStream
 {
 	private readonly MockHttpMessageHandler _httpHandler;

@@ -22,11 +22,10 @@ internal static class StreamFactory
 	{
 		return new StreamRequest
 		{
-			Name = "Test Topic" + Random.Shared.Next(1, 69),
+			Name = "test_stream" + Random.Shared.Next(1, 69),
 			StreamId = Random.Shared.Next(1, 10),
 		};
 	}
-
 	internal static StreamResponse CreateStreamResponse()
 	{
 		var responses = new List<TopicResponse>();
