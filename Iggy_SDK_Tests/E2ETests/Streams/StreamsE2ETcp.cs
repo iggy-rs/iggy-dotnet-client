@@ -2,8 +2,6 @@ using FluentAssertions;
 using Iggy_SDK;
 using Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
 using Iggy_SDK_Tests.Utils;
-using Iggy_SDK_Tests.Utils.Streams;
-using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Exceptions;
 using Iggy_SDK.Factory;
