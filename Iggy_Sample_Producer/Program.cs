@@ -1,7 +1,4 @@
-﻿using System.Buffers.Binary;
-using System.Security.Cryptography;
-using System.Text;
-using Iggy_Sample_Producer;
+﻿using Iggy_Sample_Producer;
 using Iggy_SDK;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
@@ -11,6 +8,9 @@ using Iggy_SDK.Kinds;
 using Iggy_SDK.Messages;
 using Iggy_SDK.MessageStream;
 using Shared;
+using System.Buffers.Binary;
+using System.Security.Cryptography;
+using System.Text;
 
 var protocol = Protocol.Tcp;
 var bus = MessageStreamFactory.CreateMessageStream(options =>
@@ -55,7 +55,7 @@ catch
 }
 
 var actualStream = await bus.GetStreamByIdAsync(streamId);
-var actualTopic = await bus.GetTopicByIdAsync(streamId, topicId); 
+var actualTopic = await bus.GetTopicByIdAsync(streamId, topicId);
 
 await ProduceMessages(bus, actualStream, actualTopic);
 
@@ -162,7 +162,7 @@ async Task ProduceMessages(IMessageClient bus, StreamResponse? stream, TopicResp
 }
 
 
-public static class EncryptorData 
+public static class EncryptorData
 {
     private static byte[] key = {
         0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,

@@ -8,9 +8,9 @@ namespace Iggy_SDK.Enums;
 
 public enum MessagePolling
 {
-	Offset,
-	Timestamp,
-	First,
-	Last,
-	Next
+    Offset,
+    Timestamp,
+    First,
+    Last,
+    Next
 }

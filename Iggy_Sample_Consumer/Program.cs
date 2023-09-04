@@ -1,13 +1,13 @@
-﻿using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
-using Iggy_SDK;
+﻿using Iggy_SDK;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
 using Iggy_SDK.JsonConfiguration;
 using Iggy_SDK.Kinds;
 using Shared;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 
 var jsonOptions = new JsonSerializerOptions();
 jsonOptions.PropertyNamingPolicy = new ToSnakeCaseNamingPolicy();
@@ -71,18 +71,18 @@ async Task ConsumeMessages()
     {
         try
         {
-             var messages = await bus.PollMessagesAsync<Envelope>(new MessageFetchRequest
-             {
-                 Consumer = Consumer.New(consumerId),
-                 Count = 1,
-                 TopicId = topicId,
-                 StreamId = streamId,
-                 PartitionId = partitionId,
-                 PollingStrategy = PollingStrategy.Next(),
-                 AutoCommit = true
-             }, deserializer, decryptor);
-            
-            
+            var messages = await bus.PollMessagesAsync<Envelope>(new MessageFetchRequest
+            {
+                Consumer = Consumer.New(consumerId),
+                Count = 1,
+                TopicId = topicId,
+                StreamId = streamId,
+                PartitionId = partitionId,
+                PollingStrategy = PollingStrategy.Next(),
+                AutoCommit = true
+            }, deserializer, decryptor);
+
+
             if (!messages.Messages.Any())
             {
                 Console.WriteLine("No messages were found");
@@ -112,30 +112,30 @@ void HandleMessage(MessageResponse<Envelope> messageResponse)
     Console.WriteLine();
     Console.WriteLine("---------------------------MESSAGE-----------------------------------");
     Console.WriteLine();
-    
+
     switch (messageResponse.Message.MessageType)
     {
         case "order_created":
-        {
-            var orderCreated = JsonSerializer.Deserialize<OrderCreated>(messageResponse.Message.Payload, jsonOptions);
-            Console.WriteLine(orderCreated);
-            break;
-        }
+            {
+                var orderCreated = JsonSerializer.Deserialize<OrderCreated>(messageResponse.Message.Payload, jsonOptions);
+                Console.WriteLine(orderCreated);
+                break;
+            }
         case "order_confirmed":
-        {
-            var orderConfirmed =
-                JsonSerializer.Deserialize<OrderConfirmed>(messageResponse.Message.Payload, jsonOptions);
-            Console.WriteLine(orderConfirmed);
-            break;
-        }
+            {
+                var orderConfirmed =
+                    JsonSerializer.Deserialize<OrderConfirmed>(messageResponse.Message.Payload, jsonOptions);
+                Console.WriteLine(orderConfirmed);
+                break;
+            }
         case "order_rejected":
-        {
-            var orderRejected = JsonSerializer.Deserialize<OrderRejected>(messageResponse.Message.Payload, jsonOptions);
-            Console.WriteLine(orderRejected);
-            break;
-        }
+            {
+                var orderRejected = JsonSerializer.Deserialize<OrderRejected>(messageResponse.Message.Payload, jsonOptions);
+                Console.WriteLine(orderRejected);
+                break;
+            }
     }
-    
+
 
     if (messageResponse.Headers is not null)
     {
@@ -144,7 +144,7 @@ void HandleMessage(MessageResponse<Envelope> messageResponse)
         Console.WriteLine();
         foreach (var (headerKey, headerValue) in messageResponse.Headers)
         {
-            Console.WriteLine("Found Header: {0} with value: {1}, ", headerKey, headerValue); 
+            Console.WriteLine("Found Header: {0} with value: {1}, ", headerKey, headerValue);
         }
         Console.WriteLine();
     }
@@ -168,7 +168,7 @@ async Task ValidateSystem(Identifier streamId, Identifier topicId, int partition
     }
     catch
     {
-        
+
         Console.WriteLine($"Creating stream with {streamId}");
         await bus.CreateStreamAsync(new StreamRequest
         {

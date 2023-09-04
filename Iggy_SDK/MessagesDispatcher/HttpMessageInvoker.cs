@@ -1,24 +1,24 @@
+using Iggy_SDK.Contracts.Http;
+using Iggy_SDK.Exceptions;
+using Iggy_SDK.JsonConfiguration;
 using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
-using Iggy_SDK.Contracts.Http;
-using Iggy_SDK.Exceptions;
-using Iggy_SDK.JsonConfiguration;
 
 namespace Iggy_SDK.MessagesDispatcher;
 
 internal sealed class HttpMessageInvoker : MessageInvoker
 {
-	private readonly HttpClient _client;
+    private readonly HttpClient _client;
     private readonly JsonSerializerOptions _toSnakeCaseOptions;
 
-	public HttpMessageInvoker(HttpClient client)
-	{
-		_client = client;
-        _toSnakeCaseOptions = new();
-        
+    public HttpMessageInvoker(HttpClient client)
+    {
+        _client = client;
+        _toSnakeCaseOptions = new JsonSerializerOptions();
+
         _toSnakeCaseOptions.PropertyNamingPolicy = new ToSnakeCaseNamingPolicy();
         _toSnakeCaseOptions.WriteIndented = true;
 
@@ -48,22 +48,22 @@ internal sealed class HttpMessageInvoker : MessageInvoker
                 }
             }
         };
-        
+
         _toSnakeCaseOptions.Converters.Add(new UInt128Converter());
         _toSnakeCaseOptions.Converters.Add(new JsonStringEnumConverter(new ToSnakeCaseNamingPolicy()));
-	}
-	internal override async Task SendMessagesAsync(MessageSendRequest request, CancellationToken token = default)
-	{
+    }
+    internal override async Task SendMessagesAsync(MessageSendRequest request, CancellationToken token = default)
+    {
         var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
-        
+
         var response = await _client.PostAsync($"/streams/{request.StreamId}/topics/{request.TopicId}/messages", data, token);
         if (!response.IsSuccessStatusCode)
         {
             await HandleResponseAsync(response);
             throw new Exception("Unknown error occurred.");
         }
-	}
+    }
     private static async Task HandleResponseAsync(HttpResponseMessage response)
     {
         if ((int)response.StatusCode > 300 && (int)response.StatusCode < 500)

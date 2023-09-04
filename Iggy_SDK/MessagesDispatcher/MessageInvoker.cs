@@ -3,6 +3,6 @@ namespace Iggy_SDK.MessagesDispatcher;
 
 internal abstract class MessageInvoker
 {
-	internal abstract Task SendMessagesAsync(MessageSendRequest request,
-		CancellationToken token = default);
+    internal abstract Task SendMessagesAsync(MessageSendRequest request,
+        CancellationToken token = default);
 }

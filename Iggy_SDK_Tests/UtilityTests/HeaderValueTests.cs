@@ -1,13 +1,13 @@
-using System.Text;
 using Iggy_SDK.Extensions;
 using Iggy_SDK.Headers;
+using System.Text;
 
 namespace Iggy_SDK_Tests.UtilityTests;
 
 public sealed class HeaderValueTests
 {
-	
-	[Fact]
+
+    [Fact]
     public void Raw_ReturnsCorrectValue()
     {
         byte[] data = new byte[] { 1, 2, 3 };
@@ -141,5 +141,5 @@ public sealed class HeaderValueTests
         Assert.Equal(HeaderKind.Float64, header.Kind);
         Assert.Equal(value, BitConverter.ToDouble(header.Value));
     }
-    
+
 }

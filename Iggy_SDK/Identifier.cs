@@ -1,66 +1,66 @@
+using Iggy_SDK.Enums;
 using System.Buffers.Binary;
 using System.Text;
-using Iggy_SDK.Enums;
 
 namespace Iggy_SDK;
 
 public readonly struct Identifier : IEquatable<Identifier>
 {
-	
-	public required IdKind Kind { get; init; }
-	public required int Length { get; init; }
-	public required byte[] Value { get; init; }
 
-	public static Identifier Numeric(int value)
-	{
-		byte[] bytes = new byte[4];
-		BinaryPrimitives.WriteInt32LittleEndian(bytes, value);
+    public required IdKind Kind { get; init; }
+    public required int Length { get; init; }
+    public required byte[] Value { get; init; }
 
-		return new Identifier
-		{
-			Kind = IdKind.Numeric,
-			Length = 4,
-			Value = bytes
-		};
-	}
+    public static Identifier Numeric(int value)
+    {
+        byte[] bytes = new byte[4];
+        BinaryPrimitives.WriteInt32LittleEndian(bytes, value);
 
-	public static Identifier String(string value)
-	{
-		if (value.Length is 0 or > 255)
-		{
-			throw new ArgumentException("Value has incorrect size, must be between 1 and 255", nameof(value));
-		}
-		return new Identifier
-		{
-			Kind = IdKind.String,
-			Length = value.Length,
-			Value = Encoding.UTF8.GetBytes(value)
-		};
-	}
+        return new Identifier
+        {
+            Kind = IdKind.Numeric,
+            Length = 4,
+            Value = bytes
+        };
+    }
 
-	public override string ToString()
-	{
-		return Kind switch
-		{
-			IdKind.Numeric => BitConverter.ToInt32(Value).ToString(),
-			IdKind.String => Encoding.UTF8.GetString(Value),
-			_ => throw new ArgumentOutOfRangeException()
-		};
-	}
+    public static Identifier String(string value)
+    {
+        if (value.Length is 0 or > 255)
+        {
+            throw new ArgumentException("Value has incorrect size, must be between 1 and 255", nameof(value));
+        }
+        return new Identifier
+        {
+            Kind = IdKind.String,
+            Length = value.Length,
+            Value = Encoding.UTF8.GetBytes(value)
+        };
+    }
 
-	public bool Equals(Identifier other)
-	{
-		return Kind == other.Kind && Value.Equals(other.Value);
-	}
+    public override string ToString()
+    {
+        return Kind switch
+        {
+            IdKind.Numeric => BitConverter.ToInt32(Value).ToString(),
+            IdKind.String => Encoding.UTF8.GetString(Value),
+            _ => throw new ArgumentOutOfRangeException()
+        };
+    }
 
-	public override bool Equals(object? obj)
-	{
-		return obj is Identifier other && Equals(other);
-	}
+    public bool Equals(Identifier other)
+    {
+        return Kind == other.Kind && Value.Equals(other.Value);
+    }
 
-	public override int GetHashCode()
-	{
-		return HashCode.Combine((int)Kind, Value);
-	}
+    public override bool Equals(object? obj)
+    {
+        return obj is Identifier other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine((int)Kind, Value);
+    }
 }
 

@@ -1,5 +1,5 @@
-using System.Text.Json;
 using Iggy_SDK.Extensions;
+using System.Text.Json;
 
 namespace Iggy_SDK.JsonConfiguration;
 
