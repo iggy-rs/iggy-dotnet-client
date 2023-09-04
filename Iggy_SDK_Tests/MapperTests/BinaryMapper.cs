@@ -265,9 +265,9 @@ public sealed class BinaryMapper
     public void MapConsumerGroups_ReturnsValidConsumerGroupsResponses()
     {
         // Arrange
-        var (id1, membersCount1, partitionsCount1) = GroupFactory.CreateConsumerGroupResponseFields();
+        var (id1, membersCount1, partitionsCount1) = ConsumerGroupFactory.CreateConsumerGroupResponseFields();
         byte[] payload1 = BinaryFactory.CreateGroupPayload(id1, membersCount1, partitionsCount1);
-        var (id2, membersCount2, partitionsCount2) = GroupFactory.CreateConsumerGroupResponseFields();
+        var (id2, membersCount2, partitionsCount2) = ConsumerGroupFactory.CreateConsumerGroupResponseFields();
         byte[] payload2 = BinaryFactory.CreateGroupPayload(id2, membersCount2, partitionsCount2);
 
         byte[] combinedPayload = new byte[payload1.Length + payload2.Length];
@@ -296,7 +296,7 @@ public sealed class BinaryMapper
     public void MapConsumerGroup_ReturnsValidConsumerGroupResponse()
     {
         // Arrange
-        var (groupId, membersCount, partitionsCount) = GroupFactory.CreateConsumerGroupResponseFields();
+        var (groupId, membersCount, partitionsCount) = ConsumerGroupFactory.CreateConsumerGroupResponseFields();
         byte[] groupPayload = BinaryFactory.CreateGroupPayload(groupId, membersCount, partitionsCount);
 
         // Act

@@ -292,7 +292,7 @@ public class HttpMessageStream : IMessageStream
             throw new Exception("Unknown error occurred.");
         }
     }
-    public async Task DeleteConsumerGroupAsync(DeleteConsumerGroup request, CancellationToken token = default)
+    public async Task DeleteConsumerGroupAsync(DeleteConsumerGroupRequest request, CancellationToken token = default)
     {
         var response = await _httpClient.DeleteAsync($"/streams/{request.StreamId}/topics/{request.TopicId}/consumer-groups/{request.ConsumerGroupId}", token);
         await HandleResponseAsync(response);

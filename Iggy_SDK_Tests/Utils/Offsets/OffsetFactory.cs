@@ -16,6 +16,16 @@ internal static class OffsetFactory
             StreamId = Identifier.Numeric(Random.Shared.Next(1, 10)),
         };
     }
+    internal static OffsetRequest CreateOffsetRequest(int streamId, int topicId, int partitionId, int consumerId)
+    {
+        return new OffsetRequest
+        {
+            Consumer = Consumer.New(consumerId),
+            TopicId = Identifier.Numeric(topicId),
+            PartitionId = partitionId,
+            StreamId = Identifier.Numeric(streamId),
+        };
+    }
 
     internal static OffsetResponse CreateOffsetResponse()
     {
@@ -38,6 +48,20 @@ internal static class OffsetFactory
             Consumer = Consumer.New(1),
             Offset = (ulong)Random.Shared.Next(1, 10),
             PartitionId = Random.Shared.Next(1, 10),
+        };
+    }
+    internal static StoreOffsetRequest CreateOffsetContract(int streamId, int topicId, int consumerId, ulong offset,
+        int partitionId)
+    {
+        var stream = Identifier.Numeric(streamId);
+        var topic = Identifier.Numeric(topicId);
+        return new StoreOffsetRequest
+        {
+            StreamId = stream,
+            TopicId = topic,
+            Consumer = Consumer.New(consumerId),
+            Offset = offset,
+            PartitionId = partitionId
         };
     }
 }

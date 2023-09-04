@@ -1,6 +1,6 @@
 namespace Iggy_SDK.Contracts.Http;
 
-public sealed class DeleteConsumerGroup
+public sealed class DeleteConsumerGroupRequest
 {
 
     public required Identifier StreamId { get; init; }

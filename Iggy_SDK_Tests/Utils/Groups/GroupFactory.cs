@@ -3,7 +3,7 @@ using Iggy_SDK.Contracts.Http;
 
 namespace Iggy_SDK_Tests.Utils.Groups;
 
-internal static class GroupFactory
+internal static class ConsumerGroupFactory
 {
 
     internal static (int id, int membersCount, int partitionsCount) CreateConsumerGroupResponseFields()
@@ -35,6 +35,24 @@ internal static class GroupFactory
         return Enumerable.Empty<ConsumerGroupResponse>();
     }
 
+    internal static CreateConsumerGroupRequest CreateRequest(int streamId, int topicId, int groupId)
+    {
+        return new CreateConsumerGroupRequest
+        {
+            StreamId = Identifier.Numeric(streamId),
+            TopicId = Identifier.Numeric(topicId),
+            ConsumerGroupId = groupId,
+        };
+    }
+    internal static JoinConsumerGroupRequest CreateJoinGroupRequest(int streamId, int topicId, int groupId)
+    {
+        return new JoinConsumerGroupRequest
+        {
+            StreamId = Identifier.Numeric(streamId),
+            ConsumerGroupId = groupId,
+            TopicId = Identifier.Numeric(topicId)
+        };
+    }
     internal static JoinConsumerGroupRequest CreateJoinGroupRequest()
     {
         return new JoinConsumerGroupRequest
@@ -45,6 +63,24 @@ internal static class GroupFactory
         };
     }
 
+    internal static LeaveConsumerGroupRequest CreateLeaveGroupRequest(int streamId, int topicId, int groupId)
+    {
+        return new LeaveConsumerGroupRequest
+        {
+            StreamId = Identifier.Numeric(streamId),
+            ConsumerGroupId = groupId,
+            TopicId = Identifier.Numeric(topicId)
+        };
+    }
+    internal static DeleteConsumerGroupRequest CreateDeleteGroupRequest(int streamId, int topicId, int groupId)
+    {
+        return new DeleteConsumerGroupRequest
+        {
+            StreamId = Identifier.Numeric(streamId),
+            ConsumerGroupId = groupId,
+            TopicId = Identifier.Numeric(topicId)
+        };
+    }
     internal static LeaveConsumerGroupRequest CreateLeaveGroupRequest()
     {
         return new LeaveConsumerGroupRequest

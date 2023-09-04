@@ -215,7 +215,7 @@ public sealed class TcpContract
     public void TcpContracts_JoinGroup_HasCorrectBytes()
     {
         // Arrange
-        var request = GroupFactory.CreateJoinGroupRequest();
+        var request = ConsumerGroupFactory.CreateJoinGroupRequest();
 
         // Act
         var result = TcpContracts.JoinGroup(request).AsSpan();
@@ -238,7 +238,7 @@ public sealed class TcpContract
     public void TcpContracts_LeaveGroup_HasCorrectBytes()
     {
         // Arrange
-        var request = GroupFactory.CreateLeaveGroupRequest();
+        var request = ConsumerGroupFactory.CreateLeaveGroupRequest();
 
         // Act
         var result = TcpContracts.LeaveGroup(request).AsSpan();

@@ -1,9 +1,11 @@
 using DotNet.Testcontainers.Builders;
+using Iggy_SDK_Tests.Utils.Streams;
+using Iggy_SDK.Contracts.Http;
 using IContainer = DotNet.Testcontainers.Containers.IContainer;
 
-namespace Iggy_SDK_Tests.E2ETests.Tcp;
+namespace Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
 
-public sealed class IggyTcpFixture : IAsyncLifetime
+public sealed class IggyTcpStreamFixture : IAsyncLifetime
 {
 	public readonly IContainer Container = new ContainerBuilder().WithImage("iggyrs/iggy:latest")
 		//.WithPortBinding(3000, true)
@@ -11,6 +13,7 @@ public sealed class IggyTcpFixture : IAsyncLifetime
 		//.WithPortBinding(8080, true)
 		.Build();
 
+	public readonly StreamRequest StreamRequest = StreamFactory.CreateStreamRequest();
 	public async Task InitializeAsync()
 	{
 		await Container.StartAsync();

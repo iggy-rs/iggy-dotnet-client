@@ -528,7 +528,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
         }
     }
 
-    public async Task DeleteConsumerGroupAsync(DeleteConsumerGroup request, CancellationToken token = default)
+    public async Task DeleteConsumerGroupAsync(DeleteConsumerGroupRequest request, CancellationToken token = default)
 
     {
         var message = TcpContracts.DeleteGroup(request.StreamId, request.TopicId, request.ConsumerGroupId);

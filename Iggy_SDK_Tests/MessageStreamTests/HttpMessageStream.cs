@@ -236,7 +236,7 @@ public sealed class HttpMessageStream
     {
         var streamId = Identifier.Numeric(1);
         var topicId = Identifier.Numeric(1);
-        var response = GroupFactory.CreateGroupsResponse(3);
+        var response = ConsumerGroupFactory.CreateGroupsResponse(3);
 
         _httpHandler.When($"/streams/{streamId}/topics/{topicId}/consumer-groups")
             .Respond(HttpStatusCode.OK, "application/json", JsonSerializer.Serialize(response, _toSnakeCaseOptions));
