@@ -12,15 +12,15 @@ internal sealed class MessageSenderDispatcher
     private readonly PeriodicTimer _timer;
     private Task? _timerTask;
     private readonly CancellationTokenSource _cts = new();
-    private readonly MessageInvoker _bus;
+    private readonly MessageInvoker _messageInvoker;
     private readonly Channel<MessageSendRequest> _channel;
     private readonly int _maxMessages;
 
     internal MessageSenderDispatcher(SendMessageConfigurator sendMessagesOptions, Channel<MessageSendRequest> channel,
-        MessageInvoker bus)
+        MessageInvoker messageInvoker)
     {
         _timer = new PeriodicTimer(sendMessagesOptions.PollingInterval);
-        _bus = bus;
+        _messageInvoker = messageInvoker;
         _maxMessages = sendMessagesOptions.MaxMessagesPerBatch;
         _channel = channel;
     }
@@ -30,9 +30,11 @@ internal sealed class MessageSenderDispatcher
         _timerTask = SendMessagesInBatchesAsync();
     }
 
+    //TODO - for non batching mode (PollingInterval = 0), should i introduce another flag to the while loop to make it infinite ?
+    //or make another Dispatcher that would use IAsyncEnumerable read from the channel.
     private async Task SendMessagesInBatchesAsync()
     {
-        //TODO - this should match the bound limit of channel in the future
+        //TODO - move this inside of the while loop and use the channel count to determine size of the buffer
         var messagesSendRequests = MemoryPool<MessageSendRequest>.Shared.Rent(1024);
         while (await _timer.WaitForNextTickAsync(_cts.Token))
         {
@@ -52,7 +54,7 @@ internal sealed class MessageSenderDispatcher
             {
                 for (int i = 0; i < messagesSendRequests.Memory.Length; i++)
                 {
-                    await _bus.SendMessagesAsync(messagesSendRequests.Memory.Span[i], token: _cts.Token);
+                    await _messageInvoker.SendMessagesAsync(messagesSendRequests.Memory.Span[i], token: _cts.Token);
                 }
 
                 continue;
@@ -65,9 +67,8 @@ internal sealed class MessageSenderDispatcher
                 {
                     break;
                 }
-                await _bus.SendMessagesAsync(message, token: _cts.Token);
+                await _messageInvoker.SendMessagesAsync(message, token: _cts.Token);
             }
-
         }
     }
     private static bool CanBatchMessages(Span<MessageSendRequest> requests)

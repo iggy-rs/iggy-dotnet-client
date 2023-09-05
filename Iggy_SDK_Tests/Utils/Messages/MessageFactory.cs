@@ -111,12 +111,37 @@ internal static class MessageFactory
         };
     }
 
-    internal static IList<Message> GenerateDummyMessages(int count, int paylaodLen, Dictionary<HeaderKey, HeaderValue>? Headers = null)
+    private static byte[] SerializeDummyMessage(DummyMessage message)
+    {
+        var bytes = new byte[4 + 4 + message.Text.Length];
+        BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan()[..4], message.Id);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan()[4..8], message.Text.Length);
+        Encoding.UTF8.GetBytes(message.Text).CopyTo(bytes.AsSpan()[8..]);
+        return bytes;
+    }
+
+    internal static Func<byte[], DummyMessage> DeserializeDummyMessage
+        => bytes =>
+        {
+            var id = BinaryPrimitives.ReadInt32LittleEndian(bytes.AsSpan()[..4]);
+            var textLength = BinaryPrimitives.ReadInt32LittleEndian(bytes.AsSpan()[4..8]);
+            var text = Encoding.UTF8.GetString(bytes.AsSpan()[8..(8 + textLength)]);
+            return new DummyMessage { Id = id, Text = text };
+        };
+    internal static IList<Message> GenerateDummyMessages(int count, Dictionary<HeaderKey, HeaderValue>? Headers = null)
     {
         return Enumerable.Range(1, count).Select(i => new Message{
             Id = Guid.NewGuid(),
             Headers = Headers,
-            Payload = Enumerable.Range(1, paylaodLen).Select(x => (byte)x).ToArray()
+            Payload = SerializeDummyMessage(new DummyMessage{Id = Random.Shared.Next(1,69), Text = RandomString(Random.Shared.Next(69,420))})
+        }).ToList();
+    }
+    internal static IList<Message> GenerateDummyMessages(int count, int payloadLen, Dictionary<HeaderKey, HeaderValue>? Headers = null)
+    {
+        return Enumerable.Range(1, count).Select(i => new Message{
+            Id = Guid.NewGuid(),
+            Headers = Headers,
+            Payload = Enumerable.Range(1, payloadLen).Select(x => (byte)x).ToArray()
         }).ToList();
     }
     internal static MessageFetchRequest CreateMessageFetchRequest()
@@ -132,30 +157,42 @@ internal static class MessageFactory
             TopicId = Identifier.Numeric(Random.Shared.Next(1, 10)),
         };
     }
+    internal static MessageFetchRequest CreateMessageFetchRequest(int count, int streamId, int topicId, int partitionId)
+    {
+        return new MessageFetchRequest
+        {
+            Count = count,
+            AutoCommit = true,
+            Consumer = Consumer.New(1),
+            PartitionId = partitionId,
+            PollingStrategy = PollingStrategy.Next(),
+            StreamId = Identifier.Numeric(streamId),
+            TopicId = Identifier.Numeric(topicId),
+        };
+    }
     internal static Dictionary<HeaderKey, HeaderValue> GenerateMessageHeaders(int count)
     {
         var headers = new Dictionary<HeaderKey, HeaderValue>();
         for(int i = 0; i < count; i++)
         {
-        headers.Add(
-            HeaderKey.New(RandomString(Random.Shared.Next(50, 254))),
-            Random.Shared.Next(1, 12) switch
-
-            {
-                1 => HeaderValue.Raw(Encoding.UTF8.GetBytes(RandomString(Random.Shared.Next(50, 254)))),
-                2 => HeaderValue.String(RandomString(Random.Shared.Next(25, 254))),
-                3 => HeaderValue.Bool(Random.Shared.Next(0,1) switch { 0 => false, 1 => true, _ => false}),
-                4 => HeaderValue.Int32(Random.Shared.Next(69, 420)),
-                5 => HeaderValue.Int64(Random.Shared.NextInt64(6942023, 98723131)),
-                6 => HeaderValue.Int128(Guid.NewGuid().ToByteArray().ToInt128()),
-                7 => HeaderValue.Guid(Guid.NewGuid()),
-                8 => HeaderValue.UInt32((uint)Random.Shared.Next(1, 69)),
-                9 => HeaderValue.UInt64((ulong)Random.Shared.Next(1, 69)),
-                10 => HeaderValue.UInt128(Guid.NewGuid().ToUInt128()),
-                11 => HeaderValue.Float32(Random.Shared.NextSingle()),
-                12 => HeaderValue.Float64(Random.Shared.NextDouble()),
-                _ =>  HeaderValue.UInt64((ulong)Random.Shared.Next(1, 69))
-            });
+            headers.Add(
+                HeaderKey.New(RandomString(Random.Shared.Next(50, 254))),
+                Random.Shared.Next(1, 12) switch
+                {
+                    1 => HeaderValue.Raw(Encoding.UTF8.GetBytes(RandomString(Random.Shared.Next(50, 254)))),
+                    2 => HeaderValue.String(RandomString(Random.Shared.Next(25, 254))),
+                    3 => HeaderValue.Bool(Random.Shared.Next(0,1) switch { 0 => false, 1 => true, _ => false}),
+                    4 => HeaderValue.Int32(Random.Shared.Next(69, 420)),
+                    5 => HeaderValue.Int64(Random.Shared.NextInt64(6942023, 98723131)),
+                    6 => HeaderValue.Int128(Guid.NewGuid().ToByteArray().ToInt128()),
+                    7 => HeaderValue.Guid(Guid.NewGuid()),
+                    8 => HeaderValue.UInt32((uint)Random.Shared.Next(1, 69)),
+                    9 => HeaderValue.UInt64((ulong)Random.Shared.Next(1, 69)),
+                    10 => HeaderValue.UInt128(Guid.NewGuid().ToUInt128()),
+                    11 => HeaderValue.Float32(Random.Shared.NextSingle()),
+                    12 => HeaderValue.Float64(Random.Shared.NextDouble()),
+                    _ =>  HeaderValue.UInt64((ulong)Random.Shared.Next(1, 69))
+                });
         }
         return headers;
     }

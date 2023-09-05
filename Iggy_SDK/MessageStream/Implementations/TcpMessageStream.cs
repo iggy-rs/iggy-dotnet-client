@@ -278,6 +278,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 
     }
 
+    //TODO - explore simplifying this method, extract repeating parts of the code to separate methods
     public async Task<PolledMessages<TMessage>> PollMessagesAsync<TMessage>(MessageFetchRequest request,
         Func<byte[], TMessage> serializer, Func<byte[], byte[]>? decryptor = null, CancellationToken token = default)
     {
@@ -308,7 +309,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
             var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
             if (response.Status != 0)
             {
-                throw new TcpInvalidResponseException();
+                throw new InvalidResponseException($"Invalid response status code: {response.Status}");
             }
 
             if (response.Length <= 1)
@@ -340,6 +341,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
             ArrayPool<byte>.Shared.Return(buffer);
         }
     }
+    //TODO - explore simplifying this method, extract repeating parts of the code to separate methods
     public async Task<PolledMessages> PollMessagesAsync(MessageFetchRequest request,
         Func<byte[], byte[]>? decryptor = null, CancellationToken token = default)
     {
@@ -370,7 +372,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
             var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
             if (response.Status != 0)
             {
-                throw new TcpInvalidResponseException();
+                throw new InvalidResponseException($"Invalid response status code: {response.Status}");
             }
 
             if (response.Length <= 1)

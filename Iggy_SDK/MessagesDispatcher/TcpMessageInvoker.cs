@@ -36,10 +36,8 @@ internal sealed class TcpMessageInvoker : MessageInvoker
                 messages);
             TcpMessageStreamHelpers.CreatePayload(payload.AsSpan()[..payloadBufferSize], message.AsSpan()[..messageBufferSize], CommandCodes.SEND_MESSAGES_CODE);
 
-            var recv = _socket.ReceiveAsync(_responseBuffer, token);
             await _socket.SendAsync(payload.AsMemory()[..payloadBufferSize], token);
-
-            await recv;
+            await _socket.ReceiveAsync(_responseBuffer, token);
 
             var status = TcpMessageStreamHelpers.GetResponseStatus(_responseBuffer.Span);
             if (status != 0)

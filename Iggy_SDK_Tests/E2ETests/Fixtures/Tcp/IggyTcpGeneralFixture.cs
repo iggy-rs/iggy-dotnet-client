@@ -12,7 +12,7 @@ namespace Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
 
 public sealed class IggyTcpGeneralFixture : IAsyncLifetime
 {
-	public readonly IContainer Container = new ContainerBuilder().WithImage("iggyrs/iggy:latest")
+    private readonly IContainer _container = new ContainerBuilder().WithImage("iggyrs/iggy:latest")
 		//.WithPortBinding(3000, true)
 		.WithPortBinding(8090, true)
         .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8090))
@@ -22,10 +22,10 @@ public sealed class IggyTcpGeneralFixture : IAsyncLifetime
 
 	public async Task InitializeAsync()
 	{
-		await Container.StartAsync();
+		await _container.StartAsync();
 		sut = MessageStreamFactory.CreateMessageStream(options =>
 		{
-			options.BaseAdress = $"127.0.0.1:{Container.GetMappedPublicPort(8090)}";
+			options.BaseAdress = $"127.0.0.1:{_container.GetMappedPublicPort(8090)}";
 			options.Protocol = Protocol.Tcp;
 			options.SendMessagesOptions = x =>
 			{
@@ -37,6 +37,6 @@ public sealed class IggyTcpGeneralFixture : IAsyncLifetime
 
 	public async Task DisposeAsync()
 	{
-		await Container.StopAsync();
+		await _container.StopAsync();
 	}
 }

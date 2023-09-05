@@ -43,17 +43,18 @@ public static class MessageStreamFactory
         socket.ReceiveBufferSize = options.ReceiveBufferSize;
 
         //TODO - explore making this bounded ?
+        //TODO - this channel will probably need to be refactored, to accept a lambda instead of MessageSendRequest
+        //in order to make it easier to test (currently there is no way to test some scenarios such as flooding channel)
         var channel = Channel.CreateUnbounded<MessageSendRequest>(new UnboundedChannelOptions
         {
-            //TODO - turn those on, for the benchmark, to see if it will work with multi threaded tasks
+            //TODO - turn those on, for the benchmark, to see if it will work with multi-threaded tasks
             //SingleWriter = true,
             //SingleReader = true,
         });
-        //TODO - make another dispatcher for an PollingInterval of 0, that will send messages asynchronously
 
         var messageStream = new TcpMessageStream(socket, channel);
-        var messageBus = new TcpMessageInvoker(socket);
-        var messageDispatcher = new MessageSenderDispatcher(sendMessagesOptions, channel, messageBus);
+        var messageInvoker = new TcpMessageInvoker(socket);
+        var messageDispatcher = new MessageSenderDispatcher(sendMessagesOptions, channel, messageInvoker);
 
         messageDispatcher.Start();
         return messageStream;
@@ -83,8 +84,8 @@ public static class MessageStreamFactory
         });
 
         var messageStream = new HttpMessageStream(client, channel);
-        var messageBus = new MessagesDispatcher.HttpMessageInvoker(client);
-        var messageDispatcher = new MessageSenderDispatcher(sendMessagesOptions, channel, messageBus);
+        var messageInvoker = new MessagesDispatcher.HttpMessageInvoker(client);
+        var messageDispatcher = new MessageSenderDispatcher(sendMessagesOptions, channel, messageInvoker);
 
         messageDispatcher.Start();
 

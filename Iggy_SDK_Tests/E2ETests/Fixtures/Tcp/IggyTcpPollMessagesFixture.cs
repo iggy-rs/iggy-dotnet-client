@@ -7,10 +7,11 @@ using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
 using Iggy_SDK.MessageStream;
 using IContainer = DotNet.Testcontainers.Containers.IContainer;
+using Iggy_SDK_Tests.Utils.Messages;
 
 namespace Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
 
-public sealed class IggyTcpPartitionFixture : IAsyncLifetime
+public sealed class IggyTcpPollMessagesFixture : IAsyncLifetime
 {
     private readonly IContainer _container = new ContainerBuilder().WithImage("iggyrs/iggy:latest")
 		//.WithPortBinding(3000, true)
@@ -18,10 +19,23 @@ public sealed class IggyTcpPartitionFixture : IAsyncLifetime
         .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8090))
 		//.WithPortBinding(8080, true)
 		.Build();
-	public IMessageStream sut;
 
-	public readonly StreamRequest StreamRequest = StreamFactory.CreateStreamRequest();
-	public readonly TopicRequest TopicRequest = TopicFactory.CreateTopicRequest();
+    
+    public IMessageStream sut;
+
+	private static readonly StreamRequest StreamRequest = StreamFactory.CreateStreamRequest();
+	private static readonly StreamRequest NonExistingStreamRequest = StreamFactory.CreateStreamRequest();
+	private static readonly TopicRequest NonExistingTopicRequest = TopicFactory.CreateTopicRequest();
+	private static readonly TopicRequest TopicRequest = TopicFactory.CreateTopicRequest();
+
+    public readonly int StreamId = StreamRequest.StreamId;
+    public readonly int TopicId = TopicRequest.TopicId;
+    
+    public readonly int InvalidStreamId = NonExistingStreamRequest.StreamId;
+    public readonly int InvalidTopicId = NonExistingTopicRequest.TopicId;
+    
+	public readonly int PartitionId = 1;
+    
 	public async Task InitializeAsync()
 	{
 		await _container.StartAsync();
@@ -35,8 +49,20 @@ public sealed class IggyTcpPartitionFixture : IAsyncLifetime
 				x.PollingInterval = TimeSpan.FromMilliseconds(100);
 			};
 		});
+        
         await sut.CreateStreamAsync(StreamRequest);
         await sut.CreateTopicAsync(Identifier.Numeric(StreamRequest.StreamId), TopicRequest);
+        
+        //send 5 batches
+        for (int i = 0; i < 5; i++)
+        {
+            var request = MessageFactory.CreateMessageSendRequest(
+                StreamRequest.StreamId, TopicRequest.TopicId, PartitionId, 
+                MessageFactory.GenerateDummyMessages(10));
+            await sut.SendMessagesAsync(request);
+        }
+
+        await Task.Delay(200);
     }
 
 	public async Task DisposeAsync()

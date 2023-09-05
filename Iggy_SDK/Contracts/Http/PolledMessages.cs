@@ -2,7 +2,7 @@ namespace Iggy_SDK.Contracts.Http;
 
 public sealed class PolledMessages
 {
-    public required uint PartitionId { get; init; }
+    public required int PartitionId { get; init; }
     public required ulong CurrentOffset { get; init; }
     public required IReadOnlyList<MessageResponse> Messages { get; init; }
 
