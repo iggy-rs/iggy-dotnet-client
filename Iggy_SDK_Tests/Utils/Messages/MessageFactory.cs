@@ -1,6 +1,7 @@
 using Iggy_SDK;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
+using Iggy_SDK.Extensions;
 using Iggy_SDK.Headers;
 using Iggy_SDK.Kinds;
 using Iggy_SDK.Messages;
@@ -98,6 +99,26 @@ internal static class MessageFactory
             },
         };
     }
+    internal static MessageSendRequest CreateMessageSendRequest(int streamId, int topicId, int partitionId, IList<Message>? messages = null)
+    {
+        return new MessageSendRequest
+        {
+
+            StreamId = Identifier.Numeric(streamId),
+            TopicId = Identifier.Numeric(topicId),
+            Partitioning = Partitioning.PartitionId(partitionId),
+            Messages = messages ?? GenerateDummyMessages(Random.Shared.Next(1, 69), Random.Shared.Next(69 , 420))
+        };
+    }
+
+    internal static IList<Message> GenerateDummyMessages(int count, int paylaodLen, Dictionary<HeaderKey, HeaderValue>? Headers = null)
+    {
+        return Enumerable.Range(1, count).Select(i => new Message{
+            Id = Guid.NewGuid(),
+            Headers = Headers,
+            Payload = Enumerable.Range(1, paylaodLen).Select(x => (byte)x).ToArray()
+        }).ToList();
+    }
     internal static MessageFetchRequest CreateMessageFetchRequest()
     {
         return new MessageFetchRequest
@@ -111,7 +132,33 @@ internal static class MessageFactory
             TopicId = Identifier.Numeric(Random.Shared.Next(1, 10)),
         };
     }
+    internal static Dictionary<HeaderKey, HeaderValue> GenerateMessageHeaders(int count)
+    {
+        var headers = new Dictionary<HeaderKey, HeaderValue>();
+        for(int i = 0; i < count; i++)
+        {
+        headers.Add(
+            HeaderKey.New(RandomString(Random.Shared.Next(50, 254))),
+            Random.Shared.Next(1, 12) switch
 
+            {
+                1 => HeaderValue.Raw(Encoding.UTF8.GetBytes(RandomString(Random.Shared.Next(50, 254)))),
+                2 => HeaderValue.String(RandomString(Random.Shared.Next(25, 254))),
+                3 => HeaderValue.Bool(Random.Shared.Next(0,1) switch { 0 => false, 1 => true, _ => false}),
+                4 => HeaderValue.Int32(Random.Shared.Next(69, 420)),
+                5 => HeaderValue.Int64(Random.Shared.NextInt64(6942023, 98723131)),
+                6 => HeaderValue.Int128(Guid.NewGuid().ToByteArray().ToInt128()),
+                7 => HeaderValue.Guid(Guid.NewGuid()),
+                8 => HeaderValue.UInt32((uint)Random.Shared.Next(1, 69)),
+                9 => HeaderValue.UInt64((ulong)Random.Shared.Next(1, 69)),
+                10 => HeaderValue.UInt128(Guid.NewGuid().ToUInt128()),
+                11 => HeaderValue.Float32(Random.Shared.NextSingle()),
+                12 => HeaderValue.Float64(Random.Shared.NextDouble()),
+                _ =>  HeaderValue.UInt64((ulong)Random.Shared.Next(1, 69))
+            });
+        }
+        return headers;
+    }
     internal static MessageResponseHttp CreateMessageResponse()
     {
         return new MessageResponseHttp
