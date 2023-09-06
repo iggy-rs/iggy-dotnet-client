@@ -14,6 +14,7 @@
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
         <PackageReference Include="Moq" Version="4.18.4" />
         <PackageReference Include="RichardSzalay.MockHttp" Version="6.0.0" />
+        <PackageReference Include="SpecFlow.xUnit" Version="3.9.74" />
         <PackageReference Include="Testcontainers" Version="3.3.0" />
         <PackageReference Include="xunit" Version="2.4.2" />
         <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
@@ -30,6 +31,9 @@
       <ProjectReference Include="..\Iggy_SDK\Iggy_SDK.csproj" />
 
       <ProjectReference Include="..\Shared\Shared.csproj" />
+
+
+
 
 
 
