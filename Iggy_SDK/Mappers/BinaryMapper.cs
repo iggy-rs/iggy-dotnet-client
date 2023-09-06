@@ -120,7 +120,7 @@ internal static class BinaryMapper
         Func<byte[], TMessage> serializer, Func<byte[], byte[]>? decryptor = null)
     {
         int length = payload.Length;
-        var partitionId = BinaryPrimitives.ReadUInt32LittleEndian(payload[0..4]);
+        var partitionId = BinaryPrimitives.ReadInt32LittleEndian(payload[0..4]);
         var currentOffset = BinaryPrimitives.ReadUInt64LittleEndian(payload[4..12]);
         var messagesCount = BinaryPrimitives.ReadUInt32LittleEndian(payload[12..16]);
         int position = 16;

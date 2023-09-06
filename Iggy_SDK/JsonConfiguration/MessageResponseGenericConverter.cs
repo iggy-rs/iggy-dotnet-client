@@ -23,7 +23,7 @@ internal sealed class MessageResponseGenericConverter<TMessage> : JsonConverter<
 
         var root = doc.RootElement;
 
-        var partitionId = root.GetProperty(nameof(PolledMessages.PartitionId).ToSnakeCase()).GetUInt32();
+        var partitionId = root.GetProperty(nameof(PolledMessages.PartitionId).ToSnakeCase()).GetInt32();
         var currentOffset = root.GetProperty(nameof(PolledMessages.CurrentOffset).ToSnakeCase()).GetUInt64();
         var messages = root.GetProperty(nameof(PolledMessages.Messages).ToSnakeCase());
         //var messagesCount = BinaryPrimitives.ReadUInt32LittleEndian(payload[12..16]);

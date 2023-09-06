@@ -8,6 +8,7 @@ using Iggy_SDK.Factory;
 using Iggy_SDK.MessageStream;
 using IContainer = DotNet.Testcontainers.Containers.IContainer;
 using Iggy_SDK_Tests.Utils.Messages;
+using Iggy_SDK.Messages;
 
 namespace Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
 
@@ -21,7 +22,7 @@ public sealed class IggyTcpPollMessagesFixture : IAsyncLifetime
 		.Build();
 
     
-    public IMessageStream sut;
+    public required IMessageStream sut;
 
 	private static readonly StreamRequest StreamRequest = StreamFactory.CreateStreamRequest();
 	private static readonly StreamRequest NonExistingStreamRequest = StreamFactory.CreateStreamRequest();
@@ -33,7 +34,6 @@ public sealed class IggyTcpPollMessagesFixture : IAsyncLifetime
     
     public readonly int InvalidStreamId = NonExistingStreamRequest.StreamId;
     public readonly int InvalidTopicId = NonExistingTopicRequest.TopicId;
-    
 	public readonly int PartitionId = 1;
     
 	public async Task InitializeAsync()
@@ -52,15 +52,17 @@ public sealed class IggyTcpPollMessagesFixture : IAsyncLifetime
         
         await sut.CreateStreamAsync(StreamRequest);
         await sut.CreateTopicAsync(Identifier.Numeric(StreamRequest.StreamId), TopicRequest);
-        
-        //send 5 batches
-        for (int i = 0; i < 5; i++)
-        {
-            var request = MessageFactory.CreateMessageSendRequest(
-                StreamRequest.StreamId, TopicRequest.TopicId, PartitionId, 
-                MessageFactory.GenerateDummyMessages(10));
-            await sut.SendMessagesAsync(request);
-        }
+
+
+        var request = MessageFactory.CreateMessageSendRequest(
+            StreamRequest.StreamId, TopicRequest.TopicId, PartitionId,
+			MessageFactory.GenerateDummyMessages(20));
+
+        var requestWithHeaders = MessageFactory.CreateMessageSendRequest(
+            StreamRequest.StreamId, TopicRequest.TopicId, PartitionId,
+			MessageFactory.GenerateDummyMessages(20, MessageFactory.GenerateMessageHeaders(6)));
+        await sut.SendMessagesAsync(request);
+		await sut.SendMessagesAsync(requestWithHeaders);
 
         await Task.Delay(200);
     }
