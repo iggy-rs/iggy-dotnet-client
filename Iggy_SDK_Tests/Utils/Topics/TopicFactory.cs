@@ -21,7 +21,17 @@ internal static class TopicFactory
         return new TopicRequest
         {
             Name = "test_topic" + Random.Shared.Next(1, 69),
-            TopicId = Random.Shared.Next(1, 10),
+            TopicId = Random.Shared.Next(1, 2137),
+            MessageExpiry = Random.Shared.Next(1, 69),
+            PartitionsCount = Random.Shared.Next(1, 10)
+        };
+    }
+    internal static TopicRequest CreateTopicRequest(int topicId)
+    {
+        return new TopicRequest
+        {
+            Name = "test_topic" + Random.Shared.Next(1, 69),
+            TopicId = topicId,
             MessageExpiry = Random.Shared.Next(1, 69),
             PartitionsCount = Random.Shared.Next(1, 10)
         };

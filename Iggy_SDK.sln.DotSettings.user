@@ -28,6 +28,11 @@
     &lt;TestId&gt;xUnit::8514D555-35CF-4538-97D3-DC42A182B694::net7.0::Iggy_SDK_Tests.E2ETests.Messaging.PollMessagesE2ETcp.PollMessages_Should_PollMessages_Successfully&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=13997495_002Df698_002D4088_002Da169_002Dde2e1751ae45/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="PollMessagesE2ETcp #3" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;TestAncestor&gt;
+    &lt;TestId&gt;xUnit::8514D555-35CF-4538-97D3-DC42A182B694::net7.0::Iggy_SDK_Tests.E2ETests.Messaging.PollMessagesE2ETcp&lt;/TestId&gt;
+  &lt;/TestAncestor&gt;
+&lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=159bbffa_002D1bd1_002D4bc0_002Db278_002De099941bbb4f/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="SendMessagesE2ETcp" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
     &lt;TestId&gt;xUnit::8514D555-35CF-4538-97D3-DC42A182B694::net7.0::Iggy_SDK_Tests.E2ETests.Messaging.SendMessagesE2ETcp&lt;/TestId&gt;
@@ -83,6 +88,11 @@
     &lt;TestId&gt;xUnit::8514D555-35CF-4538-97D3-DC42A182B694::net7.0::Iggy_SDK_Tests.MapperTests.BinaryMapper.MapMessages_NoHeaders_ReturnsValidMessageResponses&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=57d34563_002Dedc7_002D4a89_002Db7cb_002D4ac5bdb27b3d/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="PollMessagesE2ETcp" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;TestAncestor&gt;
+    &lt;TestId&gt;xUnit::8514D555-35CF-4538-97D3-DC42A182B694::net7.0::Iggy_SDK_Tests.E2ETests.Messaging.PollMessagesE2ETcp&lt;/TestId&gt;
+  &lt;/TestAncestor&gt;
+&lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=580cb3b7_002Dff45_002D4f85_002D9631_002Dc9143d4fc9f9/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="TopicsE2E #3" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
     &lt;TestId&gt;xUnit::8514D555-35CF-4538-97D3-DC42A182B694::net7.0::Iggy_SDK_Tests.E2ETests.Tcp.Streams.TopicsE2E&lt;/TestId&gt;
@@ -107,6 +117,11 @@
 &lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=65ba0f4e_002D306b_002D4084_002D92a4_002D913a82e52850/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="StreamsE2E" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;Project Location="/home/numinex/projects/iggy-dotnet-client/Iggy_SDK_Tests" Presentation="&amp;lt;Iggy_SDK_Tests&amp;gt;" /&gt;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=6f3a0564_002D3196_002D4125_002Db587_002Dcbccd5ea964a/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="PollMessagesE2ETcp #6" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;TestAncestor&gt;
+    &lt;TestId&gt;xUnit::8514D555-35CF-4538-97D3-DC42A182B694::net7.0::Iggy_SDK_Tests.E2ETests.Messaging.PollMessagesE2ETcp&lt;/TestId&gt;
+  &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=6f4cc285_002De863_002D4dcf_002D9413_002Dc3d5259f3103/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="TcpMessageStream" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
@@ -161,6 +176,11 @@
     &lt;TestId&gt;xUnit::8514D555-35CF-4538-97D3-DC42A182B694::net7.0::Iggy_SDK_Tests.E2ETests.Tcp.Streams.TopicsE2E&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=a8b84a95_002Da457_002D4f40_002D9b94_002Da917a792e15d/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="PollMessagesE2ETcp #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;TestAncestor&gt;
+    &lt;TestId&gt;xUnit::8514D555-35CF-4538-97D3-DC42A182B694::net7.0::Iggy_SDK_Tests.E2ETests.Messaging.PollMessagesE2ETcp&lt;/TestId&gt;
+  &lt;/TestAncestor&gt;
+&lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=b18afe3e_002Dabde_002D4595_002Dacb6_002D9abd2e18d3c8/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="MapStream_ReturnsValidStreamResponse" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;Project Location="/home/numinex/projects/Iggy_SDK/Iggy_SDK_Tests" Presentation="&amp;lt;Iggy_SDK_Tests&amp;gt;" /&gt;
 &lt;/SessionState&gt;</s:String>
@@ -174,7 +194,7 @@
     &lt;TestId&gt;xUnit::8514D555-35CF-4538-97D3-DC42A182B694::net7.0::Iggy_SDK_Tests.UtilityTests.JsonConverterTests.Read_DeserializeValidJson_ReturnsMessageResponseList&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=c04afc4e_002D6a46_002D4742_002D8ae8_002D3598aa73269f/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="PollMessages_Should_PollMessages_Successfully #5" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=c04afc4e_002D6a46_002D4742_002D8ae8_002D3598aa73269f/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="PollMessages_Should_PollMessages_Successfully #5" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
     &lt;TestId&gt;xUnit::8514D555-35CF-4538-97D3-DC42A182B694::net7.0::Iggy_SDK_Tests.E2ETests.Messaging.PollMessagesE2ETcp&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
@@ -192,6 +212,11 @@
     &lt;TestId&gt;xUnit::8514D555-35CF-4538-97D3-DC42A182B694::net7.0::Iggy_SDK_Tests.UtilityTests.JsonConverterTests.Read_DeserializeValidJson_ReturnsMessageResponseList&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=d50c9977_002D24e9_002D40ab_002Db890_002D88d80b846823/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="PollMessagesE2ETcp #5" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;TestAncestor&gt;
+    &lt;TestId&gt;xUnit::8514D555-35CF-4538-97D3-DC42A182B694::net7.0::Iggy_SDK_Tests.E2ETests.Messaging.PollMessagesE2ETcp&lt;/TestId&gt;
+  &lt;/TestAncestor&gt;
+&lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=dbe5043f_002D05f9_002D487c_002Da9b7_002D512b2ee6485d/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="SendMessages_NoHeaders_NonGeneric_Should_Throw_InvalidResponse" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
     &lt;TestId&gt;xUnit::8514D555-35CF-4538-97D3-DC42A182B694::net7.0::Iggy_SDK_Tests.E2ETests.Messaging.SendMessagesE2ETcp&lt;/TestId&gt;
@@ -203,10 +228,18 @@
     &lt;TestId&gt;xUnit::8514D555-35CF-4538-97D3-DC42A182B694::net7.0::Iggy_SDK_Tests.IntegrationTests.TcpMessageStream.Test&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=e5638b12_002D77c7_002D44da_002D953a_002D09e8ee9978a7/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="PollMessagesE2ETcp #4" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;TestAncestor&gt;
+    &lt;TestId&gt;xUnit::8514D555-35CF-4538-97D3-DC42A182B694::net7.0::Iggy_SDK_Tests.E2ETests.Messaging.PollMessagesE2ETcp&lt;/TestId&gt;
+  &lt;/TestAncestor&gt;
+&lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=ebc5e7dd_002D3aaa_002D4339_002D8bc9_002Dc908eeca1077/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="TopicsE2E" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
     &lt;TestId&gt;xUnit::8514D555-35CF-4538-97D3-DC42A182B694::net7.0::Iggy_SDK_Tests.E2ETests.Tcp.Streams.TopicsE2E&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=f56f371c_002D0b48_002D40df_002D90cb_002D314567639646/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="PollMessagesE2ETcp #7" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;Project Location="/home/numinex/projects/iggy-dotnet-client/Iggy_SDK_Tests" Presentation="&amp;lt;Iggy_SDK_Tests&amp;gt;" /&gt;
 &lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=fb39e0ed_002D9ae7_002D42be_002D87b8_002Dc466e2675de2/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Test #6" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
@@ -214,5 +247,7 @@
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=fdae582f_002D649c_002D46a6_002D8ad5_002D876f70bf8246/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="GetTopicByIdAsync_Returns200Ok_WhenFound" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
-  &lt;ProjectFile&gt;8514D555-35CF-4538-97D3-DC42A182B694/d:E2ETests/d:Messaging/f:MessagingE2ETcp.cs&lt;/ProjectFile&gt;
+  &lt;TestAncestor&gt;
+    &lt;TestId&gt;xUnit::8514D555-35CF-4538-97D3-DC42A182B694::net7.0::Iggy_SDK_Tests.E2ETests.Messaging.PollMessagesE2ETcp&lt;/TestId&gt;
+  &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

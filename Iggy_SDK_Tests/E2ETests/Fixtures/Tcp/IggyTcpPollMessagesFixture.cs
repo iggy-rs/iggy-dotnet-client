@@ -26,11 +26,13 @@ public sealed class IggyTcpPollMessagesFixture : IAsyncLifetime
 
 	private static readonly StreamRequest StreamRequest = StreamFactory.CreateStreamRequest();
 	private static readonly StreamRequest NonExistingStreamRequest = StreamFactory.CreateStreamRequest();
-	private static readonly TopicRequest NonExistingTopicRequest = TopicFactory.CreateTopicRequest();
+	private static readonly TopicRequest NonExistingTopicRequest = TopicFactory.CreateTopicRequest(3000);
 	private static readonly TopicRequest TopicRequest = TopicFactory.CreateTopicRequest();
+	private static readonly TopicRequest HeadersTopicRequest = TopicFactory.CreateTopicRequest();
 
     public readonly int StreamId = StreamRequest.StreamId;
     public readonly int TopicId = TopicRequest.TopicId;
+    public readonly int HeadersTopicId = HeadersTopicRequest.TopicId;
     
     public readonly int InvalidStreamId = NonExistingStreamRequest.StreamId;
     public readonly int InvalidTopicId = NonExistingTopicRequest.TopicId;
@@ -43,6 +45,8 @@ public sealed class IggyTcpPollMessagesFixture : IAsyncLifetime
 		{
 			options.BaseAdress = $"127.0.0.1:{_container.GetMappedPublicPort(8090)}";
 			options.Protocol = Protocol.Tcp;
+            options.SendBufferSize = 100000;
+            options.ReceiveBufferSize = 100000;
 			options.SendMessagesOptions = x =>
 			{
 				x.MaxMessagesPerBatch = 1000;
@@ -52,6 +56,7 @@ public sealed class IggyTcpPollMessagesFixture : IAsyncLifetime
         
         await sut.CreateStreamAsync(StreamRequest);
         await sut.CreateTopicAsync(Identifier.Numeric(StreamRequest.StreamId), TopicRequest);
+        await sut.CreateTopicAsync(Identifier.Numeric(StreamRequest.StreamId), HeadersTopicRequest);
 
 
         var request = MessageFactory.CreateMessageSendRequest(
@@ -59,7 +64,7 @@ public sealed class IggyTcpPollMessagesFixture : IAsyncLifetime
 			MessageFactory.GenerateDummyMessages(20));
 
         var requestWithHeaders = MessageFactory.CreateMessageSendRequest(
-            StreamRequest.StreamId, TopicRequest.TopicId, PartitionId,
+            StreamRequest.StreamId, HeadersTopicRequest.TopicId, PartitionId,
 			MessageFactory.GenerateDummyMessages(20, MessageFactory.GenerateMessageHeaders(6)));
         await sut.SendMessagesAsync(request);
 		await sut.SendMessagesAsync(requestWithHeaders);
