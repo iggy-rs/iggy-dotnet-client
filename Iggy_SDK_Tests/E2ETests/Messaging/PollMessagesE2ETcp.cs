@@ -20,11 +20,11 @@ public sealed class PollMessagesE2ETcp : IClassFixture<IggyTcpPollMessagesFixtur
     {
         _fixture = fixture;
         _messageFetchRequest =
-            MessageFactory.CreateMessageFetchRequest(10, _fixture.StreamId, _fixture.TopicId, _fixture.PartitionId);
+            MessageFactory.CreateMessageFetchRequestConsumer(10, _fixture.StreamId, _fixture.TopicId, _fixture.PartitionId);
         _headersMessageFetchRequest =
-            MessageFactory.CreateMessageFetchRequest(10, _fixture.StreamId, _fixture.HeadersTopicId, _fixture.PartitionId);
+            MessageFactory.CreateMessageFetchRequestConsumer(10, _fixture.StreamId, _fixture.HeadersTopicId, _fixture.PartitionId);
         _invalidFetchRequest = 
-            MessageFactory.CreateMessageFetchRequest(10, _fixture.InvalidStreamId, _fixture.InvalidTopicId, _fixture.PartitionId);
+            MessageFactory.CreateMessageFetchRequestConsumer(10, _fixture.InvalidStreamId, _fixture.InvalidTopicId, _fixture.PartitionId);
     }
     
     [Fact, TestPriority(1)]

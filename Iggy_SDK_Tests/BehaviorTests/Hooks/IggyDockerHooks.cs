@@ -1,13 +1,11 @@
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 using Iggy_SDK;
-using Iggy_SDK_Tests.Utils.Messages;
 using Iggy_SDK_Tests.Utils.Streams;
 using Iggy_SDK_Tests.Utils.Topics;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
-using Iggy_SDK.Messages;
 using Iggy_SDK.MessageStream;
 using TechTalk.SpecFlow;
 using BoDi;
@@ -28,22 +26,7 @@ public sealed class IggyDockerHooks
     private static readonly TopicRequest _topicConsumersRequest = TopicFactory.CreateTopicRequest(); 
     private static readonly TopicRequest _topicConsumerGroupRequest = TopicFactory.CreateTopicRequest();
 
-    private static readonly int _partitionId = 1;
-
-    private static readonly IList<Message> _messages = MessageFactory.GenerateDummyMessages(10);
-
-    private static readonly MessageSendRequest _messageConsumersSendRequest =
-        MessageFactory.CreateMessageSendRequest(_streamRequest.StreamId, _topicConsumersRequest.TopicId, 
-            _partitionId, _messages);
-
-    private static readonly MessageSendRequest _messageConsumerGroupSendRequest =
-        MessageFactory.CreateMessageSendRequest(_streamRequest.StreamId, _topicConsumerGroupRequest.TopicId,
-            _partitionId, _messages);
-    
-
     private readonly IObjectContainer _dependencyContainer; 
-
-
     public IggyDockerHooks(IObjectContainer dependencyContainer)
     {
         _dependencyContainer = dependencyContainer;
@@ -52,25 +35,47 @@ public sealed class IggyDockerHooks
     [BeforeScenario]
     public void RegisterDependencies()
     {
-		var messageBus = MessageStreamFactory.CreateMessageStream(options =>
-		{
-			options.BaseAdress = $"127.0.0.1:{_container.GetMappedPublicPort(8090)}";
-			options.Protocol = Protocol.Tcp;
+        var clients = new List<IMessageStream>();
+        var messageBus = MessageStreamFactory.CreateMessageStream(options =>
+        {
+            options.BaseAdress = $"127.0.0.1:{_container.GetMappedPublicPort(8090)}";
+            options.Protocol = Protocol.Tcp;
             options.SendBufferSize = 10000;
             options.ReceiveBufferSize = 10000;
-			options.SendMessagesOptions = x =>
-			{
-				x.MaxMessagesPerBatch = 1000;
-				x.PollingInterval = TimeSpan.FromMilliseconds(100);
-			}; });
-       _dependencyContainer.RegisterInstanceAs<IMessageStream>(messageBus);
-        var listOfIds = new int[3]{_streamRequest.StreamId, _topicConsumersRequest.TopicId, _topicConsumerGroupRequest.TopicId};
-       _dependencyContainer.RegisterInstanceAs<int[]>(listOfIds);
+            options.SendMessagesOptions = x =>
+            {
+                x.MaxMessagesPerBatch = 1000;
+                x.PollingInterval = TimeSpan.FromMilliseconds(50);
+            };
+        });
+        
+        for (int i = 0; i < 2; i++)
+        {
+            var client = MessageStreamFactory.CreateMessageStream(options =>
+            {
+                options.BaseAdress = $"127.0.0.1:{_container.GetMappedPublicPort(8090)}";
+                options.Protocol = Protocol.Tcp;
+                options.SendBufferSize = 10000;
+                options.ReceiveBufferSize = 10000;
+                options.SendMessagesOptions = x =>
+                {
+                    x.MaxMessagesPerBatch = 1000;
+                    x.PollingInterval = TimeSpan.FromMilliseconds(50);
+                };
+            });
+            clients.Add(client);
+        }
+        
+
+        _dependencyContainer.RegisterInstanceAs<IMessageStream>(messageBus);
+        _dependencyContainer.RegisterInstanceAs<List<IMessageStream>>(clients);
+        var listOfIds = new int[3] { _streamRequest.StreamId, _topicConsumersRequest.TopicId, _topicConsumerGroupRequest.TopicId };
+        _dependencyContainer.RegisterInstanceAs<int[]>(listOfIds);
 
     }
 
     [BeforeTestRun]
-    public static async Task IntialSetup()
+    public static async Task InitialSetup()
     {
         await _container.StartAsync();
 		var messageBus = MessageStreamFactory.CreateMessageStream(options =>
@@ -90,8 +95,6 @@ public sealed class IggyDockerHooks
         await messageBus.CreateTopicAsync(Identifier.Numeric(_streamRequest.StreamId), _topicConsumersRequest);
         await messageBus.CreateTopicAsync(Identifier.Numeric(_streamRequest.StreamId), _topicConsumerGroupRequest);
         
-        await messageBus.SendMessagesAsync(_messageConsumersSendRequest);
-        await messageBus.SendMessagesAsync(_messageConsumerGroupSendRequest);
     }
 
     [AfterTestRun]

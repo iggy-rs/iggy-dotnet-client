@@ -144,7 +144,7 @@ internal static class MessageFactory
             Payload = Enumerable.Range(1, payloadLen).Select(x => (byte)x).ToArray()
         }).ToList();
     }
-    internal static MessageFetchRequest CreateMessageFetchRequest()
+    internal static MessageFetchRequest CreateMessageFetchRequestConsumer()
     {
         return new MessageFetchRequest
         {
@@ -157,13 +157,26 @@ internal static class MessageFactory
             TopicId = Identifier.Numeric(Random.Shared.Next(1, 10)),
         };
     }
-    internal static MessageFetchRequest CreateMessageFetchRequest(int count, int streamId, int topicId, int partitionId, int consumerId = 1)
+    internal static MessageFetchRequest CreateMessageFetchRequestConsumer(int count, int streamId, int topicId, int partitionId, int consumerId = 1)
     {
         return new MessageFetchRequest
         {
             Count = count,
             AutoCommit = true,
             Consumer = Consumer.New(consumerId),
+            PartitionId = partitionId,
+            PollingStrategy = PollingStrategy.Next(),
+            StreamId = Identifier.Numeric(streamId),
+            TopicId = Identifier.Numeric(topicId),
+        };
+    }
+    internal static MessageFetchRequest CreateMessageFetchRequestConsumerGroup(int count, int streamId, int topicId, int partitionId, int consumerGroupId)
+    {
+        return new MessageFetchRequest
+        {
+            Count = count,
+            AutoCommit = true,
+            Consumer = Consumer.Group(consumerGroupId),
             PartitionId = partitionId,
             PollingStrategy = PollingStrategy.Next(),
             StreamId = Identifier.Numeric(streamId),

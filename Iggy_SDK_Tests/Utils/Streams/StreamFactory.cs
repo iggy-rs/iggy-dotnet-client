@@ -21,7 +21,7 @@ internal static class StreamFactory
         return new StreamRequest
         {
             Name = "test-stream" + Random.Shared.Next(1, 69),
-            StreamId = Random.Shared.Next(1, 10),
+            StreamId = Random.Shared.Next(1, 2137),
         };
     }
     internal static StreamResponse CreateStreamsResponse()

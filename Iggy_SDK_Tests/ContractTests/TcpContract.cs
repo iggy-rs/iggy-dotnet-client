@@ -24,7 +24,7 @@ public sealed class TcpContract
     {
         const int messageBufferSize = 23 + 2 + 4 + 2 + 4;
         // Arrange
-        var request = MessageFactory.CreateMessageFetchRequest();
+        var request = MessageFactory.CreateMessageFetchRequestConsumer();
         var result = new byte[messageBufferSize];
 
         // Act

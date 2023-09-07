@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Iggy_SDK;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.MessageStream;
 using Iggy_SDK_Tests.Utils.Messages;
@@ -6,30 +7,48 @@ using TechTalk.SpecFlow;
 
 namespace Iggy_SDK_Tests.BehaviorTests.Steps;
 
+//TODO - cleanup this mess
 [Binding]
 public sealed class MultipleConsumersPollingSteps
 {
     private readonly ScenarioContext _scenarioContext;
     private readonly IMessageStream _messageStream;
+    private readonly List<IMessageStream> _clients;
     private readonly int[] _listOfIds;
 
-    private readonly int[] _consumersIds = new int[] {1,2,3};
+    private readonly int[] _consumersIds = new int[] {1,2,3,4};
+    private static readonly int _partitionId = 1;
+    private static readonly int _consumerGroupId = 1;
 
-    public MultipleConsumersPollingSteps(ScenarioContext scenarioContext, IMessageStream messageStream, int[] listOfIds)
+    public MultipleConsumersPollingSteps(ScenarioContext scenarioContext, IMessageStream messageStream,
+        List<IMessageStream> clients, int[] listOfIds)
     {
         _scenarioContext = scenarioContext;
         _messageStream = messageStream;
+        _clients = clients;
         _listOfIds = listOfIds;
 
     }
+    [Given(@"Messages are available in topic on single partition")]
+    public async Task GivenMessagesAreAvailableOnConsumerTopic()
+    {
+        var messages = MessageFactory.GenerateDummyMessages(10);
+        var messageConsumersSendRequest =
+            MessageFactory.CreateMessageSendRequest(_listOfIds[0], _listOfIds[1],
+                _partitionId, messages);
+        
+        await _messageStream.SendMessagesAsync(messageConsumersSendRequest);
+        //waiting for the message dispatcher to batch the messages and send them to server
+        await Task.Delay(1500);
+    }
 
-    [When(@"Consumers poll messages")]
+    [When(@"Consumers polls messages")]
     public async Task WhenConsumersPollMessages()
     {
         var consumerPolledMessages = new List<PolledMessages>();
         foreach(var consumerId in _consumersIds)
         {
-            var request = MessageFactory.CreateMessageFetchRequest(10, _listOfIds[0], _listOfIds[1], 1 , consumerId);
+            var request = MessageFactory.CreateMessageFetchRequestConsumer(10, _listOfIds[0], _listOfIds[1], _partitionId , consumerId);
             var result = await _messageStream.PollMessagesAsync(request);
             consumerPolledMessages.Add(result);
         }
@@ -40,24 +59,79 @@ public sealed class MultipleConsumersPollingSteps
     public void ThenEachConsumerGetsEqualAmountOfMessages()
     {
         var consumerPolledMessages = _scenarioContext.Get<List<PolledMessages>>("ConsumersPollResults");
-        
         foreach(var polledMessage in consumerPolledMessages)
         {
-            var xd = polledMessage.Messages.Count().Should().Be(10);
-            break;
+            polledMessage.Messages.Count.Should().Be(10);
+        }
+    }
+    
+    
+    [Given(@"Messages are available in topic on multiple partitions")]
+    public async Task GivenMessagesAreAvailableOnConsumergroupTopicAndConsumergroupExists()
+    {
+        var messages = MessageFactory.GenerateDummyMessages(10);
+        var messageConsumerGroupSendRequest =
+            MessageFactory.CreateMessageSendRequest(_listOfIds[0], _listOfIds[2],
+                _partitionId, messages);
+         var messageConsumerGroupSendRequestPt2 =
+             MessageFactory.CreateMessageSendRequest(_listOfIds[0], _listOfIds[2],
+                 _partitionId + 1, messages);
+         var messageConsumerGroupSendRequestPt3 =
+             MessageFactory.CreateMessageSendRequest(_listOfIds[0], _listOfIds[2],
+                 _partitionId + 2, messages);
+         var messageConsumerGroupSendRequestPt4 =
+             MessageFactory.CreateMessageSendRequest(_listOfIds[0], _listOfIds[2],
+                 _partitionId + 3, messages);
+
+        await _messageStream.CreateConsumerGroupAsync(new CreateConsumerGroupRequest
+        {
+            StreamId = Identifier.Numeric(_listOfIds[0]),
+            TopicId = Identifier.Numeric(_listOfIds[2]),
+            ConsumerGroupId = _consumerGroupId
+        });
+        await _messageStream.SendMessagesAsync(messageConsumerGroupSendRequest);
+        await _messageStream.SendMessagesAsync(messageConsumerGroupSendRequestPt2);
+         await _messageStream.SendMessagesAsync(messageConsumerGroupSendRequestPt3);
+         await _messageStream.SendMessagesAsync(messageConsumerGroupSendRequestPt4);
+        //waiting for the message dispatcher to batch the messages and send them to server
+        await Task.Delay(1500);
+    }
+    
+    [When(@"Consumer group polls messages")]
+    public async Task WhenConsumerGroupPollMessages()
+    {
+        var consumerPolledMessages = new List<PolledMessages>();
+        foreach (var client in _clients)
+        {
+            await client.JoinConsumerGroupAsync(new JoinConsumerGroupRequest
+            {
+                StreamId = Identifier.Numeric(_listOfIds[0]),
+                TopicId = Identifier.Numeric(_listOfIds[2]),
+                ConsumerGroupId = _consumerGroupId
+            });
         }
 
+        foreach (var client in _clients)
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                var request = MessageFactory.CreateMessageFetchRequestConsumerGroup(10, _listOfIds[0], _listOfIds[2], 0, _consumerGroupId);
+                var result = await client.PollMessagesAsync(request);
+                consumerPolledMessages.Add(result);
+            }
+        }
+
+        _scenarioContext.Add("ConsumerGroupPollResults", consumerPolledMessages);
     }
 
-    [When(@"Consumer group poll messages")]
-    public void WhenConsumerGroupPollMessages()
-    {
-        ScenarioContext.StepIsPending();
-    }
 
-    [Then(@"Each consumer gets same amount of messages")]
+    [Then(@"Each consumer gets messages from server-side calculated partitions")]
     public void ThenEachConsumerGetsSameAmountOfMessages()
     {
-        ScenarioContext.StepIsPending();
+        var consumerPolledMessages = _scenarioContext.Get<List<PolledMessages>>("ConsumerGroupPollResults");
+        foreach (var polledMessage in consumerPolledMessages)
+        {
+            polledMessage.Messages.Count.Should().Be(10);
+        }
     }
 }

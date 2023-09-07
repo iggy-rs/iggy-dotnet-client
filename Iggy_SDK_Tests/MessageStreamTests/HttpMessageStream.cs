@@ -173,7 +173,7 @@ public sealed class HttpMessageStream
     [Fact]
     public async Task GetMessagesAsync_ThrowsErrorResponseException_OnFailure()
     {
-        var request = MessageFactory.CreateMessageFetchRequest();
+        var request = MessageFactory.CreateMessageFetchRequestConsumer();
         var content = JsonSerializer.Serialize(ErrorModelFactory.CreateErrorModelBadRequest(), _toSnakeCaseOptions);
 
         _httpHandler.When(HttpMethod.Get,
