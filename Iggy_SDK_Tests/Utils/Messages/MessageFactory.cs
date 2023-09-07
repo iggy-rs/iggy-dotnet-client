@@ -157,13 +157,13 @@ internal static class MessageFactory
             TopicId = Identifier.Numeric(Random.Shared.Next(1, 10)),
         };
     }
-    internal static MessageFetchRequest CreateMessageFetchRequest(int count, int streamId, int topicId, int partitionId)
+    internal static MessageFetchRequest CreateMessageFetchRequest(int count, int streamId, int topicId, int partitionId, int consumerId = 1)
     {
         return new MessageFetchRequest
         {
             Count = count,
             AutoCommit = true,
-            Consumer = Consumer.New(1),
+            Consumer = Consumer.New(consumerId),
             PartitionId = partitionId,
             PollingStrategy = PollingStrategy.Next(),
             StreamId = Identifier.Numeric(streamId),
