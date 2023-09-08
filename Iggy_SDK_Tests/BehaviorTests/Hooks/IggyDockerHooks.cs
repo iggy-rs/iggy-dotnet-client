@@ -9,6 +9,7 @@ using Iggy_SDK.Factory;
 using Iggy_SDK.MessageStream;
 using TechTalk.SpecFlow;
 using BoDi;
+using Iggy_SDK_Tests.Utils.SpecFlowTypes;
 
 namespace Iggy_SDK_Tests.BehaviorTests.Hooks;
 
@@ -65,12 +66,16 @@ public sealed class IggyDockerHooks
             });
             clients.Add(client);
         }
-        
 
         _dependencyContainer.RegisterInstanceAs<IMessageStream>(messageBus);
         _dependencyContainer.RegisterInstanceAs<List<IMessageStream>>(clients);
-        var listOfIds = new int[3] { _streamRequest.StreamId, _topicConsumersRequest.TopicId, _topicConsumerGroupRequest.TopicId };
-        _dependencyContainer.RegisterInstanceAs<int[]>(listOfIds);
+        var listOfIds = new ConsumerPollStreamTopicId
+        {
+            StreamId = _streamRequest.StreamId, 
+            ConsumerTopicId = _topicConsumersRequest.TopicId,
+            ConsumerGroupTopicId = _topicConsumerGroupRequest.TopicId
+        };
+        _dependencyContainer.RegisterInstanceAs(listOfIds);
 
     }
 

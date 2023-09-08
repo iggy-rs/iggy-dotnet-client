@@ -94,8 +94,16 @@ public sealed class ConsumerGroupE2ETcp : IClassFixture<IggyTcpConsumerGroupFixt
             .Should()
             .NotThrowAsync();
     }
-
+    
     [Fact, TestPriority(8)]
+    public async Task JoinConsumerGroup_Should_Throw_InvalidResponse()
+    {
+        await _fixture.sut.Invoking(x => x.JoinConsumerGroupAsync(_joinConsumerGroupRequest))
+            .Should()
+            .ThrowExactlyAsync<InvalidResponseException>();
+    }
+
+    [Fact, TestPriority(9)]
     public async Task DeleteConsumerGroup_Should_Throw_InvalidResponse()
     {
         await _fixture.sut.Invoking(x => x.DeleteConsumerGroupAsync(_deleteConsumerGroupRequest))
