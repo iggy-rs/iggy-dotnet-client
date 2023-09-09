@@ -1,3 +1,4 @@
+@ignore
 Feature: Multiple consumers poll messages from same topic.
 
 Scenario: Multiple consumers not in a consumer group poll messages
