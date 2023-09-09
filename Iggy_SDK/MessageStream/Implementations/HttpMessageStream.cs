@@ -99,9 +99,16 @@ public class HttpMessageStream : IMessageStream
         throw new Exception("Unknown error occurred.");
     }
 
-    public Task UpdateStreamAsync(Identifier streamId, UpdateStreamRequest request, CancellationToken token = default)
+    public async Task UpdateStreamAsync(Identifier streamId, UpdateStreamRequest request, CancellationToken token = default)
     {
-        throw new NotImplementedException();
+        var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);    
+        var data = new StringContent(json, Encoding.UTF8, "application/json");
+        var response = await _httpClient.PutAsync($"/streams/{streamId}", data, token);
+        if (!response.IsSuccessStatusCode)
+        {
+            await HandleResponseAsync(response);
+            throw new Exception("Unknown error occurred.");
+        }
     }
 
     public async Task<IReadOnlyList<StreamResponse>> GetStreamsAsync(CancellationToken token = default)
@@ -131,9 +138,16 @@ public class HttpMessageStream : IMessageStream
         }
     }
 
-    public Task UpdateTopicAsync(Identifier streamId, Identifier topicId, UpdateTopicRequest request, CancellationToken token = default)
+    public async Task UpdateTopicAsync(Identifier streamId, Identifier topicId, UpdateTopicRequest request, CancellationToken token = default)
     {
-        throw new NotImplementedException();
+        var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
+        var data = new StringContent(json, Encoding.UTF8, "application/json");
+        var response = await _httpClient.PutAsync($"/streams/{streamId}/topics/{topicId}", data, token);
+        if (!response.IsSuccessStatusCode)
+        {
+            await HandleResponseAsync(response);
+            throw new Exception("Unknown error occurred.");
+        }
     }
 
     public async Task DeleteTopicAsync(Identifier streamId, Identifier topicId, CancellationToken token = default)
