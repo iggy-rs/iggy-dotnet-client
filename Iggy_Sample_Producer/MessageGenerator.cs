@@ -65,4 +65,3 @@ public static class MessageGenerator
         };
     }
 }
-

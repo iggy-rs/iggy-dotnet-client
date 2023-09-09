@@ -101,7 +101,7 @@ public class HttpMessageStream : IMessageStream
 
     public async Task UpdateStreamAsync(Identifier streamId, UpdateStreamRequest request, CancellationToken token = default)
     {
-        var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);    
+        var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await _httpClient.PutAsync($"/streams/{streamId}", data, token);
         if (!response.IsSuccessStatusCode)

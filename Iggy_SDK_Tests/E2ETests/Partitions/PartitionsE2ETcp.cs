@@ -1,22 +1,22 @@
 using FluentAssertions;
 using Iggy_SDK;
+using Iggy_SDK.Contracts.Http;
+using Iggy_SDK.Exceptions;
 using Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
 using Iggy_SDK_Tests.Utils;
 using Iggy_SDK_Tests.Utils.Partitions;
-using Iggy_SDK.Contracts.Http;
-using Iggy_SDK.Exceptions;
 
 namespace Iggy_SDK_Tests.E2ETests.Partitions;
 
 [TestCaseOrderer("Iggy_SDK_Tests.Utils.PriorityOrderer", "Iggy_SDK_Tests")]
 public sealed class PartitionsE2ETcp : IClassFixture<IggyTcpPartitionFixture>
 {
-	private readonly IggyTcpPartitionFixture _fixture;
+    private readonly IggyTcpPartitionFixture _fixture;
     private readonly CreatePartitionsRequest _partitionsRequest;
     private readonly DeletePartitionsRequest _deletePartitionsRequest;
-	public PartitionsE2ETcp(IggyTcpPartitionFixture fixture)
-	{
-		_fixture = fixture;
+    public PartitionsE2ETcp(IggyTcpPartitionFixture fixture)
+    {
+        _fixture = fixture;
         _partitionsRequest =
             PartitionFactory.CreatePartitionsRequest(_fixture.StreamRequest.StreamId, _fixture.TopicRequest.TopicId);
         _deletePartitionsRequest = PartitionFactory.CreateDeletePartitionsRequest(_fixture.StreamRequest.StreamId,
@@ -38,7 +38,7 @@ public sealed class PartitionsE2ETcp : IClassFixture<IggyTcpPartitionFixture>
             .Should()
             .NotThrowAsync();
     }
-    
+
     [Fact, TestPriority(3)]
     public async Task DeletePartition_Should_Throw_WhenTopic_DoesNotExist()
     {
@@ -49,7 +49,7 @@ public sealed class PartitionsE2ETcp : IClassFixture<IggyTcpPartitionFixture>
             .Should()
             .ThrowExactlyAsync<InvalidResponseException>();
     }
-    
+
     [Fact, TestPriority(4)]
     public async Task DeletePartition_Should_Throw_WhenStream_DoesNotExist()
     {

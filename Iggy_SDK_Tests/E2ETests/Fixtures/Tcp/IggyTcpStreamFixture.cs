@@ -1,28 +1,28 @@
 using DotNet.Testcontainers.Builders;
-using Iggy_SDK_Tests.Utils.Streams;
 using Iggy_SDK.Contracts.Http;
+using Iggy_SDK_Tests.Utils.Streams;
 using IContainer = DotNet.Testcontainers.Containers.IContainer;
 
 namespace Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
 
 public sealed class IggyTcpStreamFixture : IAsyncLifetime
 {
-	public readonly IContainer Container = new ContainerBuilder().WithImage("iggyrs/iggy:latest")
-		//.WithPortBinding(3000, true)
-		.WithPortBinding(8090, true)
+    public readonly IContainer Container = new ContainerBuilder().WithImage("iggyrs/iggy:latest")
+        //.WithPortBinding(3000, true)
+        .WithPortBinding(8090, true)
         .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8090))
-		//.WithPortBinding(8080, true)
-		.Build();
+        //.WithPortBinding(8080, true)
+        .Build();
 
-	public readonly StreamRequest StreamRequest = StreamFactory.CreateStreamRequest();
+    public readonly StreamRequest StreamRequest = StreamFactory.CreateStreamRequest();
     public readonly UpdateStreamRequest UpdateStreamRequest = StreamFactory.CreateUpdateStreamRequest();
-	public async Task InitializeAsync()
-	{
-		await Container.StartAsync();
-	}
+    public async Task InitializeAsync()
+    {
+        await Container.StartAsync();
+    }
 
-	public async Task DisposeAsync()
-	{
-		await Container.StopAsync();
-	}
+    public async Task DisposeAsync()
+    {
+        await Container.StopAsync();
+    }
 }

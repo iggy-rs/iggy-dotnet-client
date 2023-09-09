@@ -2,13 +2,13 @@ using BoDi;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 using Iggy_SDK;
-using Iggy_SDK_Tests.Utils.SpecFlowTypes;
-using Iggy_SDK_Tests.Utils.Streams;
-using Iggy_SDK_Tests.Utils.Topics;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
 using Iggy_SDK.MessageStream;
+using Iggy_SDK_Tests.Utils.SpecFlowTypes;
+using Iggy_SDK_Tests.Utils.Streams;
+using Iggy_SDK_Tests.Utils.Topics;
 using TechTalk.SpecFlow;
 
 namespace Iggy_SDK_Tests.BehaviorTests.ConsumerGroupPolling.Hooks;
@@ -17,17 +17,17 @@ namespace Iggy_SDK_Tests.BehaviorTests.ConsumerGroupPolling.Hooks;
 public sealed class IggyDockerHooks
 {
     private static readonly IContainer _container = new ContainerBuilder().WithImage("iggyrs/iggy:latest")
-		//.WithPortBinding(3000, true)
-		.WithPortBinding(8090, true)
+        //.WithPortBinding(3000, true)
+        .WithPortBinding(8090, true)
         .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8090))
-		//.WithPortBinding(8080, true)
-		.Build();
+        //.WithPortBinding(8080, true)
+        .Build();
 
     private static readonly StreamRequest _streamRequest = StreamFactory.CreateStreamRequest();
-    private static readonly TopicRequest _topicConsumersRequest = TopicFactory.CreateTopicRequest(); 
+    private static readonly TopicRequest _topicConsumersRequest = TopicFactory.CreateTopicRequest();
     private static readonly TopicRequest _topicConsumerGroupRequest = TopicFactory.CreateTopicRequest();
 
-    private readonly IObjectContainer _dependencyContainer; 
+    private readonly IObjectContainer _dependencyContainer;
     public IggyDockerHooks(IObjectContainer dependencyContainer)
     {
         _dependencyContainer = dependencyContainer;
@@ -49,7 +49,7 @@ public sealed class IggyDockerHooks
                 x.PollingInterval = TimeSpan.FromMilliseconds(50);
             };
         });
-        
+
         for (int i = 0; i < 2; i++)
         {
             var client = MessageStreamFactory.CreateMessageStream(options =>
@@ -71,7 +71,7 @@ public sealed class IggyDockerHooks
         _dependencyContainer.RegisterInstanceAs<List<IMessageStream>>(clients);
         var listOfIds = new ConsumerPollStreamTopicId
         {
-            StreamId = _streamRequest.StreamId, 
+            StreamId = _streamRequest.StreamId,
             ConsumerTopicId = _topicConsumersRequest.TopicId,
             ConsumerGroupTopicId = _topicConsumerGroupRequest.TopicId
         };
@@ -83,23 +83,23 @@ public sealed class IggyDockerHooks
     public static async Task InitialSetup()
     {
         await _container.StartAsync();
-		var messageBus = MessageStreamFactory.CreateMessageStream(options =>
-		{
-			options.BaseAdress = $"127.0.0.1:{_container.GetMappedPublicPort(8090)}";
-			options.Protocol = Protocol.Tcp;
+        var messageBus = MessageStreamFactory.CreateMessageStream(options =>
+        {
+            options.BaseAdress = $"127.0.0.1:{_container.GetMappedPublicPort(8090)}";
+            options.Protocol = Protocol.Tcp;
             options.SendBufferSize = 10000;
             options.ReceiveBufferSize = 10000;
-			options.SendMessagesOptions = x =>
-			{
-				x.MaxMessagesPerBatch = 1000;
-				x.PollingInterval = TimeSpan.FromMilliseconds(100);
-			};
-		});
+            options.SendMessagesOptions = x =>
+            {
+                x.MaxMessagesPerBatch = 1000;
+                x.PollingInterval = TimeSpan.FromMilliseconds(100);
+            };
+        });
 
         await messageBus.CreateStreamAsync(_streamRequest);
         await messageBus.CreateTopicAsync(Identifier.Numeric(_streamRequest.StreamId), _topicConsumersRequest);
         await messageBus.CreateTopicAsync(Identifier.Numeric(_streamRequest.StreamId), _topicConsumerGroupRequest);
-        
+
     }
 
     [AfterTestRun]
