@@ -26,6 +26,16 @@ internal static class TopicFactory
             PartitionsCount = Random.Shared.Next(5, 25)
         };
     }
+
+    internal static UpdateTopicRequest CreateUpdateTopicRequest()
+    {
+        return new UpdateTopicRequest 
+        { 
+            Name = "updated_topic" + Random.Shared.Next(1, 69),
+            MessageExpiry = Random.Shared.Next(1, 69)
+        };
+    }
+
     internal static TopicRequest CreateTopicRequest(int topicId)
     {
         return new TopicRequest

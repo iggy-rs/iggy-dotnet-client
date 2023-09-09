@@ -24,6 +24,11 @@ internal static class StreamFactory
             StreamId = Random.Shared.Next(1, 2137),
         };
     }
+
+    internal static UpdateStreamRequest CreateUpdateStreamRequest()
+    {
+        return new UpdateStreamRequest { Name = "updated-stream" + Random.Shared.Next(1, 69) };
+    }
     internal static StreamResponse CreateStreamsResponse()
     {
         return new StreamResponse

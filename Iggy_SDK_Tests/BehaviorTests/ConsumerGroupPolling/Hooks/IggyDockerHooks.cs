@@ -1,6 +1,8 @@
+using BoDi;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 using Iggy_SDK;
+using Iggy_SDK_Tests.Utils.SpecFlowTypes;
 using Iggy_SDK_Tests.Utils.Streams;
 using Iggy_SDK_Tests.Utils.Topics;
 using Iggy_SDK.Contracts.Http;
@@ -8,10 +10,8 @@ using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
 using Iggy_SDK.MessageStream;
 using TechTalk.SpecFlow;
-using BoDi;
-using Iggy_SDK_Tests.Utils.SpecFlowTypes;
 
-namespace Iggy_SDK_Tests.BehaviorTests.Hooks;
+namespace Iggy_SDK_Tests.BehaviorTests.ConsumerGroupPolling.Hooks;
 
 [Binding]
 public sealed class IggyDockerHooks

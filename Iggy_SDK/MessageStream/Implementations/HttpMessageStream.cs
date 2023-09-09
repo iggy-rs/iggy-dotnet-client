@@ -98,6 +98,12 @@ public class HttpMessageStream : IMessageStream
         await HandleResponseAsync(response);
         throw new Exception("Unknown error occurred.");
     }
+
+    public Task UpdateStreamAsync(Identifier streamId, UpdateStreamRequest request, CancellationToken token = default)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<IReadOnlyList<StreamResponse>> GetStreamsAsync(CancellationToken token = default)
     {
         var response = await _httpClient.GetAsync($"/streams", token);
@@ -124,6 +130,12 @@ public class HttpMessageStream : IMessageStream
             throw new Exception("Unknown error occurred.");
         }
     }
+
+    public Task UpdateTopicAsync(Identifier streamId, Identifier topicId, UpdateTopicRequest request, CancellationToken token = default)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task DeleteTopicAsync(Identifier streamId, Identifier topicId, CancellationToken token = default)
     {
         var response = await _httpClient.DeleteAsync($"/streams/{streamId}/topics/{topicId}", token);

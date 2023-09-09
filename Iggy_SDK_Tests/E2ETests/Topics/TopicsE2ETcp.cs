@@ -50,8 +50,23 @@ public sealed class TopicsE2ETcp : IClassFixture<IggyTcpTopicFixture>
 		response.CreatedAt.Day.Should().Be(DateTimeOffset.UtcNow.Day);
 		response.CreatedAt.Minute.Should().Be(DateTimeOffset.UtcNow.Minute);
 	}
-    
     [Fact, TestPriority(4)]
+    public async Task UpdateTopic_Should_UpdateStream_Successfully()
+    {
+        await _fixture.sut.Invoking(async x =>
+                await x.UpdateTopicAsync(Identifier.Numeric(_fixture.StreamRequest.StreamId),
+                    Identifier.Numeric(_fixture.TopicRequest.TopicId), _fixture.UpdateTopicRequest))
+            .Should()
+            .NotThrowAsync();
+        
+        var result = await _fixture.sut.GetTopicByIdAsync(Identifier.Numeric(_fixture.StreamRequest.StreamId), 
+            Identifier.Numeric(_fixture.TopicRequest.TopicId));
+        result.Should().NotBeNull();
+        result.Name.Should().Be(_fixture.UpdateTopicRequest.Name);
+        result.MessageExpiry.Should().Be(_fixture.UpdateTopicRequest.MessageExpiry);
+    }
+    
+    [Fact, TestPriority(5)]
     public async Task DeleteTopic_Should_DeleteTopic_Successfully()
     {
 		await _fixture.sut.Invoking(async x =>
@@ -61,7 +76,7 @@ public sealed class TopicsE2ETcp : IClassFixture<IggyTcpTopicFixture>
 			.NotThrowAsync();
     }
     
-    [Fact, TestPriority(5)]
+    [Fact, TestPriority(6)]
     public async Task DeleteTopic_Should_Throw_InvalidResponse()
     {
         await _fixture.sut.Invoking(async x =>
@@ -71,7 +86,7 @@ public sealed class TopicsE2ETcp : IClassFixture<IggyTcpTopicFixture>
             .ThrowExactlyAsync<InvalidResponseException>();
     }
     
-	[Fact, TestPriority(6)]
+	[Fact, TestPriority(7)]
 	public async Task GetTopic_Should_Throw_InvalidResponse()
 	{
         await _fixture.sut.Invoking(async x =>

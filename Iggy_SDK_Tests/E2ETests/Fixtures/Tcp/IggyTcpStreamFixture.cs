@@ -15,6 +15,7 @@ public sealed class IggyTcpStreamFixture : IAsyncLifetime
 		.Build();
 
 	public readonly StreamRequest StreamRequest = StreamFactory.CreateStreamRequest();
+    public readonly UpdateStreamRequest UpdateStreamRequest = StreamFactory.CreateUpdateStreamRequest();
 	public async Task InitializeAsync()
 	{
 		await Container.StartAsync();

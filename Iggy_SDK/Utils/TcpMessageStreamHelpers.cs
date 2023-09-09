@@ -1,3 +1,4 @@
+using Iggy_SDK.Enums;
 using Iggy_SDK.Messages;
 using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
@@ -42,7 +43,24 @@ internal static class TcpMessageStreamHelpers
             )
         };
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static byte[] GetBytesFromIdentifier(Identifier identifier)
+    {
+        Span<byte> bytes = stackalloc byte[2 + identifier.Length];
+        bytes[0] = identifier.Kind switch
+        {
+            IdKind.Numeric => 1,
+            IdKind.String => 2,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+        bytes[1] = (byte)identifier.Length;
+        for (int i = 0; i < identifier.Length; i++)
+        {
+            bytes[i + 2] = identifier.Value[i];
+        }
 
+        return bytes.ToArray();
+    }
     private static int CalculateMessageBytesCountArray(Message[] messages)
     {
         ref var start = ref MemoryMarshal.GetArrayDataReference(messages);

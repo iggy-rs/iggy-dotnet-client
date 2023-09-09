@@ -74,6 +74,24 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
         return BinaryMapper.MapStream(responseBuffer);
     }
 
+    public async Task UpdateStreamAsync(Identifier streamId, UpdateStreamRequest request, CancellationToken token = default)
+    {
+        var message = TcpContracts.UpdateStream(streamId, request);
+        var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
+        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.UPDATE_STREAM_CODE);
+
+        await _socket.SendAsync(payload, token);
+
+        var buffer = new byte[BufferSizes.ExpectedResponseSize];
+        await _socket.ReceiveAsync(buffer, token);
+
+        var status = TcpMessageStreamHelpers.GetResponseStatus(buffer);
+        if (status != 0)
+        {
+            throw new InvalidResponseException($"Invalid response status code: {status}");
+        }
+    }
+
     public async Task<IReadOnlyList<StreamResponse>> GetStreamsAsync(CancellationToken token = default)
     {
         var message = Array.Empty<byte>();
@@ -191,6 +209,24 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 
         var status = TcpMessageStreamHelpers.GetResponseStatus(buffer);
 
+        if (status != 0)
+        {
+            throw new InvalidResponseException($"Invalid response status code: {status}");
+        }
+    }
+
+    public async Task UpdateTopicAsync(Identifier streamId, Identifier topicId, UpdateTopicRequest request, CancellationToken token = default)
+    {
+        var message = TcpContracts.UpdateTopic(streamId, topicId, request);
+        var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
+        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.UPDATE_TOPIC_CODE);
+
+        await _socket.SendAsync(payload, token);
+
+        var buffer = new byte[BufferSizes.ExpectedResponseSize];
+        await _socket.ReceiveAsync(buffer, token);
+
+        var status = TcpMessageStreamHelpers.GetResponseStatus(buffer);
         if (status != 0)
         {
             throw new InvalidResponseException($"Invalid response status code: {status}");

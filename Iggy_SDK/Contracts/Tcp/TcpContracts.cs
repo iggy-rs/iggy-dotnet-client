@@ -220,6 +220,15 @@ internal static class TcpContracts
         Encoding.UTF8.GetBytes(request.Name, bytes[5..]);
         return bytes.ToArray();
     }
+    internal static byte[] UpdateStream(Identifier streamId, UpdateStreamRequest request)
+    {
+        Span<byte> bytes = stackalloc byte[streamId.Length + request.Name.Length + 3];
+        WriteBytesFromIdentifierToSpan(streamId, bytes);
+        int position = 2 + streamId.Length; 
+        bytes[position] = (byte)request.Name.Length;
+        Encoding.UTF8.GetBytes(request.Name, bytes[(position + 1)..]);
+        return bytes.ToArray();
+    }
 
     internal static byte[] CreateGroup(CreateConsumerGroupRequest request)
     {
@@ -268,6 +277,18 @@ internal static class TcpContracts
         WriteBytesFromStreamAndTopicIdToSpan(streamId, topicId, bytes);
         int position = 2 + streamId.Length + 2 + topicId.Length;
         BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], groupId);
+        return bytes.ToArray();
+    }
+    
+    internal static byte[] UpdateTopic(Identifier streamId, Identifier topicId, UpdateTopicRequest request)
+    {
+        Span<byte> bytes = stackalloc byte[streamId.Length + topicId.Length + 9 + request.Name.Length];
+        WriteBytesFromStreamAndTopicIdToSpan(streamId, topicId, bytes);
+        var position = 4 + streamId.Length + topicId.Length;
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)],
+            request.MessageExpiry ?? 0);
+        bytes[position + 4] = (byte)request.Name.Length; 
+        Encoding.UTF8.GetBytes(request.Name, bytes[(position + 5)..]);
         return bytes.ToArray();
     }
 

@@ -1,12 +1,12 @@
 using FluentAssertions;
 using Iggy_SDK;
-using Iggy_SDK.Contracts.Http;
-using Iggy_SDK.MessageStream;
 using Iggy_SDK_Tests.Utils.Messages;
 using Iggy_SDK_Tests.Utils.SpecFlowTypes;
+using Iggy_SDK.Contracts.Http;
+using Iggy_SDK.MessageStream;
 using TechTalk.SpecFlow;
 
-namespace Iggy_SDK_Tests.BehaviorTests.Steps;
+namespace Iggy_SDK_Tests.BehaviorTests.ConsumerGroupPolling.Steps;
 
 //TODO - cleanup this mess
 [Binding]
@@ -140,71 +140,5 @@ public sealed class MultipleConsumersPollingSteps
            TopicId = Identifier.Numeric(_streamAndTopicFixture.ConsumerGroupTopicId),
            ConsumerGroupId = _consumerGroupId
         });
-    }
-
-    [Given(@"Messages are available in topic on several partitions")]
-    public async Task GivenMessagesAreAvailableInTopicOnSeveralPartitions()
-    {
-        var messages = MessageFactory.GenerateDummyMessages(20);
-        var messageConsumerGroupSendRequestPt1 =
-            MessageFactory.CreateMessageSendRequest(_streamAndTopicFixture.StreamId, _streamAndTopicFixture.ConsumerGroupTopicId,
-                _partitionId, messages);
-        var messageConsumerGroupSendRequestPt2 =
-            MessageFactory.CreateMessageSendRequest(_streamAndTopicFixture.StreamId, _streamAndTopicFixture.ConsumerGroupTopicId,
-                _partitionId + 1, messages);
-        var messageConsumerGroupSendRequestPt3 =
-            MessageFactory.CreateMessageSendRequest(_streamAndTopicFixture.StreamId, _streamAndTopicFixture.ConsumerGroupTopicId,
-                _partitionId + 2, messages);
-        var messageConsumerGroupSendRequestPt4 =
-            MessageFactory.CreateMessageSendRequest(_streamAndTopicFixture.StreamId, _streamAndTopicFixture.ConsumerGroupTopicId,
-                _partitionId + 3, messages);
-
-        await _messageStream.CreateConsumerGroupAsync(new CreateConsumerGroupRequest
-        {
-            StreamId = Identifier.Numeric(_streamAndTopicFixture.StreamId),
-            TopicId = Identifier.Numeric(_streamAndTopicFixture.ConsumerGroupTopicId),
-            ConsumerGroupId = _consumerGroupId
-        });
-        await _messageStream.SendMessagesAsync(messageConsumerGroupSendRequestPt1);
-        await _messageStream.SendMessagesAsync(messageConsumerGroupSendRequestPt2);
-        await _messageStream.SendMessagesAsync(messageConsumerGroupSendRequestPt3);
-        await _messageStream.SendMessagesAsync(messageConsumerGroupSendRequestPt4);
-    }
-
-    [When(@"Consumer group polls batch of messages")]
-    public async Task WhenConsumerGroupPollsBatchOfMessages()
-    {
-        var consumerPolledMessages = new List<PolledMessages>();
-        foreach (var client in _clients)
-        {
-            await client.JoinConsumerGroupAsync(new JoinConsumerGroupRequest
-            {
-                StreamId = Identifier.Numeric(_streamAndTopicFixture.StreamId),
-                TopicId = Identifier.Numeric(_streamAndTopicFixture.ConsumerGroupTopicId),
-                ConsumerGroupId = _consumerGroupId
-            });
-        }
-
-        foreach (var client in _clients)
-        {
-            for (int i = 0; i < 2; i++)
-            {
-                var request = MessageFactory.CreateMessageFetchRequestConsumerGroup(10, _streamAndTopicFixture.StreamId, _streamAndTopicFixture.ConsumerGroupTopicId, 0, _consumerGroupId);
-                var result = await client.PollMessagesAsync(request);
-                consumerPolledMessages.Add(result);
-            }
-        }
-    }
-
-    [When(@"One consumer disconnects")]
-    public void WhenOneConsumerDisconnects()
-    {
-        ScenarioContext.StepIsPending();
-    }
-
-    [Then(@"Consumer group gets rebalanced")]
-    public void ThenConsumerGroupGetsRebalanced()
-    {
-        ScenarioContext.StepIsPending();
     }
 }

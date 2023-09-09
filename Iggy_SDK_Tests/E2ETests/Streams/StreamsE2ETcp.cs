@@ -1,4 +1,5 @@
 using FluentAssertions;
+using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using Iggy_SDK;
 using Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
 using Iggy_SDK_Tests.Utils;
@@ -55,8 +56,19 @@ public sealed class StreamsE2ETcp : IClassFixture<IggyTcpStreamFixture>
 		response!.Id.Should().Be(_fixture.StreamRequest.StreamId);
 		response.Name.Should().Be(_fixture.StreamRequest.Name);
 	}
+
+    [Fact, TestPriority(4)]
+    public async Task UpdateStream_Should_UpdateStream_Successfully()
+    {
+        await _sut.Invoking(async x => await x.UpdateStreamAsync(Identifier.Numeric(_fixture.StreamRequest.StreamId), _fixture.UpdateStreamRequest))
+            .Should()
+            .NotThrowAsync();
+		var result = await _sut.GetStreamByIdAsync(Identifier.Numeric(_fixture.StreamRequest.StreamId));
+        result.Should().NotBeNull();
+        result.Name.Should().Be(_fixture.UpdateStreamRequest.Name);
+    }
     
-	[Fact, TestPriority(4)]
+    [Fact, TestPriority(5)]
 	public async Task DeleteStream_Should_DeleteStream_Successfully()
 	{
 		await _sut.Invoking(async x =>
@@ -65,7 +77,7 @@ public sealed class StreamsE2ETcp : IClassFixture<IggyTcpStreamFixture>
 			.NotThrowAsync();
 	}
     
-	[Fact, TestPriority(5)]
+	[Fact, TestPriority(6)]
 	public async Task DeleteStream_Should_Throw_InvalidResponse()
 	{
 		await _sut.Invoking(async x => await x.DeleteStreamAsync(Identifier.Numeric(_fixture.StreamRequest.StreamId)))
@@ -74,7 +86,7 @@ public sealed class StreamsE2ETcp : IClassFixture<IggyTcpStreamFixture>
 			.WithMessage("Invalid response status code: 1009");
 	}
     
-	[Fact, TestPriority(6)]
+	[Fact, TestPriority(7)]
 	public async Task GetStreamById_Should_Throw_InvalidResponse()
 	{
 		await _sut.Invoking(async x => 
