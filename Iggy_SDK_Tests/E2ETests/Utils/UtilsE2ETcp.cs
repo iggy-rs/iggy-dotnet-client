@@ -17,7 +17,7 @@ public sealed class UtilsE2ETcp : IClassFixture<IggyTcpGeneralFixture>
     [Fact, TestPriority(1)]
     public async Task GetStats_Should_ReturnValidResponse()
     {
-        var response =await _fixture.sut.GetStatsAsync();
+        var response = await _fixture.sut.GetStatsAsync();
         response.Should().NotBeNull();
         response!.MessagesCount.Should().Be(0);
         response.PartitionsCount.Should().Be(0);

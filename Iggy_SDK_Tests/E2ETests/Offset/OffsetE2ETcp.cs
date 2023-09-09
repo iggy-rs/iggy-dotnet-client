@@ -1,8 +1,8 @@
 using FluentAssertions;
+using Iggy_SDK.Contracts.Http;
 using Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
 using Iggy_SDK_Tests.Utils;
 using Iggy_SDK_Tests.Utils.Offset;
-using Iggy_SDK.Contracts.Http;
 
 namespace Iggy_SDK_Tests.E2ETests.Offset;
 
@@ -26,7 +26,7 @@ public sealed class OffsetE2ETcp : IClassFixture<IggyTcpOffsetFixture>
         _offsetIndividualConsumer = OffsetFactory.CreateOffsetRequest(_fixture.StreamRequest.StreamId,
             _fixture.TopicRequest.TopicId, GET_PARTITION_ID, GET_INDIVIDUAL_CONSUMER_ID);
     }
-    
+
     [Fact, TestPriority(1)]
     public async Task StoreOffset_IndividualConsumer_Should_StoreOffset_Successfully()
     {

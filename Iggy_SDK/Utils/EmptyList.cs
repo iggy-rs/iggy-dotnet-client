@@ -9,4 +9,3 @@ public static class EmptyList<T>
     }
     public static IReadOnlyList<T> Instance => Empty<T>.Value;
 }
-

@@ -29,8 +29,8 @@ internal static class TopicFactory
 
     internal static UpdateTopicRequest CreateUpdateTopicRequest()
     {
-        return new UpdateTopicRequest 
-        { 
+        return new UpdateTopicRequest
+        {
             Name = "updated_topic" + Random.Shared.Next(1, 69),
             MessageExpiry = Random.Shared.Next(1, 69)
         };

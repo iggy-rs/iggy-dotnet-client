@@ -19,4 +19,3 @@ public readonly struct HeaderKey
         return Value;
     }
 }
-

@@ -63,4 +63,3 @@ public readonly struct Identifier : IEquatable<Identifier>
         return HashCode.Combine((int)Kind, Value);
     }
 }
-

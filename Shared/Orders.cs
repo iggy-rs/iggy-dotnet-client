@@ -138,4 +138,3 @@ public class OrderRejected : ISerializableMessage
         return $"OrderRejected {ToJsonPrint()}";
     }
 }
-

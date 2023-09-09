@@ -1,9 +1,9 @@
 using FluentAssertions;
 using Iggy_SDK;
-using Iggy_SDK_Tests.Utils.Messages;
-using Iggy_SDK_Tests.Utils.SpecFlowTypes;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.MessageStream;
+using Iggy_SDK_Tests.Utils.Messages;
+using Iggy_SDK_Tests.Utils.SpecFlowTypes;
 using TechTalk.SpecFlow;
 
 namespace Iggy_SDK_Tests.BehaviorTests.ConsumerGroupPolling.Steps;
@@ -17,7 +17,7 @@ public sealed class MultipleConsumersPollingSteps
     private readonly List<IMessageStream> _clients;
     private readonly ConsumerPollStreamTopicId _streamAndTopicFixture;
 
-    private readonly int[] _consumersIds = new int[] {1,2,3,4};
+    private readonly int[] _consumersIds = new int[] { 1, 2, 3, 4 };
     private static readonly int _partitionId = 1;
     private static readonly int _consumerGroupId = 1;
 
@@ -37,7 +37,7 @@ public sealed class MultipleConsumersPollingSteps
         var messageConsumersSendRequest =
             MessageFactory.CreateMessageSendRequest(_streamAndTopicFixture.StreamId, _streamAndTopicFixture.ConsumerTopicId,
                 _partitionId, messages);
-        
+
         await _messageStream.SendMessagesAsync(messageConsumersSendRequest);
         //waiting for the message dispatcher to batch the messages and send them to server
         await Task.Delay(1500);
@@ -47,9 +47,9 @@ public sealed class MultipleConsumersPollingSteps
     public async Task WhenConsumersPollMessages()
     {
         var consumerPolledMessages = new List<PolledMessages>();
-        foreach(var consumerId in _consumersIds)
+        foreach (var consumerId in _consumersIds)
         {
-            var request = MessageFactory.CreateMessageFetchRequestConsumer(10, _streamAndTopicFixture.StreamId, _streamAndTopicFixture.ConsumerTopicId, _partitionId , consumerId);
+            var request = MessageFactory.CreateMessageFetchRequestConsumer(10, _streamAndTopicFixture.StreamId, _streamAndTopicFixture.ConsumerTopicId, _partitionId, consumerId);
             var result = await _messageStream.PollMessagesAsync(request);
             consumerPolledMessages.Add(result);
         }
@@ -60,12 +60,12 @@ public sealed class MultipleConsumersPollingSteps
     public void ThenEachConsumerGetsEqualAmountOfMessages()
     {
         var consumerPolledMessages = _scenarioContext.Get<List<PolledMessages>>("ConsumersPollResults");
-        foreach(var polledMessage in consumerPolledMessages)
+        foreach (var polledMessage in consumerPolledMessages)
         {
             polledMessage.Messages.Count.Should().Be(10);
         }
     }
-    
+
     [Given(@"Messages are available in topic on multiple partitions")]
     public async Task GivenMessagesAreAvailableOnConsumergroupTopicAndConsumergroupExists()
     {
@@ -96,7 +96,7 @@ public sealed class MultipleConsumersPollingSteps
         //waiting for the message dispatcher to batch the messages and send them to server
         await Task.Delay(1500);
     }
-    
+
     [When(@"Consumer group polls messages")]
     public async Task WhenConsumerGroupPollMessages()
     {
@@ -128,17 +128,17 @@ public sealed class MultipleConsumersPollingSteps
     public async Task ThenEachConsumerGetsSameAmountOfMessages()
     {
         var consumerPolledMessages = _scenarioContext.Get<List<PolledMessages>>("ConsumerGroupPollResults");
-        
+
         foreach (var polledMessage in consumerPolledMessages)
         {
             polledMessage.Messages.Count.Should().Be(10);
         }
-        
+
         await _messageStream.DeleteConsumerGroupAsync(new DeleteConsumerGroupRequest
         {
-           StreamId = Identifier.Numeric(_streamAndTopicFixture.StreamId),
-           TopicId = Identifier.Numeric(_streamAndTopicFixture.ConsumerGroupTopicId),
-           ConsumerGroupId = _consumerGroupId
+            StreamId = Identifier.Numeric(_streamAndTopicFixture.StreamId),
+            TopicId = Identifier.Numeric(_streamAndTopicFixture.ConsumerGroupTopicId),
+            ConsumerGroupId = _consumerGroupId
         });
     }
 }

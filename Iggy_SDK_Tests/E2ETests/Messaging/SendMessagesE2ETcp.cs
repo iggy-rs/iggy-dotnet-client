@@ -1,9 +1,9 @@
 using FluentAssertions;
+using Iggy_SDK.Contracts.Http;
+using Iggy_SDK.Exceptions;
 using Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
 using Iggy_SDK_Tests.Utils;
 using Iggy_SDK_Tests.Utils.Messages;
-using Iggy_SDK.Contracts.Http;
-using Iggy_SDK.Exceptions;
 
 namespace Iggy_SDK_Tests.E2ETests.Messaging;
 
@@ -19,23 +19,23 @@ public sealed class SendMessagesE2ETcp : IClassFixture<IggyTcpSendMessagesFixtur
 
     public SendMessagesE2ETcp(IggyTcpSendMessagesFixture fixture)
     {
-        _fixture =  fixture;
+        _fixture = fixture;
 
         var messageWithHeaders = MessageFactory.GenerateDummyMessages(
             Random.Shared.Next(20, 50),
             Random.Shared.Next(69, 420),
             MessageFactory.GenerateMessageHeaders(Random.Shared.Next(1, 20)));
-                                      
-        _messageNoHeadersSendRequest = MessageFactory.CreateMessageSendRequest(_fixture.StreamId, 
+
+        _messageNoHeadersSendRequest = MessageFactory.CreateMessageSendRequest(_fixture.StreamId,
             _fixture.TopicId, _fixture.PartitionId);
-        _invalidMessageNoHeadersSendRequest = MessageFactory.CreateMessageSendRequest(_fixture.InvalidStreamId, 
+        _invalidMessageNoHeadersSendRequest = MessageFactory.CreateMessageSendRequest(_fixture.InvalidStreamId,
             _fixture.InvalidTopicId, _fixture.PartitionId);
 
-        _messageWithHeadersSendRequest = MessageFactory.CreateMessageSendRequest(_fixture.StreamId, 
+        _messageWithHeadersSendRequest = MessageFactory.CreateMessageSendRequest(_fixture.StreamId,
             _fixture.TopicId, _fixture.PartitionId, messageWithHeaders);
-        _invalidMessageWithHeadersSendRequest = MessageFactory.CreateMessageSendRequest(_fixture.InvalidStreamId, 
+        _invalidMessageWithHeadersSendRequest = MessageFactory.CreateMessageSendRequest(_fixture.InvalidStreamId,
             _fixture.InvalidTopicId, _fixture.PartitionId, messageWithHeaders);
-        
+
     }
 
     [Fact, TestPriority(1)]
@@ -45,7 +45,7 @@ public sealed class SendMessagesE2ETcp : IClassFixture<IggyTcpSendMessagesFixtur
             .Should()
             .NotThrowAsync();
     }
-    
+
     [Fact, TestPriority(2)]
     public async Task SendMessages_NoHeaders_Should_Throw_InvalidResponse()
     {
@@ -53,7 +53,7 @@ public sealed class SendMessagesE2ETcp : IClassFixture<IggyTcpSendMessagesFixtur
             .Should()
             .ThrowAsync<InvalidResponseException>();
     }
-    
+
     [Fact, TestPriority(3)]
     public async Task SendMessages_WithHeaders_Should_SendMessages_Successfully()
     {
@@ -61,7 +61,7 @@ public sealed class SendMessagesE2ETcp : IClassFixture<IggyTcpSendMessagesFixtur
             .Should()
             .NotThrowAsync();
     }
-    
+
     [Fact, TestPriority(4)]
     public async Task SendMessages_WithHeaders_Should_Throw_InvalidResponse()
     {

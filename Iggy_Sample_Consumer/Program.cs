@@ -191,5 +191,3 @@ async Task ValidateSystem(Identifier streamId, Identifier topicId, int partition
     }
 
 }
-
-

@@ -107,7 +107,7 @@ internal static class MessageFactory
             StreamId = Identifier.Numeric(streamId),
             TopicId = Identifier.Numeric(topicId),
             Partitioning = Partitioning.PartitionId(partitionId),
-            Messages = messages ?? GenerateDummyMessages(Random.Shared.Next(1, 69), Random.Shared.Next(69 , 420))
+            Messages = messages ?? GenerateDummyMessages(Random.Shared.Next(1, 69), Random.Shared.Next(69, 420))
         };
     }
 
@@ -130,15 +130,17 @@ internal static class MessageFactory
         };
     internal static IList<Message> GenerateDummyMessages(int count, Dictionary<HeaderKey, HeaderValue>? Headers = null)
     {
-        return Enumerable.Range(1, count).Select(i => new Message{
+        return Enumerable.Range(1, count).Select(i => new Message
+        {
             Id = Guid.NewGuid(),
             Headers = Headers,
-            Payload = SerializeDummyMessage(new DummyMessage{Id = Random.Shared.Next(1,69), Text = RandomString(Random.Shared.Next(69,420))})
+            Payload = SerializeDummyMessage(new DummyMessage { Id = Random.Shared.Next(1, 69), Text = RandomString(Random.Shared.Next(69, 420)) })
         }).ToList();
     }
     internal static IList<Message> GenerateDummyMessages(int count, int payloadLen, Dictionary<HeaderKey, HeaderValue>? Headers = null)
     {
-        return Enumerable.Range(1, count).Select(i => new Message{
+        return Enumerable.Range(1, count).Select(i => new Message
+        {
             Id = Guid.NewGuid(),
             Headers = Headers,
             Payload = Enumerable.Range(1, payloadLen).Select(x => (byte)x).ToArray()
@@ -186,7 +188,7 @@ internal static class MessageFactory
     internal static Dictionary<HeaderKey, HeaderValue> GenerateMessageHeaders(int count)
     {
         var headers = new Dictionary<HeaderKey, HeaderValue>();
-        for(int i = 0; i < count; i++)
+        for (int i = 0; i < count; i++)
         {
             headers.Add(
                 HeaderKey.New(RandomString(Random.Shared.Next(50, 254))),
@@ -194,7 +196,7 @@ internal static class MessageFactory
                 {
                     1 => HeaderValue.Raw(Encoding.UTF8.GetBytes(RandomString(Random.Shared.Next(50, 254)))),
                     2 => HeaderValue.String(RandomString(Random.Shared.Next(25, 254))),
-                    3 => HeaderValue.Bool(Random.Shared.Next(0,1) switch { 0 => false, 1 => true, _ => false}),
+                    3 => HeaderValue.Bool(Random.Shared.Next(0, 1) switch { 0 => false, 1 => true, _ => false }),
                     4 => HeaderValue.Int32(Random.Shared.Next(69, 420)),
                     5 => HeaderValue.Int64(Random.Shared.NextInt64(6942023, 98723131)),
                     6 => HeaderValue.Int128(Guid.NewGuid().ToByteArray().ToInt128()),
@@ -204,7 +206,7 @@ internal static class MessageFactory
                     10 => HeaderValue.UInt128(Guid.NewGuid().ToUInt128()),
                     11 => HeaderValue.Float32(Random.Shared.NextSingle()),
                     12 => HeaderValue.Float64(Random.Shared.NextDouble()),
-                    _ =>  HeaderValue.UInt64((ulong)Random.Shared.Next(1, 69))
+                    _ => HeaderValue.UInt64((ulong)Random.Shared.Next(1, 69))
                 });
         }
         return headers;
