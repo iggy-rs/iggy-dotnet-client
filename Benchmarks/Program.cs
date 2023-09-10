@@ -22,7 +22,7 @@ for (int i = 0; i < producerCount; i++)
         options.SendMessagesOptions = x =>
         {
             x.MaxMessagesPerBatch = 1000;
-            x.PollingInterval = TimeSpan.FromMilliseconds(0);
+            x.PollingInterval = TimeSpan.Zero;
         };
 #if OS_LINUX
 		options.ReceiveBufferSize = Int32.MaxValue;

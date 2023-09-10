@@ -10,8 +10,6 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Text.Json.Serialization.Metadata;
 using System.Threading.Channels;
 
 namespace Iggy_SDK.MessageStream.Implementations;
@@ -20,60 +18,25 @@ namespace Iggy_SDK.MessageStream.Implementations;
 public class HttpMessageStream : IMessageStream
 {
     //TODO - replace the HttpClient with IHttpClientFactory, when implementing support for ASP.NET Core DI
-    //TODO - create a builder for all the custom JsonOptions serializers that will be used
+    //TODO - create a factory for all the custom JsonOptions serializers that will be used
     private readonly HttpClient _httpClient;
     private readonly Channel<MessageSendRequest> _channel;
-    private readonly JsonSerializerOptions _toSnakeCaseOptions;
 
     internal HttpMessageStream(HttpClient httpClient, Channel<MessageSendRequest> channel)
     {
         _httpClient = httpClient;
         _channel = channel;
-        _toSnakeCaseOptions = new JsonSerializerOptions();
 
-        _toSnakeCaseOptions.PropertyNamingPolicy = new ToSnakeCaseNamingPolicy();
-        _toSnakeCaseOptions.WriteIndented = true;
-
-        //This code makes the source generated JsonSerializer work with JsonIgnore attribute for required properties
-        _toSnakeCaseOptions.TypeInfoResolver = new DefaultJsonTypeInfoResolver
-        {
-            Modifiers =
-            {
-                ti =>
-                {
-                    if (ti.Kind == JsonTypeInfoKind.Object)
-                    {
-                        JsonPropertyInfo[] props = ti.Properties
-                            .Where(prop => prop.AttributeProvider == null || prop.AttributeProvider
-                                .GetCustomAttributes(typeof(JsonIgnoreAttribute), false).Length == 0)
-                            .ToArray();
-
-                        if (props.Length != ti.Properties.Count)
-                        {
-                            ti.Properties.Clear();
-                            foreach (var prop in props)
-                            {
-                                ti.Properties.Add(prop);
-                            }
-                        }
-                    }
-                }
-            }
-        };
-
-        _toSnakeCaseOptions.Converters.Add(new UInt128Converter());
-        _toSnakeCaseOptions.Converters.Add(new JsonStringEnumConverter(new ToSnakeCaseNamingPolicy()));
     }
     public async Task CreateStreamAsync(StreamRequest request, CancellationToken token = default)
     {
-        var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
+        var json = JsonSerializer.Serialize(request, JsonConverterFactory.SnakeCaseOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
 
         var response = await _httpClient.PostAsync("/streams", data, token);
         if (!response.IsSuccessStatusCode)
         {
             await HandleResponseAsync(response);
-            throw new Exception("Unknown error occurred.");
         }
     }
     public async Task DeleteStreamAsync(Identifier streamId, CancellationToken token = default)
@@ -82,7 +45,6 @@ public class HttpMessageStream : IMessageStream
         if (!response.IsSuccessStatusCode)
         {
             await HandleResponseAsync(response);
-            throw new Exception("Unknown error occurred.");
         }
     }
     public async Task<StreamResponse?> GetStreamByIdAsync(Identifier streamId, CancellationToken token = default)
@@ -90,24 +52,20 @@ public class HttpMessageStream : IMessageStream
         var response = await _httpClient.GetAsync($"/streams/{streamId}", token);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<StreamResponse>(new JsonSerializerOptions
-            {
-                Converters = { new StreamResponseConverter() }
-            }, cancellationToken: token);
+            return await response.Content.ReadFromJsonAsync<StreamResponse>(JsonConverterFactory.StreamResponseOptions, cancellationToken: token);
         }
         await HandleResponseAsync(response);
-        throw new Exception("Unknown error occurred.");
+        return null;
     }
 
     public async Task UpdateStreamAsync(Identifier streamId, UpdateStreamRequest request, CancellationToken token = default)
     {
-        var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
+        var json = JsonSerializer.Serialize(request, JsonConverterFactory.SnakeCaseOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await _httpClient.PutAsync($"/streams/{streamId}", data, token);
         if (!response.IsSuccessStatusCode)
         {
             await HandleResponseAsync(response);
-            throw new Exception("Unknown error occurred.");
         }
     }
 
@@ -116,37 +74,33 @@ public class HttpMessageStream : IMessageStream
         var response = await _httpClient.GetAsync($"/streams", token);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<IReadOnlyList<StreamResponse>>(new JsonSerializerOptions
-            {
-                Converters = { new StreamResponseConverter() }
-            }, cancellationToken: token)
+            return await response.Content.ReadFromJsonAsync<IReadOnlyList<StreamResponse>>(JsonConverterFactory.StreamResponseOptions,
+                       cancellationToken: token)
                    ?? EmptyList<StreamResponse>.Instance;
         }
         await HandleResponseAsync(response);
-        throw new Exception("Unknown error occurred.");
+        return EmptyList<StreamResponse>.Instance;
     }
     public async Task CreateTopicAsync(Identifier streamId, TopicRequest topic, CancellationToken token = default)
     {
-        var json = JsonSerializer.Serialize(topic, _toSnakeCaseOptions);
+        var json = JsonSerializer.Serialize(topic, JsonConverterFactory.SnakeCaseOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
 
         var response = await _httpClient.PostAsync($"/streams/{streamId}/topics", data, token);
         if (!response.IsSuccessStatusCode)
         {
             await HandleResponseAsync(response);
-            throw new Exception("Unknown error occurred.");
         }
     }
 
     public async Task UpdateTopicAsync(Identifier streamId, Identifier topicId, UpdateTopicRequest request, CancellationToken token = default)
     {
-        var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
+        var json = JsonSerializer.Serialize(request, JsonConverterFactory.SnakeCaseOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await _httpClient.PutAsync($"/streams/{streamId}/topics/{topicId}", data, token);
         if (!response.IsSuccessStatusCode)
         {
             await HandleResponseAsync(response);
-            throw new Exception("Unknown error occurred.");
         }
     }
 
@@ -156,7 +110,6 @@ public class HttpMessageStream : IMessageStream
         if (!response.IsSuccessStatusCode)
         {
             await HandleResponseAsync(response);
-            throw new Exception("Unknown error occurred.");
         }
     }
     public async Task<IReadOnlyList<TopicResponse>> GetTopicsAsync(Identifier streamId, CancellationToken token = default)
@@ -164,11 +117,11 @@ public class HttpMessageStream : IMessageStream
         var response = await _httpClient.GetAsync($"/streams/{streamId}/topics", token);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<IReadOnlyList<TopicResponse>>(_toSnakeCaseOptions, cancellationToken: token)
+            return await response.Content.ReadFromJsonAsync<IReadOnlyList<TopicResponse>>(JsonConverterFactory.TopicResponseOptions, cancellationToken: token)
                    ?? EmptyList<TopicResponse>.Instance;
         }
         await HandleResponseAsync(response);
-        throw new Exception("Unknown error occurred.");
+        return EmptyList<TopicResponse>.Instance;
     }
 
     public async Task<TopicResponse?> GetTopicByIdAsync(Identifier streamId, Identifier topicId, CancellationToken token = default)
@@ -176,10 +129,10 @@ public class HttpMessageStream : IMessageStream
         var response = await _httpClient.GetAsync($"/streams/{streamId}/topics/{topicId}", token);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<TopicResponse>(_toSnakeCaseOptions, cancellationToken: token);
+            return await response.Content.ReadFromJsonAsync<TopicResponse>(JsonConverterFactory.TopicResponseOptions, cancellationToken: token);
         }
         await HandleResponseAsync(response);
-        throw new Exception("Unknown error occurred.");
+        return null;
     }
 
     public async Task SendMessagesAsync(MessageSendRequest request,
@@ -226,15 +179,13 @@ public class HttpMessageStream : IMessageStream
         var response = await _httpClient.GetAsync(url, token);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<PolledMessages>(new JsonSerializerOptions
-            {
-                Converters = { new MessageResponseConverter(decryptor) }
-            }, cancellationToken: token)
+            return await response.Content.ReadFromJsonAsync<PolledMessages>(
+                       JsonConverterFactory.MessageResponseOptions(decryptor))
                    ?? PolledMessages.Empty;
 
         }
         await HandleResponseAsync(response);
-        throw new Exception("Unknown error occurred.");
+        return PolledMessages.Empty;
     }
 
     public async Task<PolledMessages<TMessage>> PollMessagesAsync<TMessage>(MessageFetchRequest request,
@@ -247,26 +198,23 @@ public class HttpMessageStream : IMessageStream
         var response = await _httpClient.GetAsync(url, token);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<PolledMessages<TMessage>>(new JsonSerializerOptions
-            {
-                Converters = { new MessageResponseGenericConverter<TMessage>(serializer, decryptor) }
-            }, cancellationToken: token)
+            return await response.Content.ReadFromJsonAsync<PolledMessages<TMessage>>(
+                       JsonConverterFactory.MessageResponseGenericOptions(serializer, decryptor))
                    ?? PolledMessages<TMessage>.Empty;
         }
         await HandleResponseAsync(response);
-        throw new Exception("Unknown error occurred.");
+        return PolledMessages<TMessage>.Empty;
     }
 
     public async Task StoreOffsetAsync(StoreOffsetRequest request, CancellationToken token = default)
     {
-        var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
+        var json = JsonSerializer.Serialize(request, JsonConverterFactory.SnakeCaseOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
 
         var response = await _httpClient.PutAsync($"/streams/{request.StreamId}/topics/{request.TopicId}/consumer-offsets", data, token);
         if (!response.IsSuccessStatusCode)
         {
             await HandleResponseAsync(response);
-            throw new Exception("Unknown error occurred.");
         }
     }
 
@@ -276,10 +224,10 @@ public class HttpMessageStream : IMessageStream
                        $"consumer-offsets?consumer_id={request.Consumer.Id}&partition_id={request.PartitionId}", token);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<OffsetResponse>(_toSnakeCaseOptions, cancellationToken: token);
+            return await response.Content.ReadFromJsonAsync<OffsetResponse>(JsonConverterFactory.SnakeCaseOptions, cancellationToken: token);
         }
         await HandleResponseAsync(response);
-        throw new Exception("Unknown error occurred.");
+        return null;
     }
     public async Task<IReadOnlyList<ConsumerGroupResponse>> GetConsumerGroupsAsync(Identifier streamId, Identifier topicId, CancellationToken token = default)
     {
@@ -287,11 +235,11 @@ public class HttpMessageStream : IMessageStream
 
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<IReadOnlyList<ConsumerGroupResponse>>(_toSnakeCaseOptions, cancellationToken: token)
+            return await response.Content.ReadFromJsonAsync<IReadOnlyList<ConsumerGroupResponse>>(JsonConverterFactory.SnakeCaseOptions, cancellationToken: token)
                    ?? EmptyList<ConsumerGroupResponse>.Instance;
         }
         await HandleResponseAsync(response);
-        throw new Exception("Unknown error occurred.");
+        return EmptyList<ConsumerGroupResponse>.Instance;
     }
     public async Task<ConsumerGroupResponse?> GetConsumerGroupByIdAsync(Identifier streamId, Identifier topicId,
         int groupId, CancellationToken token = default)
@@ -300,22 +248,21 @@ public class HttpMessageStream : IMessageStream
 
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<ConsumerGroupResponse>(_toSnakeCaseOptions, cancellationToken: token);
+            return await response.Content.ReadFromJsonAsync<ConsumerGroupResponse>(JsonConverterFactory.SnakeCaseOptions, cancellationToken: token);
         }
 
         await HandleResponseAsync(response);
-        throw new Exception("Unknown error occurred.");
+        return null;
     }
     public async Task CreateConsumerGroupAsync(CreateConsumerGroupRequest request, CancellationToken token = default)
     {
-        var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
+        var json = JsonSerializer.Serialize(request, JsonConverterFactory.SnakeCaseOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
 
         var response = await _httpClient.PostAsync($"/streams/{request.StreamId}/topics/{request.TopicId}/consumer-groups", data, token);
         if (!response.IsSuccessStatusCode)
         {
             await HandleResponseAsync(response);
-            throw new Exception("Unknown error occurred.");
         }
     }
     public async Task DeleteConsumerGroupAsync(DeleteConsumerGroupRequest request, CancellationToken token = default)
@@ -328,11 +275,11 @@ public class HttpMessageStream : IMessageStream
         var response = await _httpClient.GetAsync($"/stats", token);
         if (response.IsSuccessStatusCode)
         {
-            var result = await response.Content.ReadFromJsonAsync<StatsResponse>(_toSnakeCaseOptions, cancellationToken: token);
+            var result = await response.Content.ReadFromJsonAsync<StatsResponse>(JsonConverterFactory.SnakeCaseOptions, cancellationToken: token);
             return result?.ToStats();
         }
         await HandleResponseAsync(response);
-        throw new Exception("Unknown error occurred.");
+        return null;
     }
 
     [Obsolete("This method is only supported in TCP protocol", true)]
@@ -354,20 +301,18 @@ public class HttpMessageStream : IMessageStream
         if (!response.IsSuccessStatusCode)
         {
             await HandleResponseAsync(response);
-            throw new Exception("Unknown error occurred.");
         }
     }
 
     public async Task CreatePartitionsAsync(CreatePartitionsRequest request, CancellationToken token = default)
     {
-        var json = JsonSerializer.Serialize(request, _toSnakeCaseOptions);
+        var json = JsonSerializer.Serialize(request, JsonConverterFactory.SnakeCaseOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
 
         var response = await _httpClient.PostAsync($"/streams/{request.StreamId}/topics/{request.TopicId}/partitions", data, token);
         if (!response.IsSuccessStatusCode)
         {
             await HandleResponseAsync(response);
-            throw new Exception("Unknown error occurred.");
         }
     }
 

@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Iggy_SDK.Contracts.Http;
 
-[JsonConverter(typeof(TopicResponseConverter))]
+//[JsonConverter(typeof(TopicResponseConverter))]
 public sealed class TopicResponse
 {
     public required int Id { get; init; }

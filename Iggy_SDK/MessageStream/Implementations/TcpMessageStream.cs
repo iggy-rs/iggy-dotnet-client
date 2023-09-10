@@ -17,9 +17,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
     private readonly Socket _socket;
     private readonly Channel<MessageSendRequest> _channel;
 
-
-    //TODO - make this readonly
-    private Memory<byte> _responseBuffer = new(new byte[BufferSizes.ExpectedResponseSize]);
+    private readonly Memory<byte> _responseBuffer = new(new byte[BufferSizes.ExpectedResponseSize]);
 
     internal TcpMessageStream(Socket socket, Channel<MessageSendRequest> channel)
     {
@@ -149,7 +147,6 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
         await _socket.ReceiveAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
-
         if (response.Status != 0)
         {
             throw new InvalidResponseException($"Invalid response status code: {response.Status}");
@@ -260,12 +257,11 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
         }
 
         //TODO - explore making fields of Message class mutable, so there is no need to create em from scratch
-        var messages = request.Messages;
         if (encryptor is not null)
         {
             for (var i = 0; i < request.Messages.Count || token.IsCancellationRequested; i++)
             {
-                messages[i] = messages[i] with { Payload = encryptor(messages[i].Payload) };
+                request.Messages[i] = request.Messages[i] with { Payload = encryptor(request.Messages[i].Payload) };
             }
         }
 
@@ -282,12 +278,13 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
         }
 
         //TODO - explore making fields of Message class mutable, so there is no need to create em from scratch
-        var messagesPool = ArrayPool<Message>.Shared.Rent(messages.Count);
+        var messagesPool = MemoryPool<Message>.Shared.Rent(messages.Count);
+        var messagesBuffer = messagesPool.Memory;
         try
         {
             for (var i = 0; i < messages.Count || token.IsCancellationRequested; i++)
             {
-                messagesPool[i] = new Message
+                messagesBuffer.Span[i] = new Message
                 {
                     Payload = encryptor is not null ? encryptor(serializer(messages[i])) : serializer(messages[i]),
                     Headers = headers,
@@ -300,42 +297,20 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
                 StreamId = streamId,
                 TopicId = topicId,
                 Partitioning = partitioning,
-                //TODO - get rid of this allocation
-                Messages = messagesPool[..messages.Count]
+                Messages = messagesBuffer.Span[..messages.Count].ToArray()
             };
             await _channel.Writer.WriteAsync(request, token);
         }
         finally
         {
-            ArrayPool<Message>.Shared.Return(messagesPool);
+            messagesPool.Dispose();
         }
-
     }
-
-    //TODO - explore simplifying this method, extract repeating parts of the code to separate methods
+    
     public async Task<PolledMessages<TMessage>> PollMessagesAsync<TMessage>(MessageFetchRequest request,
         Func<byte[], TMessage> serializer, Func<byte[], byte[]>? decryptor = null, CancellationToken token = default)
     {
-
-        int messageBufferSize = 18 + 5 + 2 + request.StreamId.Length + 2 + request.TopicId.Length;
-        int payloadBufferSize = messageBufferSize + 4 + BufferSizes.InitialBytesLength;
-        var message = ArrayPool<byte>.Shared.Rent(messageBufferSize);
-        var payload = ArrayPool<byte>.Shared.Rent(payloadBufferSize);
-
-        //I fucking hate exceptions
-        try
-        {
-            TcpContracts.GetMessages(message.AsSpan()[..messageBufferSize], request);
-            TcpMessageStreamHelpers.CreatePayload(payload, message.AsSpan()[..messageBufferSize], CommandCodes.POLL_MESSAGES_CODE);
-
-            await _socket.SendAsync(payload.AsMemory()[..payloadBufferSize], token);
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(message);
-            ArrayPool<byte>.Shared.Return(payload);
-        }
-
+        await SendMessagesPayload(request, token);
         var buffer = ArrayPool<byte>.Shared.Rent(BufferSizes.ExpectedResponseSize);
         try
         {
@@ -348,12 +323,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 
             if (response.Length <= 1)
             {
-                return new PolledMessages<TMessage>
-                {
-                    Messages = EmptyList<MessageResponse<TMessage>>.Instance,
-                    CurrentOffset = 0,
-                    PartitionId = 0
-                };
+                return PolledMessages<TMessage>.Empty;
             }
 
             var responseBuffer = ArrayPool<byte>.Shared.Rent(response.Length);
@@ -375,29 +345,10 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
             ArrayPool<byte>.Shared.Return(buffer);
         }
     }
-    //TODO - explore simplifying this method, extract repeating parts of the code to separate methods
     public async Task<PolledMessages> PollMessagesAsync(MessageFetchRequest request,
         Func<byte[], byte[]>? decryptor = null, CancellationToken token = default)
     {
-        int messageBufferSize = 18 + 5 + 2 + request.StreamId.Length + 2 + request.TopicId.Length;
-        int payloadBufferSize = messageBufferSize + 4 + BufferSizes.InitialBytesLength;
-        var message = ArrayPool<byte>.Shared.Rent(messageBufferSize);
-        var payload = ArrayPool<byte>.Shared.Rent(payloadBufferSize);
-
-        //I fucking hate exceptions
-        try
-        {
-            TcpContracts.GetMessages(message.AsSpan()[..messageBufferSize], request);
-            TcpMessageStreamHelpers.CreatePayload(payload, message.AsSpan()[..messageBufferSize], CommandCodes.POLL_MESSAGES_CODE);
-
-            await _socket.SendAsync(payload.AsMemory()[..payloadBufferSize], token);
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(message);
-            ArrayPool<byte>.Shared.Return(payload);
-        }
-
+        await SendMessagesPayload(request, token);
         var buffer = ArrayPool<byte>.Shared.Rent(BufferSizes.ExpectedResponseSize);
         try
         {
@@ -411,13 +362,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 
             if (response.Length <= 1)
             {
-                return new PolledMessages
-                {
-                    Messages = EmptyList<MessageResponse>.Instance,
-                    CurrentOffset = 0,
-                    PartitionId = 0
-                };
-
+                return PolledMessages.Empty;
             }
 
             var responseBuffer = ArrayPool<byte>.Shared.Rent(response.Length);
@@ -439,7 +384,31 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
             ArrayPool<byte>.Shared.Return(buffer);
         }
     }
+    private async Task SendMessagesPayload(MessageFetchRequest request, CancellationToken token)
+    {
+        var messageBufferSize = CalculateMessageBufferSize(request);
+        var payloadBufferSize = CalculatePayloadBufferSize(messageBufferSize);
+        var message = ArrayPool<byte>.Shared.Rent(messageBufferSize);
+        var payload = ArrayPool<byte>.Shared.Rent(payloadBufferSize);
+        
+        try
+        {
+            TcpContracts.GetMessages(message.AsSpan()[..messageBufferSize], request);
+            TcpMessageStreamHelpers.CreatePayload(payload, message.AsSpan()[..messageBufferSize], CommandCodes.POLL_MESSAGES_CODE);
 
+            await _socket.SendAsync(payload.AsMemory()[..payloadBufferSize], token);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(message);
+            ArrayPool<byte>.Shared.Return(payload);
+        }
+    }
+    private static int CalculatePayloadBufferSize(int messageBufferSize)
+        => messageBufferSize + 4 + BufferSizes.InitialBytesLength;
+    private static int CalculateMessageBufferSize(MessageFetchRequest request)
+        => 18 + 5 + 2 + request.StreamId.Length + 2 + request.TopicId.Length;
+    
     public async Task StoreOffsetAsync(StoreOffsetRequest request, CancellationToken token = default)
     {
         var message = TcpContracts.UpdateOffset(request);

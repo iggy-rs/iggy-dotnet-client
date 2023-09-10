@@ -46,10 +46,8 @@ public sealed class StreamResponseConverter : JsonConverter<StreamResponse>
         foreach (var topic in topics)
         {
             var topicString = topic.GetRawText();
-            var topicDeserialized = JsonSerializer.Deserialize<TopicResponse>(topicString, new JsonSerializerOptions
-            {
-                Converters = { new TopicResponseConverter() }
-            });
+            var topicDeserialized = JsonSerializer.Deserialize<TopicResponse>(topicString,
+                JsonConverterFactory.TopicResponseOptions);
             result.Add(topicDeserialized!);
         }
 

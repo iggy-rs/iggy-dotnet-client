@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace Iggy_SDK.Contracts.Http;
 
-[JsonConverter(typeof(MessagesConverter))]
+//[JsonConverter(typeof(MessagesConverter))]
 public sealed class MessageSendRequest
 {
     public required Identifier StreamId { get; init; }

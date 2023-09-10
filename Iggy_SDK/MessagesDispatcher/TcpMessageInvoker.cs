@@ -11,8 +11,7 @@ internal sealed class TcpMessageInvoker : MessageInvoker
 {
     private readonly Socket _socket;
 
-    //TODO - make this readonly
-    private Memory<byte> _responseBuffer = new(new byte[BufferSizes.ExpectedResponseSize]);
+    private readonly Memory<byte> _responseBuffer = new(new byte[BufferSizes.ExpectedResponseSize]);
 
     public TcpMessageInvoker(Socket socket)
     {

@@ -52,12 +52,11 @@ internal sealed class TopicResponseConverter : JsonConverter<TopicResponse>
             PartitionsCount = partitionsCount,
             Partitions = partitions
         };
-
     }
     private IEnumerable<PartitionContract> DeserializePartitions(JsonElement partitionsElement)
     {
         var partitions = new List<PartitionContract>();
-        var partitionObjects = partitionsElement.GetProperty(nameof(PartitionContract).ToSnakeCase()).EnumerateArray();
+        var partitionObjects = partitionsElement.EnumerateArray();
         foreach (var partition in partitionObjects)
         {
             var id = partition.GetProperty(nameof(PartitionContract.Id).ToSnakeCase()).GetInt32();

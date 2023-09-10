@@ -85,7 +85,7 @@ internal sealed class MessageResponseConverter : JsonConverter<PolledMessages>
                 Checksum = checksum,
                 Headers = headers.Count > 0 ? headers : null,
                 State = state,
-                Payload = payload
+                Payload = _decryptor is not null ? _decryptor(payload) : payload
             });
         }
 

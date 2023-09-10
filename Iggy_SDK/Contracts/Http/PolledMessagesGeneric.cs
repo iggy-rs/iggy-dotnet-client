@@ -1,6 +1,5 @@
 namespace Iggy_SDK.Contracts.Http;
 
-//TODO - create a polled instance of this that is empty
 public sealed class PolledMessages<T>
 {
     public required int PartitionId { get; init; }

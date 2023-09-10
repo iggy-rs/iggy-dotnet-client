@@ -47,7 +47,7 @@ internal sealed class MessagesConverter : JsonConverter<MessageSendRequest>
             writer.WriteStartArray("messages");
             foreach (var msg in msgList)
             {
-                JsonSerializer.Serialize(writer, msg, options);
+                JsonSerializer.Serialize(writer, msg, JsonConverterFactory.HttpMessageOptions);
             }
             writer.WriteEndArray();
 

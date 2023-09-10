@@ -36,7 +36,7 @@ internal class TcpMessageStreamBuilder
         {
             0 => new MessageSenderDispatcherNoBatching(_channel, messageInvoker),
             > 0 => new MessageSenderDispatcherWithBatching(_options, _channel, messageInvoker),
-            _ => throw new ArgumentException($"{nameof(_options.PollingInterval)} has to be greater than 0"),
+            _ => throw new ArgumentException($"{nameof(_options.PollingInterval)} has to be greater or equal than 0"),
         };
         return this;
     }
