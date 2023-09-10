@@ -13,7 +13,6 @@ namespace Iggy_SDK.Factory;
 
 public static class MessageStreamFactory
 {
-    //TODO - this whole setup will have to be refactored later,when adding support for ASP.NET Core DI
     public static IMessageStream CreateMessageStream(Action<IMessageStreamConfigurator> options)
     {
         var config = new MessageStreamConfigurator();
@@ -37,29 +36,24 @@ public static class MessageStreamFactory
         {
             throw new InvalidBaseAdressException();
         }
+        
+        var socket = CreateTcpSocket(options, urlPortSplitter);
+        return new TcpMessageStreamBuilder(socket, sendMessagesOptions)
+            .CreateChannel()
+            .WithSendMessagesDispatcher()
+            .Build();
+    }
+
+    private static Socket CreateTcpSocket(IMessageStreamConfigurator options, string[] urlPortSplitter)
+    {
         var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         socket.Connect(urlPortSplitter[0], int.Parse(urlPortSplitter[1]));
         socket.SendBufferSize = options.SendBufferSize;
         socket.ReceiveBufferSize = options.ReceiveBufferSize;
-
-        //TODO - explore making this bounded ?
-        //TODO - this channel will probably need to be refactored, to accept a lambda instead of MessageSendRequest
-        //in order to make it easier to test (currently there is no way to test some scenarios such as flooding channel)
-        var channel = Channel.CreateUnbounded<MessageSendRequest>(new UnboundedChannelOptions
-        {
-            //TODO - turn those on, for the benchmark, to see if it will work with multi-threaded tasks
-            //SingleWriter = true,
-            //SingleReader = true,
-        });
-
-        var messageStream = new TcpMessageStream(socket, channel);
-        var messageInvoker = new TcpMessageInvoker(socket);
-        var messageDispatcher = new MessageSenderDispatcher(sendMessagesOptions, channel, messageInvoker);
-
-        messageDispatcher.Start();
-        return messageStream;
+        return socket;
     }
 
+    //TODO - this whole setup will have to be refactored later,when adding support for ASP.NET Core DI
     private static HttpMessageStream CreateHttpMessageStream(IMessageStreamConfigurator options)
     {
         var sendMessagesOptions = new SendMessageConfigurator();
@@ -83,9 +77,10 @@ public static class MessageStreamFactory
             //SingleReader = true,
         });
 
+        //TODO - create same builder for http protocol
         var messageStream = new HttpMessageStream(client, channel);
         var messageInvoker = new MessagesDispatcher.HttpMessageInvoker(client);
-        var messageDispatcher = new MessageSenderDispatcher(sendMessagesOptions, channel, messageInvoker);
+        var messageDispatcher = new MessageSenderDispatcherWithBatching(sendMessagesOptions, channel, messageInvoker);
 
         messageDispatcher.Start();
 

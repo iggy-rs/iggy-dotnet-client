@@ -24,8 +24,7 @@ namespace Iggy_SDK_Tests.BehaviorTests.ConsumerGroupPolling.Features
         
         private static TechTalk.SpecFlow.ITestRunner testRunner;
         
-        private static string[] featureTags = new string[] {
-                "ignore"};
+        private static string[] featureTags = ((string[])(null));
         
         private Xunit.Abstractions.ITestOutputHelper _testOutputHelper;
         
@@ -81,7 +80,7 @@ namespace Iggy_SDK_Tests.BehaviorTests.ConsumerGroupPolling.Features
             this.TestTearDown();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Multiple consumers not in a consumer group poll messages", Skip="Ignored")]
+        [Xunit.SkippableFactAttribute(DisplayName="Multiple consumers not in a consumer group poll messages")]
         [Xunit.TraitAttribute("FeatureTitle", "Multiple consumers poll messages from same topic.")]
         [Xunit.TraitAttribute("Description", "Multiple consumers not in a consumer group poll messages")]
         public void MultipleConsumersNotInAConsumerGroupPollMessages()
@@ -89,7 +88,7 @@ namespace Iggy_SDK_Tests.BehaviorTests.ConsumerGroupPolling.Features
             string[] tagsOfScenario = ((string[])(null));
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Multiple consumers not in a consumer group poll messages", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 4
+#line 3
 this.ScenarioInitialize(scenarioInfo);
 #line hidden
             if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
@@ -99,20 +98,20 @@ this.ScenarioInitialize(scenarioInfo);
             else
             {
                 this.ScenarioStart();
-#line 5
+#line 4
  testRunner.Given("Messages are available in topic on single partition", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
 #line hidden
-#line 6
+#line 5
  testRunner.When("Consumers polls messages", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
 #line hidden
-#line 7
+#line 6
  testRunner.Then("Each consumer gets equal amount of messages", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
 #line hidden
             }
             this.ScenarioCleanup();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Multiple consumers in a consumer group poll messages", Skip="Ignored")]
+        [Xunit.SkippableFactAttribute(DisplayName="Multiple consumers in a consumer group poll messages")]
         [Xunit.TraitAttribute("FeatureTitle", "Multiple consumers poll messages from same topic.")]
         [Xunit.TraitAttribute("Description", "Multiple consumers in a consumer group poll messages")]
         public void MultipleConsumersInAConsumerGroupPollMessages()
@@ -120,7 +119,7 @@ this.ScenarioInitialize(scenarioInfo);
             string[] tagsOfScenario = ((string[])(null));
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Multiple consumers in a consumer group poll messages", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 9
+#line 8
 this.ScenarioInitialize(scenarioInfo);
 #line hidden
             if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
@@ -130,13 +129,13 @@ this.ScenarioInitialize(scenarioInfo);
             else
             {
                 this.ScenarioStart();
-#line 10
+#line 9
  testRunner.Given("Messages are available in topic on multiple partitions", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
 #line hidden
-#line 11
+#line 10
  testRunner.When("Consumer group polls messages", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
 #line hidden
-#line 12
+#line 11
  testRunner.Then("Each consumer gets messages from server-side calculated partitions", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
 #line hidden
             }
@@ -150,10 +149,12 @@ this.ScenarioInitialize(scenarioInfo);
             
             public FixtureData()
             {
+                MultipleConsumersPollMessagesFromSameTopic_Feature.FeatureSetup();
             }
             
             void System.IDisposable.Dispose()
             {
+                MultipleConsumersPollMessagesFromSameTopic_Feature.FeatureTearDown();
             }
         }
     }

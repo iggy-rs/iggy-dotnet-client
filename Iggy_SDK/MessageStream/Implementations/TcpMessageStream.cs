@@ -1,6 +1,5 @@
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Contracts.Tcp;
-using Iggy_SDK.Enums;
 using Iggy_SDK.Exceptions;
 using Iggy_SDK.Headers;
 using Iggy_SDK.Kinds;
@@ -9,7 +8,6 @@ using Iggy_SDK.Messages;
 using Iggy_SDK.Utils;
 using System.Buffers;
 using System.Net.Sockets;
-using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 
 namespace Iggy_SDK.MessageStream.Implementations;
@@ -48,7 +46,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 
     public async Task<StreamResponse?> GetStreamByIdAsync(Identifier streamId, CancellationToken token = default)
     {
-        var message = GetBytesFromIdentifier(streamId);
+        var message = TcpMessageStreamHelpers.GetBytesFromIdentifier(streamId);
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.GET_STREAM_CODE);
 
@@ -122,7 +120,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 
     public async Task DeleteStreamAsync(Identifier streamId, CancellationToken token = default)
     {
-        var message = GetBytesFromIdentifier(streamId);
+        var message = TcpMessageStreamHelpers.GetBytesFromIdentifier(streamId);
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.DELETE_STREAM_CODE);
 
@@ -141,7 +139,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 
     public async Task<IReadOnlyList<TopicResponse>> GetTopicsAsync(Identifier streamId, CancellationToken token = default)
     {
-        var message = GetBytesFromIdentifier(streamId);
+        var message = TcpMessageStreamHelpers.GetBytesFromIdentifier(streamId);
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.GET_TOPICS_CODE);
 
@@ -689,25 +687,6 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
         await _socket.ReceiveAsync(responseBuffer, token);
 
         return BinaryMapper.MapStats(responseBuffer);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static byte[] GetBytesFromIdentifier(Identifier identifier)
-    {
-        Span<byte> bytes = stackalloc byte[2 + identifier.Length];
-        bytes[0] = identifier.Kind switch
-        {
-            IdKind.Numeric => 1,
-            IdKind.String => 2,
-            _ => throw new ArgumentOutOfRangeException()
-        };
-        bytes[1] = (byte)identifier.Length;
-        for (int i = 0; i < identifier.Length; i++)
-        {
-            bytes[i + 2] = identifier.Value[i];
-        }
-
-        return bytes.ToArray();
     }
 
     public void Dispose()

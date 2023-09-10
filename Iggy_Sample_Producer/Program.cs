@@ -20,7 +20,7 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
     options.SendMessagesOptions = x =>
     {
         x.MaxMessagesPerBatch = 1000;
-        x.PollingInterval = TimeSpan.FromMilliseconds(100);
+        x.PollingInterval = TimeSpan.Zero;
     };
 });
 
@@ -141,13 +141,6 @@ async Task ProduceMessages(IMessageClient bus, StreamResponse? stream, TopicResp
             await bus.SendMessagesAsync<Envelope>(streamId, topicId, Partitioning.PartitionId(3), messages,
                 serializer,
                 encryptor, headers);
-            // await bus.SendMessagesAsync(new MessageSendRequest
-            // {
-            //     Partitioning = Partitioning.PartitionId(3),
-            //     StreamId = streamId,
-            //     TopicId = topicId,
-            //     Messages = messagesSerialized
-            // });
         }
         catch (Exception e)
         {

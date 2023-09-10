@@ -44,7 +44,7 @@ internal static class TcpMessageStreamHelpers
         };
     }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static byte[] GetBytesFromIdentifier(Identifier identifier)
+    internal static byte[] GetBytesFromIdentifier(Identifier identifier)
     {
         Span<byte> bytes = stackalloc byte[2 + identifier.Length];
         bytes[0] = identifier.Kind switch
