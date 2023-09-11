@@ -24,8 +24,6 @@ internal class TcpMessageStreamBuilder
     {
         _channel = Channel.CreateUnbounded<MessageSendRequest>(new UnboundedChannelOptions
         {
-            //SingleWriter = true,
-            //SingleReader = true,
         });
         return this;
     }

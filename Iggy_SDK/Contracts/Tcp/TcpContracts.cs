@@ -38,7 +38,7 @@ internal static class TcpContracts
 
         bytes[position + 17] = request.AutoCommit ? (byte)1 : (byte)0;
     }
-    //TODO - since message is of type IList maybe I can simplife the HandleMessages methods.
+    
     internal static void CreateMessage(Span<byte> bytes, Identifier streamId, Identifier topicId,
         Partitioning partitioning, IList<Message> messages)
     {
@@ -53,16 +53,17 @@ internal static class TcpContracts
         {
             Message[] messagesArray => HandleMessagesArray(position, messagesArray, bytes),
             List<Message> messagesList => HandleMessagesList(position, messagesList, bytes),
-            _ => HandleMessagesEnumerable(position, messages, bytes),
+            _ => HandleMessagesIList(position, messages, bytes),
         };
     }
-    private static Span<byte> HandleMessagesEnumerable(int position, IEnumerable<Message> messages, Span<byte> bytes)
+    private static Span<byte> HandleMessagesIList(int position, IList<Message> messages, Span<byte> bytes)
     {
         Span<byte> emptyHeaders = stackalloc byte[4];
-
+        
         foreach (var message in messages)
         {
             var idSlice = bytes[position..(position + 16)];
+            //TODO - this required testing on different cpu architectures
             Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(idSlice), message.Id);
 
             if (message.Headers is not null)
@@ -96,6 +97,7 @@ internal static class TcpContracts
         while (Unsafe.IsAddressLessThan(ref start, ref end))
         {
             var idSlice = bytes[position..(position + 16)];
+            //TODO - this required testing on different cpu architectures
             Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(idSlice), start.Id);
 
             if (start.Headers is not null)
@@ -122,7 +124,6 @@ internal static class TcpContracts
 
         return bytes;
     }
-
     private static Span<byte> HandleMessagesList(int position, List<Message> messages, Span<byte> bytes)
     {
         Span<byte> emptyHeaders = stackalloc byte[4];
@@ -133,6 +134,7 @@ internal static class TcpContracts
         while (Unsafe.IsAddressLessThan(ref start, ref end))
         {
             var idSlice = bytes[position..(position + 16)];
+            //TODO - this required testing on different cpu architectures
             Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(idSlice), start.Id);
 
             if (start.Headers is not null)
@@ -159,7 +161,6 @@ internal static class TcpContracts
 
         return bytes;
     }
-
     private static byte[] GetHeadersBytes(Dictionary<HeaderKey, HeaderValue> headers)
     {
         var headersLength = headers.Sum(header => 4 + header.Key.Value.Length + 1 + 4 + header.Value.Value.Length);
@@ -174,7 +175,7 @@ internal static class TcpContracts
         }
         return headersBytes.ToArray();
     }
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static byte HeaderKindToByte(HeaderKind kind)
     {
@@ -396,6 +397,7 @@ internal static class TcpContracts
             _ => throw new ArgumentOutOfRangeException()
         };
     }
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static byte GetPollingStrategyByte(MessagePolling pollingStrategy)
     {

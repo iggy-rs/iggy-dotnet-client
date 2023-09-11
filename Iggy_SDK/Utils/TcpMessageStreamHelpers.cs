@@ -65,7 +65,7 @@ internal static class TcpMessageStreamHelpers
     {
         ref var start = ref MemoryMarshal.GetArrayDataReference(messages);
         ref var end = ref Unsafe.Add(ref start, messages.Length);
-        var msgBytesSum = 0;
+        int msgBytesSum = 0;
         while (Unsafe.IsAddressLessThan(ref start, ref end))
         {
             if (start.Headers is not null)

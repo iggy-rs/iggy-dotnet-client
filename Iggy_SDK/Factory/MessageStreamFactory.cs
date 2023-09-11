@@ -72,9 +72,6 @@ public static class MessageStreamFactory
         //TODO - explore making this bounded ?
         var channel = Channel.CreateUnbounded<MessageSendRequest>(new UnboundedChannelOptions
         {
-            //TODO - turn those on, for the benchmark, to see if it will work with multi threaded tasks
-            //SingleWriter = true,
-            //SingleReader = true,
         });
 
         //TODO - create same builder for http protocol

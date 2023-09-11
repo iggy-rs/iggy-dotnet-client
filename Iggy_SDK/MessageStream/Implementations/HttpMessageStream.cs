@@ -18,7 +18,6 @@ namespace Iggy_SDK.MessageStream.Implementations;
 public class HttpMessageStream : IMessageStream
 {
     //TODO - replace the HttpClient with IHttpClientFactory, when implementing support for ASP.NET Core DI
-    //TODO - create a factory for all the custom JsonOptions serializers that will be used
     private readonly HttpClient _httpClient;
     private readonly Channel<MessageSendRequest> _channel;
 
@@ -26,7 +25,6 @@ public class HttpMessageStream : IMessageStream
     {
         _httpClient = httpClient;
         _channel = channel;
-
     }
     public async Task CreateStreamAsync(StreamRequest request, CancellationToken token = default)
     {

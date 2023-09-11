@@ -30,11 +30,12 @@ internal sealed class MessageSenderDispatcherWithBatching : MessageSenderDispatc
     }
     protected override async Task SendMessages()
     {
-        //TODO - move this inside of the while loop and use the channel count to determine size of the buffer
-        var messagesSendRequests = MemoryPool<MessageSendRequest>.Shared.Rent(1024);
+        //var messagesSendRequests = MemoryPool<MessageSendRequest>.Shared.Rent(1024);
         while (await _timer.WaitForNextTickAsync(_cts.Token))
         {
             int idx = 0;
+            //TODO - is this even worth it paying the overhead of renting that buffer every poll iteration?
+            var messagesSendRequests = MemoryPool<MessageSendRequest>.Shared.Rent(_channel.Reader.Count);
             while (_channel.Reader.TryRead(out var msg))
             {
                 messagesSendRequests.Memory.Span[idx++] = msg;
