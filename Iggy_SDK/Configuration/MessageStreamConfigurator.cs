@@ -13,6 +13,7 @@ public sealed class MessageStreamConfigurator : IMessageStreamConfigurator
     {
         options.PollingInterval = TimeSpan.FromMilliseconds(100);
         options.MaxMessagesPerBatch = 1000;
+        options.MaxRequestsInPoll = 4096;
     };
     public int ReceiveBufferSize { get; set; } = 4096;
     public int SendBufferSize { get; set; } = 4096;

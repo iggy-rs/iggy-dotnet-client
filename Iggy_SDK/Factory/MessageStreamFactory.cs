@@ -70,9 +70,7 @@ public static class MessageStreamFactory
         }
 
         //TODO - explore making this bounded ?
-        var channel = Channel.CreateUnbounded<MessageSendRequest>(new UnboundedChannelOptions
-        {
-        });
+        var channel = Channel.CreateBounded<MessageSendRequest>(sendMessagesOptions.MaxRequestsInPoll);
 
         //TODO - create same builder for http protocol
         var messageStream = new HttpMessageStream(client, channel);

@@ -15,6 +15,7 @@ internal sealed class MessageSenderDispatcherWithBatching : MessageSenderDispatc
     private readonly MessageInvoker _messageInvoker;
     private readonly Channel<MessageSendRequest> _channel;
     private readonly int _maxMessages;
+    private readonly int _maxRequestsInPoll;
 
     internal MessageSenderDispatcherWithBatching(SendMessageConfigurator sendMessagesOptions, Channel<MessageSendRequest> channel,
         MessageInvoker messageInvoker)
@@ -22,6 +23,7 @@ internal sealed class MessageSenderDispatcherWithBatching : MessageSenderDispatc
         _timer = new (sendMessagesOptions.PollingInterval);
         _messageInvoker = messageInvoker;
         _maxMessages = sendMessagesOptions.MaxMessagesPerBatch;
+        _maxRequestsInPoll = sendMessagesOptions.MaxRequestsInPoll;
         _channel = channel;
     }
     internal override void Start()
@@ -30,12 +32,10 @@ internal sealed class MessageSenderDispatcherWithBatching : MessageSenderDispatc
     }
     protected override async Task SendMessages()
     {
-        //var messagesSendRequests = MemoryPool<MessageSendRequest>.Shared.Rent(1024);
+        var messagesSendRequests = MemoryPool<MessageSendRequest>.Shared.Rent(_maxRequestsInPoll);
         while (await _timer.WaitForNextTickAsync(_cts.Token))
         {
             int idx = 0;
-            //TODO - is this even worth it paying the overhead of renting that buffer every poll iteration?
-            var messagesSendRequests = MemoryPool<MessageSendRequest>.Shared.Rent(_channel.Reader.Count);
             while (_channel.Reader.TryRead(out var msg))
             {
                 messagesSendRequests.Memory.Span[idx++] = msg;
@@ -49,7 +49,7 @@ internal sealed class MessageSenderDispatcherWithBatching : MessageSenderDispatc
             var canBatchMessages = CanBatchMessages(messagesSendRequests.Memory.Span[..idx]);
             if (!canBatchMessages)
             {
-                for (int i = 0; i < messagesSendRequests.Memory.Length; i++)
+                for (int i = 0; i < idx; i++)
                 {
                     await _messageInvoker.SendMessagesAsync(messagesSendRequests.Memory.Span[i], token: _cts.Token);
                 }
@@ -64,7 +64,7 @@ internal sealed class MessageSenderDispatcherWithBatching : MessageSenderDispatc
                 {
                     break;
                 }
-                await _messageInvoker.SendMessagesAsync(message, token: _cts.Token);
+                await _messageInvoker.SendMessagesAsync(message, _cts.Token);
             }
         }
     }

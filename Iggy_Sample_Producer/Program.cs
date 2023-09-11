@@ -21,6 +21,7 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
     {
         x.MaxMessagesPerBatch = 1000;
         x.PollingInterval = TimeSpan.FromMilliseconds(100);
+        x.MaxRequestsInPoll = 8192;
     };
 });
 

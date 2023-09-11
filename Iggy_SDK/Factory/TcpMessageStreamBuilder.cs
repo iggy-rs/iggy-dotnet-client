@@ -22,9 +22,7 @@ internal class TcpMessageStreamBuilder
     //TODO - this channel will probably need to be refactored, to accept a lambda instead of MessageSendRequest
     internal TcpMessageStreamBuilder CreateChannel()
     {
-        _channel = Channel.CreateUnbounded<MessageSendRequest>(new UnboundedChannelOptions
-        {
-        });
+        _channel = Channel.CreateBounded<MessageSendRequest>(_options.MaxRequestsInPoll);
         return this;
     }
     internal TcpMessageStreamBuilder WithSendMessagesDispatcher()
