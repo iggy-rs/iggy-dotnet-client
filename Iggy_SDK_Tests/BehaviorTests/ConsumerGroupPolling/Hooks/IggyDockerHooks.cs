@@ -62,6 +62,7 @@ public sealed class IggyDockerHooks
                 {
                     x.MaxMessagesPerBatch = 1000;
                     x.PollingInterval = TimeSpan.FromMilliseconds(50);
+                    x.MaxMessagesPerBatch = 8912;
                 };
             });
             clients.Add(client);
@@ -93,6 +94,7 @@ public sealed class IggyDockerHooks
             {
                 x.MaxMessagesPerBatch = 1000;
                 x.PollingInterval = TimeSpan.FromMilliseconds(100);
+                x.MaxMessagesPerBatch = 8912;
             };
         });
 

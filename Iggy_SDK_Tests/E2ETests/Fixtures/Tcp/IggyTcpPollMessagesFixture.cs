@@ -8,6 +8,7 @@ using Iggy_SDK.MessageStream;
 using Iggy_SDK_Tests.Utils.Messages;
 using Iggy_SDK_Tests.Utils.Streams;
 using Iggy_SDK_Tests.Utils.Topics;
+using Iggy_SDK.Configuration;
 using IContainer = DotNet.Testcontainers.Containers.IContainer;
 
 namespace Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
@@ -45,15 +46,13 @@ public sealed class IggyTcpPollMessagesFixture : IAsyncLifetime
         {
             options.BaseAdress = $"127.0.0.1:{_container.GetMappedPublicPort(8090)}";
             options.Protocol = Protocol.Tcp;
-            options.SendBufferSize = 100000;
-            options.ReceiveBufferSize = 100000;
             options.SendMessagesOptions = x =>
             {
-                x.MaxMessagesPerBatch = 1000;
                 x.PollingInterval = TimeSpan.FromMilliseconds(100);
+                x.MaxMessagesPerBatch = 1000;
+                x.MaxRequestsInPoll = 8912;
             };
         });
-
         await sut.CreateStreamAsync(StreamRequest);
         await sut.CreateTopicAsync(Identifier.Numeric(StreamRequest.StreamId), TopicRequest);
         await sut.CreateTopicAsync(Identifier.Numeric(StreamRequest.StreamId), HeadersTopicRequest);
@@ -69,7 +68,7 @@ public sealed class IggyTcpPollMessagesFixture : IAsyncLifetime
         await sut.SendMessagesAsync(request);
         await sut.SendMessagesAsync(requestWithHeaders);
 
-        await Task.Delay(200);
+        await Task.Delay(300);
     }
 
     public async Task DisposeAsync()

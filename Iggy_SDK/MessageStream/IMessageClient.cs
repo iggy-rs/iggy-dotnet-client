@@ -9,6 +9,7 @@ public interface IMessageClient
 {
     Task SendMessagesAsync(MessageSendRequest request, Func<byte[], byte[]>?
         encryptor = null, CancellationToken token = default);
+    //TODO - should I create a MessageSendRequest<TMessage> to clean up function arguments ?
     Task SendMessagesAsync<TMessage>(Identifier streamId, Identifier topicId, Partitioning partitioning,
         IList<TMessage> messages, Func<TMessage, byte[]> serializer,
         Func<byte[], byte[]>? encryptor = null, Dictionary<HeaderKey, HeaderValue>? headers = null,
