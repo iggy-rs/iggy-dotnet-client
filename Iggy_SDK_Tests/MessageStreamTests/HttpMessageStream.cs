@@ -182,7 +182,7 @@ public sealed class HttpMessageStream
                             $"&auto_commit={request.AutoCommit.ToString().ToLower()}")
                     .Respond(HttpStatusCode.BadRequest, "application/json", content);
 
-        await Assert.ThrowsAsync<InvalidResponseException>(async () => await _sut.PollMessagesAsync(request));
+        await Assert.ThrowsAsync<InvalidResponseException>(async () => await _sut.FetchMessagesAsync(request));
         _httpHandler.Flush();
     }
 

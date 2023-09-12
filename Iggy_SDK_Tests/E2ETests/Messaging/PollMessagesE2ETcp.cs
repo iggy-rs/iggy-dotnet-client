@@ -30,7 +30,7 @@ public sealed class PollMessagesE2ETcp : IClassFixture<IggyTcpPollMessagesFixtur
     [Fact, TestPriority(1)]
     public async Task PollMessagesTMessage_WithNoHeaders_Should_PollMessages_Successfully()
     {
-        var response = await _fixture.sut.PollMessagesAsync<DummyMessage>(_messageFetchRequest, MessageFactory.DeserializeDummyMessage);
+        var response = await _fixture.sut.FetchMessagesAsync<DummyMessage>(_messageFetchRequest, MessageFactory.DeserializeDummyMessage);
         response.Messages.Count.Should().Be(10);
         response.PartitionId.Should().Be(_fixture.PartitionId);
         response.CurrentOffset.Should().Be(19);
@@ -44,7 +44,7 @@ public sealed class PollMessagesE2ETcp : IClassFixture<IggyTcpPollMessagesFixtur
     [Fact, TestPriority(2)]
     public async Task PollMessagesTMessage_Should_Throw_InvalidResponse()
     {
-        await _fixture.sut.Invoking(x => x.PollMessagesAsync(_invalidFetchRequest, MessageFactory.DeserializeDummyMessage))
+        await _fixture.sut.Invoking(x => x.FetchMessagesAsync(_invalidFetchRequest, MessageFactory.DeserializeDummyMessage))
             .Should()
             .ThrowExactlyAsync<InvalidResponseException>();
     }
@@ -52,7 +52,7 @@ public sealed class PollMessagesE2ETcp : IClassFixture<IggyTcpPollMessagesFixtur
     [Fact, TestPriority(3)]
     public async Task PollMessages_WithNoHeaders_Should_PollMessages_Successfully()
     {
-        var response = await _fixture.sut.PollMessagesAsync(_messageFetchRequest);
+        var response = await _fixture.sut.FetchMessagesAsync(_messageFetchRequest);
         response.Messages.Count.Should().Be(10);
         response.PartitionId.Should().Be(_fixture.PartitionId);
         response.CurrentOffset.Should().Be(19);
@@ -66,7 +66,7 @@ public sealed class PollMessagesE2ETcp : IClassFixture<IggyTcpPollMessagesFixtur
     [Fact, TestPriority(4)]
     public async Task PollMessages_Should_Throw_InvalidResponse()
     {
-        await _fixture.sut.Invoking(x => x.PollMessagesAsync(_invalidFetchRequest))
+        await _fixture.sut.Invoking(x => x.FetchMessagesAsync(_invalidFetchRequest))
             .Should()
             .ThrowExactlyAsync<InvalidResponseException>();
     }
@@ -74,7 +74,7 @@ public sealed class PollMessagesE2ETcp : IClassFixture<IggyTcpPollMessagesFixtur
     [Fact, TestPriority(5)]
     public async Task PollMessages_WithHeaders_Should_PollMessages_Successfully()
     {
-        var response = await _fixture.sut.PollMessagesAsync(_headersMessageFetchRequest);
+        var response = await _fixture.sut.FetchMessagesAsync(_headersMessageFetchRequest);
         response.Messages.Count.Should().Be(10);
         response.PartitionId.Should().Be(_fixture.PartitionId);
         response.CurrentOffset.Should().Be(19);
@@ -89,7 +89,7 @@ public sealed class PollMessagesE2ETcp : IClassFixture<IggyTcpPollMessagesFixtur
     [Fact, TestPriority(6)]
     public async Task PollMessagesTMessage_WithHeaders_Should_PollMessages_Successfully()
     {
-        var response = await _fixture.sut.PollMessagesAsync(_headersMessageFetchRequest, MessageFactory.DeserializeDummyMessage);
+        var response = await _fixture.sut.FetchMessagesAsync(_headersMessageFetchRequest, MessageFactory.DeserializeDummyMessage);
         response.Messages.Count.Should().Be(10);
         response.PartitionId.Should().Be(_fixture.PartitionId);
         response.CurrentOffset.Should().Be(19);

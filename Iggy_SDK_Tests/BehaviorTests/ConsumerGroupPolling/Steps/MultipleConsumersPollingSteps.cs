@@ -50,7 +50,7 @@ public sealed class MultipleConsumersPollingSteps
         foreach (var consumerId in _consumersIds)
         {
             var request = MessageFactory.CreateMessageFetchRequestConsumer(10, _streamAndTopicFixture.StreamId, _streamAndTopicFixture.ConsumerTopicId, _partitionId, consumerId);
-            var result = await _messageStream.PollMessagesAsync(request);
+            var result = await _messageStream.FetchMessagesAsync(request);
             consumerPolledMessages.Add(result);
         }
         _scenarioContext.Add("ConsumersPollResults", consumerPolledMessages);
@@ -116,7 +116,7 @@ public sealed class MultipleConsumersPollingSteps
             for (int i = 0; i < 2; i++)
             {
                 var request = MessageFactory.CreateMessageFetchRequestConsumerGroup(10, _streamAndTopicFixture.StreamId, _streamAndTopicFixture.ConsumerGroupTopicId, 0, _consumerGroupId);
-                var result = await client.PollMessagesAsync(request);
+                var result = await client.FetchMessagesAsync(request);
                 consumerPolledMessages.Add(result);
             }
         }

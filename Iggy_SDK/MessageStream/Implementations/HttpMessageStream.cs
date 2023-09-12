@@ -168,7 +168,7 @@ public class HttpMessageStream : IMessageStream
         await _channel.Writer.WriteAsync(request, token);
     }
 
-    public async Task<PolledMessages> PollMessagesAsync(MessageFetchRequest request,
+    public async Task<PolledMessages> FetchMessagesAsync(MessageFetchRequest request,
         Func<byte[], byte[]>? decryptor = null, CancellationToken token = default)
     {
         var url = CreateUrl($"/streams/{request.StreamId}/topics/{request.TopicId}/messages?consumer_id={request.Consumer.Id}" +
@@ -177,8 +177,7 @@ public class HttpMessageStream : IMessageStream
         var response = await _httpClient.GetAsync(url, token);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<PolledMessages>(
-                       JsonConverterFactory.MessageResponseOptions(decryptor))
+            return await response.Content.ReadFromJsonAsync<PolledMessages>(JsonConverterFactory.MessageResponseOptions(decryptor), cancellationToken: token)
                    ?? PolledMessages.Empty;
 
         }
@@ -186,7 +185,7 @@ public class HttpMessageStream : IMessageStream
         return PolledMessages.Empty;
     }
 
-    public async Task<PolledMessages<TMessage>> PollMessagesAsync<TMessage>(MessageFetchRequest request,
+    public async Task<PolledMessages<TMessage>> FetchMessagesAsync<TMessage>(MessageFetchRequest request,
         Func<byte[], TMessage> serializer,
         Func<byte[], byte[]>? decryptor = null, CancellationToken token = default)
     {
@@ -196,14 +195,16 @@ public class HttpMessageStream : IMessageStream
         var response = await _httpClient.GetAsync(url, token);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<PolledMessages<TMessage>>(
-                       JsonConverterFactory.MessageResponseGenericOptions(serializer, decryptor))
+            return await response.Content.ReadFromJsonAsync<PolledMessages<TMessage>>(JsonConverterFactory.MessageResponseGenericOptions(serializer, decryptor), cancellationToken: token)
                    ?? PolledMessages<TMessage>.Empty;
         }
         await HandleResponseAsync(response);
         return PolledMessages<TMessage>.Empty;
     }
-
+    public IAsyncEnumerable<MessageResponse<TMessage>> PollMessagesAsync<TMessage>(PollMessagesRequest request, Func<byte[], TMessage> deserializer, Func<byte[], byte[]>? decryptor = null, CancellationToken token = default)
+    {
+        throw new NotImplementedException();
+    }
     public async Task StoreOffsetAsync(StoreOffsetRequest request, CancellationToken token = default)
     {
         var json = JsonSerializer.Serialize(request, JsonConverterFactory.SnakeCaseOptions);

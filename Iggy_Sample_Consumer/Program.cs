@@ -66,42 +66,20 @@ async Task ConsumeMessages()
         using BinaryReader binaryReader = new BinaryReader(cryptoStream);
         return binaryReader.ReadBytes(payload.Length);
     };
-
-    while (true)
+    
+    await foreach (var msgResponse in bus.PollMessagesAsync<Envelope>(new PollMessagesRequest
+                   {
+                       Consumer = Consumer.New(consumerId),
+                       Count = 1,
+                       TopicId = topicId,
+                       StreamId = streamId,
+                       PartitionId = partitionId,
+                       PollingStrategy = PollingStrategy.Next(),
+                       Interval = TimeSpan.FromMilliseconds(1000),
+                       StoreOffsetStragety = StoreOffset.AfterProcessingEachMessage,
+                   }, deserializer, decryptor))
     {
-        try
-        {
-            var messages = await bus.PollMessagesAsync<Envelope>(new MessageFetchRequest
-            {
-                Consumer = Consumer.New(consumerId),
-                Count = 1,
-                TopicId = topicId,
-                StreamId = streamId,
-                PartitionId = partitionId,
-                PollingStrategy = PollingStrategy.Next(),
-                AutoCommit = true
-            }, deserializer, decryptor);
-
-
-            if (!messages.Messages.Any())
-            {
-                Console.WriteLine("No messages were found");
-                await Task.Delay(intervalInMs);
-                continue;
-            }
-
-            foreach (var message in messages.Messages)
-            {
-                HandleMessage(message);
-            }
-
-            await Task.Delay(intervalInMs);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e.Message);
-            throw;
-        }
+        HandleMessage(msgResponse);
     }
 }
 

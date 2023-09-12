@@ -3,6 +3,5 @@ public enum StoreOffset
 {
     Never,
     WhenMessagesAreReceived,
-    WhenMessagesAreProcessed,
     AfterProcessingEachMessage
 }

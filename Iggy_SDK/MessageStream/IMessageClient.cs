@@ -1,6 +1,7 @@
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Headers;
 using Iggy_SDK.Kinds;
+using System.Runtime.CompilerServices;
 
 namespace Iggy_SDK.MessageStream;
 
@@ -14,9 +15,12 @@ public interface IMessageClient
         IList<TMessage> messages, Func<TMessage, byte[]> serializer,
         Func<byte[], byte[]>? encryptor = null, Dictionary<HeaderKey, HeaderValue>? headers = null,
         CancellationToken token = default);
-    Task<PolledMessages> PollMessagesAsync(MessageFetchRequest request, Func<byte[], byte[]>? decryptor = null,
+    Task<PolledMessages> FetchMessagesAsync(MessageFetchRequest request, Func<byte[], byte[]>? decryptor = null,
         CancellationToken token = default);
-    Task<PolledMessages<TMessage>> PollMessagesAsync<TMessage>(MessageFetchRequest request,
-        Func<byte[], TMessage> serializer, Func<byte[], byte[]>? decryptor = null, CancellationToken token = default);
+    Task<PolledMessages<TMessage>> FetchMessagesAsync<TMessage>(MessageFetchRequest request,
+        Func<byte[], TMessage> deserializer, Func<byte[], byte[]>? decryptor = null, CancellationToken token = default);
+    IAsyncEnumerable<MessageResponse<TMessage>> PollMessagesAsync<TMessage>(PollMessagesRequest request,
+        Func<byte[], TMessage> deserializer, Func<byte[], byte[]>? decryptor = null,
+        CancellationToken token = default);
 
 }
