@@ -30,7 +30,6 @@ internal static class TcpMessageStreamHelpers
     internal static int GetResponseStatus(Span<byte> buffer) =>
         BinaryPrimitives.ReadInt32LittleEndian(buffer[..4]);
 
-    //TODO - explore simplifying this method since messages is of type IList
     internal static int CalculateMessageBytesCount(IList<Message> messages)
     {
         return messages switch

@@ -4,29 +4,30 @@ using Iggy_SDK.MessagesDispatcher;
 using Iggy_SDK.MessageStream.Implementations;
 using System.Net.Sockets;
 using System.Threading.Channels;
+using HttpMessageInvoker = Iggy_SDK.MessagesDispatcher.HttpMessageInvoker;
 namespace Iggy_SDK.Factory;
 
-internal class TcpMessageStreamBuilder
+internal class HttpMessageStreamBuilder
 {
-    private readonly Socket _socket;
+    private readonly HttpClient _client;
     private readonly SendMessageConfigurator _options;
     private Channel<MessageSendRequest> _channel;
     private MessageSenderDispatcher _messageSenderDispatcher;
 
-    internal TcpMessageStreamBuilder(Socket socket, SendMessageConfigurator options)
+    internal HttpMessageStreamBuilder(HttpClient client, SendMessageConfigurator options)
     {
-        _socket = socket;
+        _client = client;
         _options = options;
     }
     //TODO - this channel will probably need to be refactored, to accept a lambda instead of MessageSendRequest
-    internal TcpMessageStreamBuilder CreateChannel()
+    internal HttpMessageStreamBuilder CreateChannel()
     {
         _channel = Channel.CreateBounded<MessageSendRequest>(_options.MaxRequestsInPoll);
         return this;
     }
-    internal TcpMessageStreamBuilder WithSendMessagesDispatcher()
+    internal HttpMessageStreamBuilder WithSendMessagesDispatcher()
     {
-        var messageInvoker = new TcpMessageInvoker(_socket);
+        var messageInvoker = new HttpMessageInvoker(_client);
         _messageSenderDispatcher = _options.PollingInterval.Ticks switch
         {
             0 => new MessageSenderDispatcherNoBatching(_channel, messageInvoker),
@@ -35,10 +36,10 @@ internal class TcpMessageStreamBuilder
         };
         return this;
     }
-    internal TcpMessageStream Build()
+    internal HttpMessageStream Build()
     {
         _messageSenderDispatcher.Start();
-        return new(_socket, _channel);
+        return new(_client, _channel);
     }
     
 }

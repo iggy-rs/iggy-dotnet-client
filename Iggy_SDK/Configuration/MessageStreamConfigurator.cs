@@ -14,11 +14,6 @@ public sealed class MessageStreamConfigurator : IMessageStreamConfigurator
         options.MaxMessagesPerBatch = 1000;
         options.MaxRequestsInPoll = 4096;
     };
-    public Action<PollMessageConfigurator> PollMessagesOptions { get; set; } = options =>
-    {
-        options.PollingInterval = TimeSpan.FromMilliseconds(100);
-        options.StoreOffsetKind = StoreOffset.WhenMessagesAreProcessed;
-    };
     public int ReceiveBufferSize { get; set; } = 4096;
     public int SendBufferSize { get; set; } = 4096;
 }

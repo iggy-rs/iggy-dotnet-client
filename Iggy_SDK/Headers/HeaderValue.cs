@@ -10,7 +10,7 @@ public readonly struct HeaderValue
     public required HeaderKind Kind { get; init; }
     public required byte[] Value { get; init; }
 
-    public static HeaderValue Raw(byte[] value)
+    public static HeaderValue FromBytes(byte[] value)
     {
         return new HeaderValue
         {
@@ -19,7 +19,7 @@ public readonly struct HeaderValue
         };
     }
 
-    public static HeaderValue String(string value)
+    public static HeaderValue FromString(string value)
     {
         if (value.Length is 0 or > 255)
         {
@@ -32,7 +32,7 @@ public readonly struct HeaderValue
         };
     }
 
-    public static HeaderValue Bool(bool value)
+    public static HeaderValue FromBool(bool value)
     {
         return new HeaderValue
         {
@@ -41,7 +41,7 @@ public readonly struct HeaderValue
         };
     }
 
-    public static HeaderValue Int32(int value)
+    public static HeaderValue FromInt32(int value)
     {
         var bytes = new byte[4];
         BinaryPrimitives.WriteInt32LittleEndian(bytes, value);
@@ -52,7 +52,7 @@ public readonly struct HeaderValue
         };
     }
 
-    public static HeaderValue Int64(long value)
+    public static HeaderValue FromInt64(long value)
     {
         var bytes = new byte[8];
         BinaryPrimitives.WriteInt64LittleEndian(bytes, value);
@@ -63,7 +63,7 @@ public readonly struct HeaderValue
         };
     }
 
-    public static HeaderValue Int128(Int128 value)
+    public static HeaderValue FromInt128(Int128 value)
     {
         return new HeaderValue
         {
@@ -72,7 +72,7 @@ public readonly struct HeaderValue
         };
     }
 
-    public static HeaderValue Guid(Guid value)
+    public static HeaderValue FromGuid(Guid value)
     {
         return new HeaderValue
         {
@@ -81,7 +81,7 @@ public readonly struct HeaderValue
         };
     }
 
-    public static HeaderValue UInt32(uint value)
+    public static HeaderValue FromUInt32(uint value)
     {
         var bytes = new byte[4];
         BinaryPrimitives.WriteUInt32LittleEndian(bytes, value);
@@ -92,7 +92,7 @@ public readonly struct HeaderValue
         };
     }
 
-    public static HeaderValue UInt64(ulong value)
+    public static HeaderValue FromUInt64(ulong value)
     {
         var bytes = new byte[8];
         BinaryPrimitives.WriteUInt64LittleEndian(bytes, value);
@@ -103,7 +103,7 @@ public readonly struct HeaderValue
         };
     }
 
-    public static HeaderValue UInt128(UInt128 value)
+    public static HeaderValue FromUInt128(UInt128 value)
     {
         return new HeaderValue
         {
@@ -112,7 +112,7 @@ public readonly struct HeaderValue
         };
     }
 
-    public static HeaderValue Float32(float value)
+    public static HeaderValue FromFloat32(float value)
     {
         var bytes = new byte[4];
         BinaryPrimitives.TryWriteSingleLittleEndian(bytes, value);
@@ -123,7 +123,7 @@ public readonly struct HeaderValue
         };
     }
 
-    public static HeaderValue Float64(double value)
+    public static HeaderValue FromFloat64(double value)
     {
         var bytes = new byte[8];
         BinaryPrimitives.TryWriteDoubleLittleEndian(bytes, value);
@@ -133,8 +133,54 @@ public readonly struct HeaderValue
             Value = bytes
         };
     }
+    //since the order of headers is known during sending/polling, I can create several methods
+    //that will allow to translate raw byte array into specific types, 
+    //do an if check on the header kind to make sure that the type is correct
+    //if it's not throw exception
 
-    public override string? ToString()
+    public byte[] ToBytes()
+    {
+        if (Kind is not HeaderKind.Raw)
+        {
+            throw new InvalidOperationException("Can't convert header");
+        }
+        return Value;
+    }
+    public new string ToString()
+    {
+        if (Kind is not HeaderKind.String)
+        {
+            throw new InvalidOperationException("Can't convert header");
+        }
+        return Encoding.UTF8.GetString(Value); 
+    }
+    public bool ToBool()
+    {
+        if (Kind is not HeaderKind.Bool)
+        {
+            throw new InvalidOperationException("Can't convert header");
+        }
+        return BitConverter.ToBoolean(Value, 0);
+    }
+    public int ToInt32()
+    {
+        if (Kind is not HeaderKind.Int32)
+        {
+            throw new InvalidOperationException("Can't convert header");
+        }
+        return BitConverter.ToInt32(Value, 0);
+    }
+    public long ToInt64()
+    {
+        if (Kind is not HeaderKind.Int64)
+        {
+            throw new InvalidOperationException("Can't convert header");
+        }
+        return BitConverter.ToInt64(Value, 0);
+    }
+
+    /*
+    public override string ToString()
     {
         var sb = new StringBuilder();
         foreach (var t in Value)
@@ -159,4 +205,5 @@ public readonly struct HeaderValue
             _ => throw new ArgumentOutOfRangeException()
         };
     }
+    */
 }

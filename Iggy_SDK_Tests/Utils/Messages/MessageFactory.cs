@@ -194,19 +194,19 @@ internal static class MessageFactory
                 HeaderKey.New(RandomString(Random.Shared.Next(50, 254))),
                 Random.Shared.Next(1, 12) switch
                 {
-                    1 => HeaderValue.Raw(Encoding.UTF8.GetBytes(RandomString(Random.Shared.Next(50, 254)))),
-                    2 => HeaderValue.String(RandomString(Random.Shared.Next(25, 254))),
-                    3 => HeaderValue.Bool(Random.Shared.Next(0, 1) switch { 0 => false, 1 => true, _ => false }),
-                    4 => HeaderValue.Int32(Random.Shared.Next(69, 420)),
-                    5 => HeaderValue.Int64(Random.Shared.NextInt64(6942023, 98723131)),
-                    6 => HeaderValue.Int128(Guid.NewGuid().ToByteArray().ToInt128()),
-                    7 => HeaderValue.Guid(Guid.NewGuid()),
-                    8 => HeaderValue.UInt32((uint)Random.Shared.Next(1, 69)),
-                    9 => HeaderValue.UInt64((ulong)Random.Shared.Next(1, 69)),
-                    10 => HeaderValue.UInt128(Guid.NewGuid().ToUInt128()),
-                    11 => HeaderValue.Float32(Random.Shared.NextSingle()),
-                    12 => HeaderValue.Float64(Random.Shared.NextDouble()),
-                    _ => HeaderValue.UInt64((ulong)Random.Shared.Next(1, 69))
+                    1 => HeaderValue.FromBytes(Encoding.UTF8.GetBytes(RandomString(Random.Shared.Next(50, 254)))),
+                    2 => HeaderValue.FromString(RandomString(Random.Shared.Next(25, 254))),
+                    3 => HeaderValue.FromBool(Random.Shared.Next(0, 1) switch { 0 => false, 1 => true, _ => false }),
+                    4 => HeaderValue.FromInt32(Random.Shared.Next(69, 420)),
+                    5 => HeaderValue.FromInt64(Random.Shared.NextInt64(6942023, 98723131)),
+                    6 => HeaderValue.FromInt128(Guid.NewGuid().ToByteArray().ToInt128()),
+                    7 => HeaderValue.FromGuid(Guid.NewGuid()),
+                    8 => HeaderValue.FromUInt32((uint)Random.Shared.Next(1, 69)),
+                    9 => HeaderValue.FromUInt64((ulong)Random.Shared.Next(1, 69)),
+                    10 => HeaderValue.FromUInt128(Guid.NewGuid().ToUInt128()),
+                    11 => HeaderValue.FromFloat32(Random.Shared.NextSingle()),
+                    12 => HeaderValue.FromFloat64(Random.Shared.NextDouble()),
+                    _ => HeaderValue.FromUInt64((ulong)Random.Shared.Next(1, 69))
                 });
         }
         return headers;

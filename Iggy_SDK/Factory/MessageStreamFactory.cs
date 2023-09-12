@@ -13,6 +13,7 @@ namespace Iggy_SDK.Factory;
 
 public static class MessageStreamFactory
 {
+    //TODO - this whole setup will have to be refactored later,when adding support for ASP.NET Core DI
     public static IMessageStream CreateMessageStream(Action<IMessageStreamConfigurator> options)
     {
         var config = new MessageStreamConfigurator();
@@ -53,12 +54,21 @@ public static class MessageStreamFactory
         return socket;
     }
 
-    //TODO - this whole setup will have to be refactored later,when adding support for ASP.NET Core DI
     private static HttpMessageStream CreateHttpMessageStream(IMessageStreamConfigurator options)
     {
         var sendMessagesOptions = new SendMessageConfigurator();
         options.SendMessagesOptions.Invoke(sendMessagesOptions);
 
+        var client = CreateHttpClient(options);
+        var channel = Channel.CreateBounded<MessageSendRequest>(sendMessagesOptions.MaxRequestsInPoll);
+
+        return new HttpMessageStreamBuilder(client, sendMessagesOptions)
+            .CreateChannel()
+            .WithSendMessagesDispatcher()
+            .Build();
+    }
+    private static HttpClient CreateHttpClient(IMessageStreamConfigurator options)
+    {
         var client = new HttpClient();
         client.BaseAddress = new Uri(options.BaseAdress);
         if (options.Headers is not null)
@@ -68,17 +78,6 @@ public static class MessageStreamFactory
                 client.DefaultRequestHeaders.Add(header.Name, header.Values);
             }
         }
-
-        //TODO - explore making this bounded ?
-        var channel = Channel.CreateBounded<MessageSendRequest>(sendMessagesOptions.MaxRequestsInPoll);
-
-        //TODO - create same builder for http protocol
-        var messageStream = new HttpMessageStream(client, channel);
-        var messageInvoker = new MessagesDispatcher.HttpMessageInvoker(client);
-        var messageDispatcher = new MessageSenderDispatcherWithBatching(sendMessagesOptions, channel, messageInvoker);
-
-        messageDispatcher.Start();
-
-        return messageStream;
+        return client;
     }
 }

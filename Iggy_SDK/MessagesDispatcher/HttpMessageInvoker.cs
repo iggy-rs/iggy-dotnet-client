@@ -24,7 +24,6 @@ internal sealed class HttpMessageInvoker : MessageInvoker
         if (!response.IsSuccessStatusCode)
         {
             await HandleResponseAsync(response);
-            throw new Exception("Unknown error occurred.");
         }
     }
     private static async Task HandleResponseAsync(HttpResponseMessage response)
@@ -38,5 +37,6 @@ internal sealed class HttpMessageInvoker : MessageInvoker
         {
             throw new Exception("HTTP Internal server error");
         }
+        throw new Exception("Unknown error occurred.");
     }
 }

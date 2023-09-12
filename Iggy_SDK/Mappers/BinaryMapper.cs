@@ -221,11 +221,10 @@ internal static class BinaryMapper
             position += 4;
             var value = payload[position..(position + valueLength)];
             position += valueLength;
-            headers.Add(HeaderKey.New(key), new HeaderValue
-            {
-                Kind = headerKind,
-                Value = value.ToArray()
-            }
+            headers.Add(HeaderKey.New(key), new() 
+                {
+                    Kind = headerKind, Value = value.ToArray()
+                }
             );
         }
 
