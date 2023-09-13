@@ -1,4 +1,5 @@
 ﻿using Iggy_SDK.Contracts.Http;
+using Iggy_SDK.Enums;
 using Iggy_SDK.Exceptions;
 using Iggy_SDK.Headers;
 using Iggy_SDK.JsonConfiguration;
@@ -201,9 +202,70 @@ public class HttpMessageStream : IMessageStream
         await HandleResponseAsync(response);
         return PolledMessages<TMessage>.Empty;
     }
-    public IAsyncEnumerable<MessageResponse<TMessage>> PollMessagesAsync<TMessage>(PollMessagesRequest request, Func<byte[], TMessage> deserializer, Func<byte[], byte[]>? decryptor = null, CancellationToken token = default)
+    public async IAsyncEnumerable<MessageResponse<TMessage>> PollMessagesAsync<TMessage>(PollMessagesRequest request, Func<byte[], TMessage> deserializer, Func<byte[], byte[]>? decryptor = null, CancellationToken token = default)
     {
-        throw new NotImplementedException();
+        var channel = Channel.CreateUnbounded<MessageResponse<TMessage>>();
+        var autoCommit = request.StoreOffsetStragety switch
+        {
+            StoreOffset.Never => false,
+            StoreOffset.WhenMessagesAreReceived => true,
+            StoreOffset.AfterProcessingEachMessage => false
+        };
+        var fetchRequest = new MessageFetchRequest
+        {
+            Consumer = request.Consumer,
+            StreamId = request.StreamId,
+            TopicId = request.TopicId,
+            AutoCommit = autoCommit,
+            Count = request.Count,
+            PartitionId = request.PartitionId,
+            PollingStrategy = request.PollingStrategy
+        };
+        
+
+        _ = StartPollingMessagesAsync(fetchRequest, deserializer, request.Interval, channel.Writer, token, decryptor);
+        await foreach(var messageResponse in channel.Reader.ReadAllAsync(token))
+        {
+            yield return messageResponse;
+            
+            var currentOffset = messageResponse.Offset;
+            if (request.StoreOffsetStragety is StoreOffset.AfterProcessingEachMessage)
+            {
+                await StoreOffsetAsync(new StoreOffsetRequest
+                {
+                    Consumer = request.Consumer,
+                    Offset = currentOffset,
+                    PartitionId = request.PartitionId,
+                    StreamId = request.StreamId,
+                    TopicId = request.TopicId
+                }, token);
+            }
+            if (request.PollingStrategy.Kind is MessagePolling.Offset)
+            {
+                //TODO - check with profiler whether this doesn't cause a lot of allocations
+                request.PollingStrategy = PollingStrategy.Offset(currentOffset + 1);
+            }
+        }
+    }
+    private async Task StartPollingMessagesAsync<TMessage>(MessageFetchRequest request,
+        Func<byte[], TMessage> deserializer, TimeSpan interval, ChannelWriter<MessageResponse<TMessage>> writer,
+        CancellationToken token, Func<byte[], byte[]>? decryptor = null)
+    {
+        var timer = new PeriodicTimer(interval);
+        while (await timer.WaitForNextTickAsync(token) || token.IsCancellationRequested)
+        {
+            var fetchResponse = await FetchMessagesAsync(request, deserializer, decryptor, token);
+            if (fetchResponse.Messages.Count == 0)
+            {
+                continue;
+            }
+            foreach (var messageResponse in fetchResponse.Messages)
+            {
+                await writer.WriteAsync(messageResponse, token);
+            }
+            
+        }
+        writer.Complete();
     }
     public async Task StoreOffsetAsync(StoreOffsetRequest request, CancellationToken token = default)
     {

@@ -67,8 +67,8 @@ internal sealed class MessageResponseConverter : JsonConverter<PolledMessages>
                             "uint32" => HeaderKind.Uint32,
                             "uint64" => HeaderKind.Uint64,
                             "uint128" => HeaderKind.Uint128,
-                            "float32" => HeaderKind.Float,
-                            "float64" => HeaderKind.Double,
+                            "float" => HeaderKind.Float,
+                            "double" => HeaderKind.Double,
                             "string" => HeaderKind.String,
                             "raw" => HeaderKind.Raw,
                             _ => throw new ArgumentOutOfRangeException()

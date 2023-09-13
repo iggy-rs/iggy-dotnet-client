@@ -68,8 +68,8 @@ internal sealed class MessageResponseGenericConverter<TMessage> : JsonConverter<
                             "uint32" => HeaderKind.Uint32,
                             "uint64" => HeaderKind.Uint64,
                             "uint128" => HeaderKind.Uint128,
-                            "float" => HeaderKind.Float,
-                            "double" => HeaderKind.Double,
+                            "float32" => HeaderKind.Float,
+                            "float64" => HeaderKind.Double,
                             "string" => HeaderKind.String,
                             "raw" => HeaderKind.Raw,
                             _ => throw new ArgumentOutOfRangeException()
