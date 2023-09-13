@@ -41,14 +41,14 @@ internal static class Extensions
     }
     internal static UInt128 ToUInt128(this byte[] bytes)
     {
-        var hi = BinaryPrimitives.ReadUInt64LittleEndian(bytes[..8]);
-        var lo = BinaryPrimitives.ReadUInt64LittleEndian(bytes[8..16]);
+        var lo = BinaryPrimitives.ReadUInt64LittleEndian(bytes[..8]);
+        var hi = BinaryPrimitives.ReadUInt64LittleEndian(bytes[8..16]);
         return new UInt128(hi, lo);
     }
     internal static Int128 ToInt128(this byte[] bytes)
     {
-        var hi = BinaryPrimitives.ReadUInt64LittleEndian(bytes[..8]);
-        var lo = BinaryPrimitives.ReadUInt64LittleEndian(bytes[8..16]);
+        var lo = BinaryPrimitives.ReadUInt64LittleEndian(bytes[..8]);
+        var hi = BinaryPrimitives.ReadUInt64LittleEndian(bytes[8..16]);
         return new Int128(hi, lo);
     }
     internal static byte[] GetBytesFromGuid(this Guid value)

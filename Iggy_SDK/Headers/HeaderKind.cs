@@ -11,6 +11,6 @@ public enum HeaderKind
     Uint32,
     Uint64,
     Uint128,
-    Float32,
-    Float64
+    Float,
+    Double
 }

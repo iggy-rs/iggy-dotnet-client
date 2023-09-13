@@ -42,8 +42,8 @@ internal sealed class MessageConverter : JsonConverter<HttpMessage>
                     HeaderKind.Uint32 => "uint32",
                     HeaderKind.Uint64 => "uint64",
                     HeaderKind.Uint128 => "uint128",
-                    HeaderKind.Float32 => "float32",
-                    HeaderKind.Float64 => "float64",
+                    HeaderKind.Float => "float32",
+                    HeaderKind.Double => "float64",
                     HeaderKind.String => "string",
                     HeaderKind.Raw => "raw",
                     _ => throw new ArgumentOutOfRangeException()

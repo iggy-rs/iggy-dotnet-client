@@ -112,32 +112,27 @@ public readonly struct HeaderValue
         };
     }
 
-    public static HeaderValue FromFloat32(float value)
+    public static HeaderValue FromFloat(float value)
     {
         var bytes = new byte[4];
         BinaryPrimitives.TryWriteSingleLittleEndian(bytes, value);
         return new HeaderValue
         {
-            Kind = HeaderKind.Float32,
+            Kind = HeaderKind.Float,
             Value = bytes
         };
     }
 
-    public static HeaderValue FromFloat64(double value)
+    public static HeaderValue FromDouble(double value)
     {
         var bytes = new byte[8];
         BinaryPrimitives.TryWriteDoubleLittleEndian(bytes, value);
         return new HeaderValue
         {
-            Kind = HeaderKind.Float64,
+            Kind = HeaderKind.Double,
             Value = bytes
         };
     }
-    //since the order of headers is known during sending/polling, I can create several methods
-    //that will allow to translate raw byte array into specific types, 
-    //do an if check on the header kind to make sure that the type is correct
-    //if it's not throw exception
-
     public byte[] ToBytes()
     {
         if (Kind is not HeaderKind.Raw)
@@ -178,32 +173,60 @@ public readonly struct HeaderValue
         }
         return BitConverter.ToInt64(Value, 0);
     }
-
-    /*
-    public override string ToString()
+    public Int128 ToInt128()
     {
-        var sb = new StringBuilder();
-        foreach (var t in Value)
+        if (Kind is not HeaderKind.Int128)
         {
-            sb.Append(t);
+            throw new InvalidOperationException("Can't convert header");
         }
-        var byteArrString = sb.ToString();
-
-        return Kind switch
-        {
-            HeaderKind.Raw => byteArrString,
-            HeaderKind.String => Encoding.UTF8.GetString(Value),
-            HeaderKind.Bool => BitConverter.ToBoolean(Value, 0).ToString(),
-            HeaderKind.Int32 => BitConverter.ToInt32(Value, 0).ToString(),
-            HeaderKind.Int64 => BitConverter.ToInt64(Value, 0).ToString(),
-            HeaderKind.Int128 => Value.ToInt128().ToString(),
-            HeaderKind.Uint32 => BitConverter.ToUInt32(Value, 0).ToString(),
-            HeaderKind.Uint64 => BitConverter.ToUInt64(Value, 0).ToString(),
-            HeaderKind.Uint128 => new Guid(Value).ToString(),
-            HeaderKind.Float32 => BitConverter.ToSingle(Value, 0).ToString(CultureInfo.InvariantCulture),
-            HeaderKind.Float64 => BitConverter.ToDouble(Value, 0).ToString(CultureInfo.InvariantCulture),
-            _ => throw new ArgumentOutOfRangeException()
-        };
+        return Value.ToInt128();
     }
-    */
+    public Guid ToGuid()
+    {
+        if (Kind is not HeaderKind.Uint128)
+        {
+            throw new InvalidOperationException("Can't convert header");
+        }
+        return new Guid(Value);
+    }
+    public uint ToUInt32()
+    {
+        if (Kind is not HeaderKind.Uint32)
+        {
+            throw new InvalidOperationException("Can't convert header");
+        }
+        return BitConverter.ToUInt32(Value);
+    }
+    public ulong ToUInt64()
+    {
+        if (Kind is not HeaderKind.Uint64)
+        {
+            throw new InvalidOperationException("Can't convert header");
+        }
+        return BitConverter.ToUInt64(Value);
+    }
+    public UInt128 ToUInt128()
+    {
+        if (Kind is not HeaderKind.Uint128)
+        {
+            throw new InvalidOperationException("Can't convert header");
+        }
+        return Value.ToUInt128();
+    }
+    public float ToFloat()
+    {
+        if (Kind is not HeaderKind.Float)
+        {
+            throw new InvalidOperationException("Can't convert header");
+        }
+        return BitConverter.ToSingle(Value);
+    }
+    public double ToDouble()
+    {
+        if (Kind is not HeaderKind.Double)
+        {
+            throw new InvalidOperationException("Can't convert header");
+        }
+        return BitConverter.ToDouble(Value);
+    }
 }

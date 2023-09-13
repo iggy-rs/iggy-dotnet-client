@@ -244,8 +244,8 @@ internal static class BinaryMapper
             11 => HeaderKind.Uint32,
             12 => HeaderKind.Uint64,
             13 => HeaderKind.Uint128,
-            14 => HeaderKind.Float32,
-            15 => HeaderKind.Float64,
+            14 => HeaderKind.Float,
+            15 => HeaderKind.Double,
             _ => throw new ArgumentOutOfRangeException()
         };
         return headerKind;

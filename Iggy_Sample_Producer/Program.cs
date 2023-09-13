@@ -105,7 +105,7 @@ async Task ProduceMessages(IMessageClient bus, StreamResponse? stream, TopicResp
     var headers = new Dictionary<HeaderKey, HeaderValue>();
     headers.Add(new HeaderKey { Value = "key_1".ToLower() }, HeaderValue.FromString("test-value-1"));
     headers.Add(new HeaderKey { Value = "key_2".ToLower() }, HeaderValue.FromInt32(69));
-    headers.Add(new HeaderKey { Value = "key_3".ToLower() }, HeaderValue.FromFloat32(420.69f));
+    headers.Add(new HeaderKey { Value = "key_3".ToLower() }, HeaderValue.FromFloat(420.69f));
     headers.Add(new HeaderKey { Value = "key_4".ToLower() }, HeaderValue.FromBool(true));
     headers.Add(new HeaderKey { Value = "key_5".ToLower() }, HeaderValue.FromBytes(byteArray));
     headers.Add(new HeaderKey { Value = "key_6".ToLower() }, HeaderValue.FromInt128(new Int128(6969696969, 420420420)));

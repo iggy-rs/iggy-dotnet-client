@@ -190,8 +190,8 @@ internal static class TcpContracts
             HeaderKind.Uint32 => 11,
             HeaderKind.Uint64 => 12,
             HeaderKind.Uint128 => 13,
-            HeaderKind.Float32 => 14,
-            HeaderKind.Float64 => 15,
+            HeaderKind.Float => 14,
+            HeaderKind.Double => 15,
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
         };
     }

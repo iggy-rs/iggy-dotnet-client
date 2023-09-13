@@ -204,8 +204,8 @@ internal static class MessageFactory
                     8 => HeaderValue.FromUInt32((uint)Random.Shared.Next(1, 69)),
                     9 => HeaderValue.FromUInt64((ulong)Random.Shared.Next(1, 69)),
                     10 => HeaderValue.FromUInt128(Guid.NewGuid().ToUInt128()),
-                    11 => HeaderValue.FromFloat32(Random.Shared.NextSingle()),
-                    12 => HeaderValue.FromFloat64(Random.Shared.NextDouble()),
+                    11 => HeaderValue.FromFloat(Random.Shared.NextSingle()),
+                    12 => HeaderValue.FromDouble(Random.Shared.NextDouble()),
                     _ => HeaderValue.FromUInt64((ulong)Random.Shared.Next(1, 69))
                 });
         }
