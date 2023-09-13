@@ -3,18 +3,15 @@ using Iggy_SDK;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
-using Iggy_SDK.Messages;
 using Iggy_SDK.MessageStream;
 using Iggy_SDK_Tests.Utils.Messages;
 using Iggy_SDK_Tests.Utils.Streams;
 using Iggy_SDK_Tests.Utils.Topics;
-using Iggy_SDK.Configuration;
-using Iggy_SDK.Kinds;
 using IContainer = DotNet.Testcontainers.Containers.IContainer;
 
 namespace Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
 
-public sealed class IggyTcpPollMessagesFixture : IAsyncLifetime
+public sealed class IggyTcpFetchMessagesFixture : IAsyncLifetime
 {
     private readonly IContainer _container = new ContainerBuilder().WithImage("iggyrs/iggy:latest")
         //.WithPortBinding(3000, true)
@@ -27,16 +24,18 @@ public sealed class IggyTcpPollMessagesFixture : IAsyncLifetime
     public required IMessageStream sut;
 
     private static readonly StreamRequest StreamRequest = StreamFactory.CreateStreamRequest();
+    private static readonly StreamRequest NonExistingStreamRequest = StreamFactory.CreateStreamRequest();
+    private static readonly TopicRequest NonExistingTopicRequest = TopicFactory.CreateTopicRequest(3000);
     private static readonly TopicRequest TopicRequest = TopicFactory.CreateTopicRequest();
     private static readonly TopicRequest HeadersTopicRequest = TopicFactory.CreateTopicRequest();
-    public const int MessageCount = 1000000;
 
     public readonly int StreamId = StreamRequest.StreamId;
     public readonly int TopicId = TopicRequest.TopicId;
     public readonly int HeadersTopicId = HeadersTopicRequest.TopicId;
 
+    public readonly int InvalidStreamId = NonExistingStreamRequest.StreamId;
+    public readonly int InvalidTopicId = NonExistingTopicRequest.TopicId;
     public readonly int PartitionId = 1;
-    public readonly int HeadersCount = 6;
 
     public async Task InitializeAsync()
     {
@@ -56,14 +55,18 @@ public sealed class IggyTcpPollMessagesFixture : IAsyncLifetime
         await sut.CreateTopicAsync(Identifier.Numeric(StreamRequest.StreamId), TopicRequest);
         await sut.CreateTopicAsync(Identifier.Numeric(StreamRequest.StreamId), HeadersTopicRequest);
 
-        await sut.SendMessagesAsync(Identifier.Numeric(StreamId), Identifier.Numeric(TopicId),
-            Partitioning.PartitionId(PartitionId), MessageFactory.GenerateDummyMessages(MessageCount), MessageFactory.Serializer);
-        
-        await sut.SendMessagesAsync(Identifier.Numeric(StreamId), Identifier.Numeric(HeadersTopicId),
-            Partitioning.PartitionId(PartitionId), MessageFactory.GenerateDummyMessages(MessageCount), MessageFactory.Serializer, 
-            headers: MessageFactory.GenerateMessageHeaders(HeadersCount));
 
-        await Task.Delay(2500);
+        var request = MessageFactory.CreateMessageSendRequest(
+            StreamRequest.StreamId, TopicRequest.TopicId, PartitionId,
+            MessageFactory.GenerateMessages(20));
+
+        var requestWithHeaders = MessageFactory.CreateMessageSendRequest(
+            StreamRequest.StreamId, HeadersTopicRequest.TopicId, PartitionId,
+            MessageFactory.GenerateMessages(20, MessageFactory.GenerateMessageHeaders(6)));
+        await sut.SendMessagesAsync(request);
+        await sut.SendMessagesAsync(requestWithHeaders);
+
+        await Task.Delay(1000);
     }
 
     public async Task DisposeAsync()

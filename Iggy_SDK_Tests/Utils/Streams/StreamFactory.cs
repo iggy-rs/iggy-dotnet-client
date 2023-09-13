@@ -1,5 +1,4 @@
 using Iggy_SDK.Contracts.Http;
-using Iggy_SDK_Tests.Utils.Topics;
 
 namespace Iggy_SDK_Tests.Utils.Streams;
 
@@ -12,7 +11,7 @@ internal static class StreamFactory
         var topicsCount = Random.Shared.Next(1, 69);
         var sizeBytes = (ulong)Random.Shared.Next(69, 42069);
         var messageCount = (ulong)Random.Shared.Next(2, 3);
-        var name = "Stream " + Random.Shared.Next(1, 4);
+        var name = "Stream " + Random.Shared.Next(1, 4) + Utility.RandomString(3).ToLower();
         var createdAt = (ulong)Random.Shared.Next(69, 42069);
         return (id, topicsCount, sizeBytes, messageCount, name, createdAt);
     }

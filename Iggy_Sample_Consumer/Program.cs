@@ -75,7 +75,7 @@ async Task ConsumeMessages()
                        StreamId = streamId,
                        PartitionId = partitionId,
                        PollingStrategy = PollingStrategy.Next(),
-                       Interval = TimeSpan.FromMilliseconds(1000),
+                       Interval = TimeSpan.FromMilliseconds(intervalInMs),
                        StoreOffsetStragety = StoreOffset.AfterProcessingEachMessage,
                    }, deserializer, decryptor))
     {
@@ -126,6 +126,7 @@ void HandleMessage(MessageResponse<Envelope> messageResponse)
         }
         Console.WriteLine();
     }
+    //await Task.Delay(1000);
 }
 
 

@@ -20,10 +20,18 @@ internal static class MessageFactory
         var timestamp = (ulong)Random.Shared.Next(420, 69420);
         var guid = Guid.NewGuid();
         var checkSum = (uint)Random.Shared.Next(42069, 69042);
-        var bytes = Encoding.UTF8.GetBytes(RandomString(Random.Shared.Next(6, 69)));
+        var bytes = Encoding.UTF8.GetBytes(Utility.RandomString(Random.Shared.Next(6, 69)));
         int headersLength = Random.Shared.Next(1, 69);
         return (offset, timestamp, guid, headersLength, checkSum, bytes);
     }
+    internal static Func<DummyMessage, byte[]> Serializer = msg =>
+    {
+        Span<byte> bytes = stackalloc byte[4 + 4 + msg.Text.Length];
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[..4], msg.Id);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[4..8], msg.Text.Length);
+        Encoding.UTF8.GetBytes(msg.Text).CopyTo(bytes[8..]);
+        return bytes.ToArray();
+    };
     internal static (ulong offset, ulong timestamp, Guid guid, int headersLength, uint checkSum, byte[] payload) CreateMessageResponseFieldsTMessage()
     {
         var msg = new DummyMessage
@@ -31,20 +39,12 @@ internal static class MessageFactory
             Id = Random.Shared.Next(1, 69),
             Text = "Hello"
         };
-        Func<DummyMessage, byte[]> serializer = msg =>
-        {
-            Span<byte> bytes = stackalloc byte[4 + 4 + msg.Text.Length];
-            BinaryPrimitives.WriteInt32LittleEndian(bytes[..4], msg.Id);
-            BinaryPrimitives.WriteInt32LittleEndian(bytes[4..8], msg.Text.Length);
-            Encoding.UTF8.GetBytes(msg.Text).CopyTo(bytes[8..]);
-            return bytes.ToArray();
-        };
         ulong offset = (ulong)Random.Shared.Next(6, 69);
         int headersLength = Random.Shared.Next(1, 69);
         var timestamp = (ulong)Random.Shared.Next(420, 69420);
         var checkSum = (uint)Random.Shared.Next(42069, 69420);
         var guid = Guid.NewGuid();
-        var bytes = serializer(msg);
+        var bytes = Serializer(msg);
         return (offset, timestamp, guid, headersLength, checkSum, bytes);
     }
     internal static (ulong offset, ulong timestamp, Guid guid, byte[] payload) CreateMessageResponseGenerics()
@@ -119,6 +119,14 @@ internal static class MessageFactory
         Encoding.UTF8.GetBytes(message.Text).CopyTo(bytes.AsSpan()[8..]);
         return bytes;
     }
+     internal static IList<DummyMessage> GenerateDummyMessages(int count)
+     {
+         return Enumerable.Range(1, count).Select(i => new DummyMessage
+         {
+             Id = Random.Shared.Next(1, 69),
+             Text = Utility.RandomString(Random.Shared.Next(69, 100))
+         }).ToList();
+     }
 
     internal static Func<byte[], DummyMessage> DeserializeDummyMessage
         => bytes =>
@@ -128,13 +136,13 @@ internal static class MessageFactory
             var text = Encoding.UTF8.GetString(bytes.AsSpan()[8..(8 + textLength)]);
             return new DummyMessage { Id = id, Text = text };
         };
-    internal static IList<Message> GenerateDummyMessages(int count, Dictionary<HeaderKey, HeaderValue>? Headers = null)
+    internal static IList<Message> GenerateMessages(int count, Dictionary<HeaderKey, HeaderValue>? Headers = null)
     {
         return Enumerable.Range(1, count).Select(i => new Message
         {
             Id = Guid.NewGuid(),
             Headers = Headers,
-            Payload = SerializeDummyMessage(new DummyMessage { Id = Random.Shared.Next(1, 69), Text = RandomString(Random.Shared.Next(69, 420)) })
+            Payload = SerializeDummyMessage(new DummyMessage { Id = Random.Shared.Next(1, 69), Text = Utility.RandomString(Random.Shared.Next(20, 69)) })
         }).ToList();
     }
     internal static IList<Message> GenerateDummyMessages(int count, int payloadLen, Dictionary<HeaderKey, HeaderValue>? Headers = null)
@@ -191,11 +199,11 @@ internal static class MessageFactory
         for (int i = 0; i < count; i++)
         {
             headers.Add(
-                HeaderKey.New(RandomString(Random.Shared.Next(50, 254))),
+                HeaderKey.New(Utility.RandomString(Random.Shared.Next(50, 254))),
                 Random.Shared.Next(1, 12) switch
                 {
-                    1 => HeaderValue.FromBytes(Encoding.UTF8.GetBytes(RandomString(Random.Shared.Next(50, 254)))),
-                    2 => HeaderValue.FromString(RandomString(Random.Shared.Next(25, 254))),
+                    1 => HeaderValue.FromBytes(Encoding.UTF8.GetBytes(Utility.RandomString(Random.Shared.Next(50, 254)))),
+                    2 => HeaderValue.FromString(Utility.RandomString(Random.Shared.Next(25, 254))),
                     3 => HeaderValue.FromBool(Random.Shared.Next(0, 1) switch { 0 => false, 1 => true, _ => false }),
                     4 => HeaderValue.FromInt32(Random.Shared.Next(69, 420)),
                     5 => HeaderValue.FromInt64(Random.Shared.NextInt64(6942023, 98723131)),
@@ -223,12 +231,6 @@ internal static class MessageFactory
             Id = new UInt128(69, 420),
             Headers = null
         };
-    }
-    private static string RandomString(int length)
-    {
-        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        return new string(Enumerable.Repeat(chars, length)
-            .Select(s => s[Random.Shared.Next(s.Length)]).ToArray());
     }
 }
 internal class MessageResponseHttp

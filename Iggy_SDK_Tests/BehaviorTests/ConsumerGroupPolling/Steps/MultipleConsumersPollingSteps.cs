@@ -33,7 +33,7 @@ public sealed class MultipleConsumersPollingSteps
     [Given(@"Messages are available in topic on single partition")]
     public async Task GivenMessagesAreAvailableOnConsumerTopic()
     {
-        var messages = MessageFactory.GenerateDummyMessages(10);
+        var messages = MessageFactory.GenerateMessages(10);
         var messageConsumersSendRequest =
             MessageFactory.CreateMessageSendRequest(_streamAndTopicFixture.StreamId, _streamAndTopicFixture.ConsumerTopicId,
                 _partitionId, messages);
@@ -69,7 +69,7 @@ public sealed class MultipleConsumersPollingSteps
     [Given(@"Messages are available in topic on multiple partitions")]
     public async Task GivenMessagesAreAvailableOnConsumergroupTopicAndConsumergroupExists()
     {
-        var messages = MessageFactory.GenerateDummyMessages(10);
+        var messages = MessageFactory.GenerateMessages(10);
         var messageConsumerGroupSendRequestPt1 =
             MessageFactory.CreateMessageSendRequest(_streamAndTopicFixture.StreamId, _streamAndTopicFixture.ConsumerGroupTopicId,
                 _partitionId, messages);
