@@ -1,5 +1,7 @@
 namespace Iggy_SDK.Errors;
 
+//TODO - refactor whole error system, once the contract is set and stone.
+//currently in tcp the error message is just a server side status
 internal static class ErrorFactory
 {
     internal static ErrorModel Error => new ErrorModel(0, "error", "Error");

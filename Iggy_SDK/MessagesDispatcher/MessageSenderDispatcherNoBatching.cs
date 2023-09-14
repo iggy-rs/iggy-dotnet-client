@@ -18,6 +18,9 @@ internal sealed class MessageSenderDispatcherNoBatching : MessageSenderDispatche
     {
         Task.Run(async () => await SendMessages());
     }
+    //TODO - currently when SendMessagesAsync throws, whole program crashes,
+    //handle errors silently and allow user provide an delegate
+    //that allows logging the error
     protected override async Task SendMessages()
     {
         while (!_cts.IsCancellationRequested)

@@ -1,11 +1,9 @@
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Headers;
 using Iggy_SDK.Kinds;
-using System.Runtime.CompilerServices;
 
 namespace Iggy_SDK.MessageStream;
 
-//TODO - look into creating another overload for PollMessages method that will use IAsyncEnumerable as return type.
 public interface IMessageClient
 {
     Task SendMessagesAsync(MessageSendRequest request, Func<byte[], byte[]>?
@@ -20,7 +18,9 @@ public interface IMessageClient
     Task<PolledMessages<TMessage>> FetchMessagesAsync<TMessage>(MessageFetchRequest request,
         Func<byte[], TMessage> deserializer, Func<byte[], byte[]>? decryptor = null, CancellationToken token = default);
     IAsyncEnumerable<MessageResponse<TMessage>> PollMessagesAsync<TMessage>(PollMessagesRequest request,
-        Func<byte[], TMessage> deserializer, Func<byte[], byte[]>? decryptor = null,
+        Func<byte[], TMessage> deserializer, Func<byte[], byte[]>? decryptor = null, 
+        Action<MessageFetchRequest>? logFetchingError = null,
+        Action<StoreOffsetRequest>? logStoringOffset = null,
         CancellationToken token = default);
 
 }

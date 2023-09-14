@@ -86,6 +86,10 @@ internal static class Extensions
             slice[i + 1] = slice[i];
         }
     }
+    internal static void InvokeOrUseDefault<T>(this Action<T>? action, T arg, Action<T> defaultAction)
+    {
+        (action ?? defaultAction).Invoke(arg);
+    }
 }
 
 internal static class DateTimeOffsetUtils

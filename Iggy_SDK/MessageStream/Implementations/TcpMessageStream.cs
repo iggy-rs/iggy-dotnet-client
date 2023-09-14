@@ -2,6 +2,7 @@ using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Contracts.Tcp;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Exceptions;
+using Iggy_SDK.Extensions;
 using Iggy_SDK.Headers;
 using Iggy_SDK.Kinds;
 using Iggy_SDK.Mappers;
@@ -347,8 +348,11 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
             ArrayPool<byte>.Shared.Return(buffer);
         }
     }
+    //TODO - replace the console writelines with better logging
     public async IAsyncEnumerable<MessageResponse<TMessage>> PollMessagesAsync<TMessage>(PollMessagesRequest request,
         Func<byte[], TMessage> deserializer, Func<byte[], byte[]>? decryptor = null,
+        Action<MessageFetchRequest>? logFetchError = null,
+        Action<StoreOffsetRequest>? logStoringOffset = null,
         [EnumeratorCancellation] CancellationToken token = default)
     {
         var channel = Channel.CreateUnbounded<MessageResponse<TMessage>>();
@@ -370,7 +374,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
         };
         
 
-        _ = StartPollingMessagesAsync(fetchRequest, deserializer, request.Interval, channel.Writer, token, decryptor);
+        _ = StartPollingMessagesAsync(fetchRequest, deserializer, request.Interval, channel.Writer, decryptor, logFetchError, token);
         await foreach(var messageResponse in channel.Reader.ReadAllAsync(token))
         {
             yield return messageResponse;
@@ -378,14 +382,25 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
             var currentOffset = messageResponse.Offset;
             if (request.StoreOffsetStragety is StoreOffset.AfterProcessingEachMessage)
             {
-                await StoreOffsetAsync(new StoreOffsetRequest
+                var storeOffsetRequest = new StoreOffsetRequest
                 {
                     Consumer = request.Consumer,
                     Offset = currentOffset,
                     PartitionId = request.PartitionId,
                     StreamId = request.StreamId,
                     TopicId = request.TopicId
-                }, token);
+                };
+                try
+                {
+                    await StoreOffsetAsync(storeOffsetRequest, token);
+                }
+                catch
+                {
+                   logStoringOffset.InvokeOrUseDefault(storeOffsetRequest, (request) =>
+                   {
+                       Console.WriteLine("TROLOLOLO");
+                   }); 
+                }
             }
             if (request.PollingStrategy.Kind is MessagePolling.Offset)
             {
@@ -395,23 +410,36 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
         }
         
     }
+    //TODO - look into calling the non generic FetchMessagesAsync method in order
+    //to make this method re-usable for non generic PollMessages method.
     private async Task StartPollingMessagesAsync<TMessage>(MessageFetchRequest request,
         Func<byte[], TMessage> deserializer, TimeSpan interval, ChannelWriter<MessageResponse<TMessage>> writer,
-        CancellationToken token, Func<byte[], byte[]>? decryptor = null)
+        Func<byte[], byte[]>? decryptor = null,
+        Action<MessageFetchRequest>? logFetchError = null,
+        CancellationToken token = default)
     {
         var timer = new PeriodicTimer(interval);
         while (await timer.WaitForNextTickAsync(token) || token.IsCancellationRequested)
         {
-            var fetchResponse = await FetchMessagesAsync(request, deserializer, decryptor, token);
-            if (fetchResponse.Messages.Count == 0)
+            try
             {
-                continue;
+                var fetchResponse = await FetchMessagesAsync(request, deserializer, decryptor, token);
+                if (fetchResponse.Messages.Count == 0)
+                {
+                    continue;
+                }
+                foreach (var messageResponse in fetchResponse.Messages)
+                {
+                    await writer.WriteAsync(messageResponse, token);
+                }
             }
-            foreach (var messageResponse in fetchResponse.Messages)
+            catch
             {
-                await writer.WriteAsync(messageResponse, token);
+                logFetchError.InvokeOrUseDefault(request, (request) =>
+                {
+                    Console.WriteLine("TROLOLOLO");
+                });
             }
-            
         }
         writer.Complete();
     }
