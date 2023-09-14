@@ -2,17 +2,14 @@ using DotNet.Testcontainers.Builders;
 using Iggy_SDK;
 using Iggy_SDK.Configuration;
 using Iggy_SDK.Contracts.Http;
-using Iggy_SDK.Enums;
-using Iggy_SDK.Factory;
-using Iggy_SDK.Kinds;
 using Iggy_SDK.MessagesDispatcher;
-using Iggy_SDK.MessageStream;
 using Iggy_SDK.MessageStream.Implementations;
-using Iggy_SDK_Tests.Utils.Messages;
 using Iggy_SDK_Tests.Utils.Streams;
 using Iggy_SDK_Tests.Utils.Topics;
 using System.Net.Sockets;
 using System.Threading.Channels;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using IContainer = DotNet.Testcontainers.Containers.IContainer;
 
 namespace Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
@@ -55,8 +52,9 @@ public sealed class IggyTcpSendMessagesFixture : IAsyncLifetime
             PollingInterval = TimeSpan.FromMilliseconds(1),
             MaxMessagesPerBatch = 1000
         };
+        var loggerFactory = NullLoggerFactory.Instance;
         sut = new TcpMessageInvoker(socket);
-        var messageStream = new TcpMessageStream(socket, channel);
+        var messageStream = new TcpMessageStream(socket, channel, loggerFactory);
 
         await messageStream.CreateStreamAsync(StreamRequest);
         await messageStream.CreateTopicAsync(Identifier.Numeric(StreamRequest.StreamId), TopicRequest);

@@ -6,6 +6,7 @@ using Iggy_SDK.Factory;
 using Iggy_SDK.MessageStream;
 using Iggy_SDK_Tests.Utils.Streams;
 using Iggy_SDK_Tests.Utils.Topics;
+using Microsoft.Extensions.Logging.Abstractions;
 using IContainer = DotNet.Testcontainers.Containers.IContainer;
 
 namespace Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
@@ -32,6 +33,7 @@ public sealed class IggyTcpGeneralFixture : IAsyncLifetime
                 x.MaxMessagesPerBatch = 1000;
                 x.PollingInterval = TimeSpan.FromMilliseconds(100);
             };
+            options.LoggerFactory = NullLoggerFactory.Instance;            
         });
     }
 

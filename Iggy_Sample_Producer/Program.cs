@@ -7,15 +7,16 @@ using Iggy_SDK.Headers;
 using Iggy_SDK.Kinds;
 using Iggy_SDK.Messages;
 using Iggy_SDK.MessageStream;
+using Microsoft.Extensions.Logging;
 using Shared;
 using System.Buffers.Binary;
 using System.Security.Cryptography;
 using System.Text;
 
-var protocol = Protocol.Http;
+var protocol = Protocol.Tcp;
 var bus = MessageStreamFactory.CreateMessageStream(options =>
 {
-    options.BaseAdress = "http://127.0.0.1:3000";
+    options.BaseAdress = "127.0.0.1:8090";
     options.Protocol = protocol;
     options.SendMessagesOptions = x =>
     {

@@ -2,6 +2,7 @@ using Iggy_SDK.Configuration;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Messages;
+using Microsoft.Extensions.Logging;
 using System.Buffers;
 using System.Threading.Channels;
 
@@ -10,6 +11,7 @@ namespace Iggy_SDK.MessagesDispatcher;
 internal sealed class MessageSenderDispatcherWithBatching : MessageSenderDispatcher
 {
     private readonly PeriodicTimer _timer;
+    private readonly ILogger<MessageSenderDispatcherWithBatching> _logger;
     private Task? _timerTask;
     private readonly CancellationTokenSource _cts = new();
     private readonly MessageInvoker _messageInvoker;
@@ -18,9 +20,10 @@ internal sealed class MessageSenderDispatcherWithBatching : MessageSenderDispatc
     private readonly int _maxRequestsInPoll;
 
     internal MessageSenderDispatcherWithBatching(SendMessageConfigurator sendMessagesOptions, Channel<MessageSendRequest> channel,
-        MessageInvoker messageInvoker)
+        MessageInvoker messageInvoker, ILoggerFactory loggerFactory)
     {
         _timer = new (sendMessagesOptions.PollingInterval);
+        _logger = loggerFactory.CreateLogger<MessageSenderDispatcherWithBatching>();
         _messageInvoker = messageInvoker;
         _maxMessages = sendMessagesOptions.MaxMessagesPerBatch;
         _maxRequestsInPoll = sendMessagesOptions.MaxRequestsInPoll;

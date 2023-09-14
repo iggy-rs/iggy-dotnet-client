@@ -19,7 +19,7 @@ internal static class StreamFactory
     {
         return new StreamRequest
         {
-            Name = "test-stream" + Random.Shared.Next(1, 69),
+            Name = "test-stream" + Random.Shared.Next(1, 69) + Utility.RandomString(12).ToLower(),
             StreamId = Random.Shared.Next(1, 2137),
         };
     }

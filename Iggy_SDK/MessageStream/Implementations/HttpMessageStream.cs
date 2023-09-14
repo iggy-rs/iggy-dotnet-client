@@ -1,13 +1,13 @@
 ﻿using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Exceptions;
-using Iggy_SDK.Extensions;
 using Iggy_SDK.Headers;
 using Iggy_SDK.JsonConfiguration;
 using Iggy_SDK.Kinds;
 using Iggy_SDK.Messages;
 using Iggy_SDK.StringHandlers;
 using Iggy_SDK.Utils;
+using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
@@ -23,11 +23,14 @@ public class HttpMessageStream : IMessageStream
     //TODO - replace the HttpClient with IHttpClientFactory, when implementing support for ASP.NET Core DI
     private readonly HttpClient _httpClient;
     private readonly Channel<MessageSendRequest> _channel;
+    private readonly ILogger<HttpMessageStream> _logger;
 
-    internal HttpMessageStream(HttpClient httpClient, Channel<MessageSendRequest> channel)
+    internal HttpMessageStream(HttpClient httpClient, Channel<MessageSendRequest> channel, ILoggerFactory loggerFactory)
     {
         _httpClient = httpClient;
         _channel = channel;
+        _logger = loggerFactory.CreateLogger<HttpMessageStream>();
+        _logger.LogTrace("Started HttpMessageStream");
     }
     public async Task CreateStreamAsync(StreamRequest request, CancellationToken token = default)
     {
@@ -207,8 +210,6 @@ public class HttpMessageStream : IMessageStream
     //TODO - replace the console writelines with better logging
     public async IAsyncEnumerable<MessageResponse<TMessage>> PollMessagesAsync<TMessage>(PollMessagesRequest request, 
         Func<byte[], TMessage> deserializer, Func<byte[], byte[]>? decryptor = null, 
-        Action<MessageFetchRequest>? logFetchError = null,
-        Action<StoreOffsetRequest>? logStoringOffset = null,
         [EnumeratorCancellation] CancellationToken token = default)
     {
         var channel = Channel.CreateUnbounded<MessageResponse<TMessage>>();
@@ -230,7 +231,7 @@ public class HttpMessageStream : IMessageStream
         };
         
 
-        _ = StartPollingMessagesAsync(fetchRequest, deserializer, request.Interval, channel.Writer, decryptor, logFetchError, token);
+        _ = StartPollingMessagesAsync(fetchRequest, deserializer, request.Interval, channel.Writer, decryptor, token);
         await foreach(var messageResponse in channel.Reader.ReadAllAsync(token))
         {
             yield return messageResponse;
@@ -252,10 +253,7 @@ public class HttpMessageStream : IMessageStream
                 }
                 catch
                 {
-                    logStoringOffset.InvokeOrUseDefault(storeOffsetRequest, (request) =>
-                    {
-                        Console.WriteLine("TROLOLO");
-                    });
+                    _logger.LogError("TROLOLO");
                 }
             }
             if (request.PollingStrategy.Kind is MessagePolling.Offset)
@@ -268,7 +266,6 @@ public class HttpMessageStream : IMessageStream
     private async Task StartPollingMessagesAsync<TMessage>(MessageFetchRequest request,
         Func<byte[], TMessage> deserializer, TimeSpan interval, ChannelWriter<MessageResponse<TMessage>> writer,
         Func<byte[], byte[]>? decryptor = null,
-        Action<MessageFetchRequest>? logFetchError = null,
         CancellationToken token = default)
     {
         var timer = new PeriodicTimer(interval);
@@ -288,10 +285,7 @@ public class HttpMessageStream : IMessageStream
             }
             catch
             {
-                logFetchError.InvokeOrUseDefault(request, (request) =>
-                {
-                    Console.WriteLine("TROLOLO");
-                });
+                _logger.LogError("TROLOLO");
             }
             
         }

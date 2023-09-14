@@ -1,4 +1,5 @@
 using Iggy_SDK.Contracts.Http;
+using Microsoft.Extensions.Logging;
 using System.Threading.Channels;
 namespace Iggy_SDK.MessagesDispatcher;
 
@@ -7,12 +8,14 @@ internal sealed class MessageSenderDispatcherNoBatching : MessageSenderDispatche
     private readonly CancellationTokenSource _cts = new();
     private readonly MessageInvoker _messageInvoker;
     private readonly Channel<MessageSendRequest> _channel;
+    private readonly ILogger<MessageSenderDispatcherNoBatching> _logger;
 
     internal MessageSenderDispatcherNoBatching(Channel<MessageSendRequest> channel,
-        MessageInvoker messageInvoker)
+        MessageInvoker messageInvoker, ILoggerFactory loggerFactory)
     {
         _messageInvoker = messageInvoker;
         _channel = channel;
+        _logger = loggerFactory.CreateLogger<MessageSenderDispatcherNoBatching>();
     }
     internal override void Start()
     {

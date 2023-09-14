@@ -19,8 +19,6 @@ public interface IMessageClient
         Func<byte[], TMessage> deserializer, Func<byte[], byte[]>? decryptor = null, CancellationToken token = default);
     IAsyncEnumerable<MessageResponse<TMessage>> PollMessagesAsync<TMessage>(PollMessagesRequest request,
         Func<byte[], TMessage> deserializer, Func<byte[], byte[]>? decryptor = null, 
-        Action<MessageFetchRequest>? logFetchingError = null,
-        Action<StoreOffsetRequest>? logStoringOffset = null,
         CancellationToken token = default);
 
 }

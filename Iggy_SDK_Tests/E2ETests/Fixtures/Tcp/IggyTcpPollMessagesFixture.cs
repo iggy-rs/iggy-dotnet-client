@@ -10,6 +10,7 @@ using Iggy_SDK_Tests.Utils.Streams;
 using Iggy_SDK_Tests.Utils.Topics;
 using Iggy_SDK.Configuration;
 using Iggy_SDK.Kinds;
+using Microsoft.Extensions.Logging.Abstractions;
 using IContainer = DotNet.Testcontainers.Containers.IContainer;
 
 namespace Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
@@ -51,6 +52,7 @@ public sealed class IggyTcpPollMessagesFixture : IAsyncLifetime
                 x.MaxMessagesPerBatch = 1000;
                 x.MaxRequestsInPoll = 8912;
             };
+            options.LoggerFactory = NullLoggerFactory.Instance;
         });
         await sut.CreateStreamAsync(StreamRequest);
         await sut.CreateTopicAsync(Identifier.Numeric(StreamRequest.StreamId), TopicRequest);

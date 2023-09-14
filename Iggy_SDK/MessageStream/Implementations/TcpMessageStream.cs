@@ -2,12 +2,12 @@ using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Contracts.Tcp;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Exceptions;
-using Iggy_SDK.Extensions;
 using Iggy_SDK.Headers;
 using Iggy_SDK.Kinds;
 using Iggy_SDK.Mappers;
 using Iggy_SDK.Messages;
 using Iggy_SDK.Utils;
+using Microsoft.Extensions.Logging;
 using System.Buffers;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
@@ -19,13 +19,16 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
 {
     private readonly Socket _socket;
     private readonly Channel<MessageSendRequest> _channel;
+    private readonly ILogger<TcpMessageStream> _logger;
 
     private readonly Memory<byte> _responseBuffer = new(new byte[BufferSizes.ExpectedResponseSize]);
 
-    internal TcpMessageStream(Socket socket, Channel<MessageSendRequest> channel)
+    internal TcpMessageStream(Socket socket, Channel<MessageSendRequest> channel, ILoggerFactory loggerFactory)
     {
         _socket = socket;
         _channel = channel;
+        _logger = loggerFactory.CreateLogger<TcpMessageStream>();
+        _logger.LogInformation("Starting TcpMessageStream");
     }
     public async Task CreateStreamAsync(StreamRequest request, CancellationToken token = default)
     {
@@ -351,8 +354,6 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
     //TODO - replace the console writelines with better logging
     public async IAsyncEnumerable<MessageResponse<TMessage>> PollMessagesAsync<TMessage>(PollMessagesRequest request,
         Func<byte[], TMessage> deserializer, Func<byte[], byte[]>? decryptor = null,
-        Action<MessageFetchRequest>? logFetchError = null,
-        Action<StoreOffsetRequest>? logStoringOffset = null,
         [EnumeratorCancellation] CancellationToken token = default)
     {
         var channel = Channel.CreateUnbounded<MessageResponse<TMessage>>();
@@ -374,7 +375,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
         };
         
 
-        _ = StartPollingMessagesAsync(fetchRequest, deserializer, request.Interval, channel.Writer, decryptor, logFetchError, token);
+        _ = StartPollingMessagesAsync(fetchRequest, deserializer, request.Interval, channel.Writer, decryptor, token);
         await foreach(var messageResponse in channel.Reader.ReadAllAsync(token))
         {
             yield return messageResponse;
@@ -396,10 +397,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
                 }
                 catch
                 {
-                   logStoringOffset.InvokeOrUseDefault(storeOffsetRequest, (request) =>
-                   {
-                       Console.WriteLine("TROLOLOLO");
-                   }); 
+                    _logger.LogError("TROLOLO");
                 }
             }
             if (request.PollingStrategy.Kind is MessagePolling.Offset)
@@ -415,7 +413,6 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
     private async Task StartPollingMessagesAsync<TMessage>(MessageFetchRequest request,
         Func<byte[], TMessage> deserializer, TimeSpan interval, ChannelWriter<MessageResponse<TMessage>> writer,
         Func<byte[], byte[]>? decryptor = null,
-        Action<MessageFetchRequest>? logFetchError = null,
         CancellationToken token = default)
     {
         var timer = new PeriodicTimer(interval);
@@ -435,10 +432,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
             }
             catch
             {
-                logFetchError.InvokeOrUseDefault(request, (request) =>
-                {
-                    Console.WriteLine("TROLOLOLO");
-                });
+                _logger.LogError("TROLOLO");
             }
         }
         writer.Complete();

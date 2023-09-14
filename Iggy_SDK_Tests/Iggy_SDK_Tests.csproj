@@ -33,6 +33,16 @@
     </ItemGroup>
 
 
+    <ItemGroup>
+      <Reference Include="Microsoft.Extensions.Logging">
+        <HintPath>..\..\..\.nuget\packages\microsoft.extensions.logging\7.0.0\lib\net7.0\Microsoft.Extensions.Logging.dll</HintPath>
+      </Reference>
+    </ItemGroup>
 
+    <ItemGroup>
+      <Reference Include="Microsoft.Extensions.Logging">
+        <HintPath>..\..\..\.nuget\packages\microsoft.extensions.logging\7.0.0\lib\net7.0\Microsoft.Extensions.Logging.dll</HintPath>
+      </Reference>
+    </ItemGroup>
 
 </Project>
