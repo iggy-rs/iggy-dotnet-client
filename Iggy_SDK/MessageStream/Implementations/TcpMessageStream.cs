@@ -317,11 +317,11 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
         Func<byte[], TMessage> serializer, Func<byte[], byte[]>? decryptor = null, CancellationToken token = default)
     {
         await SendMessagesPayload(request, token);
-        var buffer = ArrayPool<byte>.Shared.Rent(BufferSizes.ExpectedResponseSize);
+        var buffer = MemoryPool<byte>.Shared.Rent(BufferSizes.ExpectedResponseSize);
         try
         {
-            await _socket.ReceiveAsync(buffer.AsMemory()[..BufferSizes.ExpectedResponseSize], token);
-            var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
+            await _socket.ReceiveAsync(buffer.Memory[..BufferSizes.ExpectedResponseSize], token);
+            var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer.Memory.Span);
             if (response.Status != 0)
             {
                 throw new InvalidResponseException($"Invalid response status code: {response.Status}");
@@ -332,26 +332,25 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
                 return PolledMessages<TMessage>.Empty;
             }
 
-            var responseBuffer = ArrayPool<byte>.Shared.Rent(response.Length);
+            var responseBuffer = MemoryPool<byte>.Shared.Rent(response.Length);
 
             try
             {
-                await _socket.ReceiveAsync(responseBuffer.AsMemory()[..response.Length], token);
+                await _socket.ReceiveAsync(responseBuffer.Memory[..response.Length], token);
                 var result = BinaryMapper.MapMessages(
-                    responseBuffer.AsSpan()[..response.Length], serializer, decryptor);
+                    responseBuffer.Memory.Span[..response.Length], serializer, decryptor);
                 return result;
             }
             finally
             {
-                ArrayPool<byte>.Shared.Return(responseBuffer);
+                responseBuffer.Dispose();
             }
         }
         finally
         {
-            ArrayPool<byte>.Shared.Return(buffer);
+            buffer.Dispose();
         }
     }
-    //TODO - replace the console writelines with better logging
     public async IAsyncEnumerable<MessageResponse<TMessage>> PollMessagesAsync<TMessage>(PollMessagesRequest request,
         Func<byte[], TMessage> deserializer, Func<byte[], byte[]>? decryptor = null,
         [EnumeratorCancellation] CancellationToken token = default)
@@ -397,7 +396,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
                 }
                 catch
                 {
-                    _logger.LogError("TROLOLO");
+                    _logger.LogError("Error encountered while saving offset information - Offset: {offset}, Stream ID: {streamId}, Topic ID: {topicId}, Partition ID: {partitionId}",
+                        currentOffset, request.StreamId, request.TopicId, request.PartitionId);
                 }
             }
             if (request.PollingStrategy.Kind is MessagePolling.Offset)
@@ -432,7 +432,8 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
             }
             catch
             {
-                _logger.LogError("TROLOLO");
+                _logger.LogError("Error encountered while polling messages - Stream ID: {streamId}, Topic ID: {topicId}, Partition ID: {partitionId}",
+                    request.StreamId, request.TopicId, request.PartitionId);
             }
         }
         writer.Complete();

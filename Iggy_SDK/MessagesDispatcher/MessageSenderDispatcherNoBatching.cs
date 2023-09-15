@@ -1,5 +1,6 @@
 using Iggy_SDK.Contracts.Http;
 using Microsoft.Extensions.Logging;
+using System.Buffers.Binary;
 using System.Threading.Channels;
 namespace Iggy_SDK.MessagesDispatcher;
 
@@ -21,16 +22,22 @@ internal sealed class MessageSenderDispatcherNoBatching : MessageSenderDispatche
     {
         Task.Run(async () => await SendMessages());
     }
-    //TODO - currently when SendMessagesAsync throws, whole program crashes,
-    //handle errors silently and allow user provide an delegate
-    //that allows logging the error
     protected override async Task SendMessages()
     {
         while (!_cts.IsCancellationRequested)
         {
             await foreach (var request in _channel.Reader.ReadAllAsync())
             {
-                await _messageInvoker.SendMessagesAsync(request); 
+                try
+                {
+                    await _messageInvoker.SendMessagesAsync(request); 
+                }
+                catch
+                {
+                    var partId = BinaryPrimitives.ReadInt32LittleEndian(request.Partitioning.Value);
+                    _logger.LogError("Error encountered while sending messages - Stream ID:{streamId}, Topic ID:{topicId}, Partition ID: {partitionId}",
+                        request.StreamId, request.TopicId, partId); 
+                }
             }
         }
     }

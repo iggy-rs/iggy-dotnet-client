@@ -207,7 +207,6 @@ public class HttpMessageStream : IMessageStream
         await HandleResponseAsync(response);
         return PolledMessages<TMessage>.Empty;
     }
-    //TODO - replace the console writelines with better logging
     public async IAsyncEnumerable<MessageResponse<TMessage>> PollMessagesAsync<TMessage>(PollMessagesRequest request, 
         Func<byte[], TMessage> deserializer, Func<byte[], byte[]>? decryptor = null, 
         [EnumeratorCancellation] CancellationToken token = default)
@@ -253,7 +252,8 @@ public class HttpMessageStream : IMessageStream
                 }
                 catch
                 {
-                    _logger.LogError("TROLOLO");
+                    _logger.LogError("Error encountered while saving offset information - Offset: {offset}, Stream ID: {streamId}, Topic ID: {topicId}, Partition ID: {partitionId}",
+                        currentOffset, request.StreamId, request.TopicId, request.PartitionId);
                 }
             }
             if (request.PollingStrategy.Kind is MessagePolling.Offset)
@@ -283,9 +283,10 @@ public class HttpMessageStream : IMessageStream
                     await writer.WriteAsync(messageResponse, token);
                 }
             }
-            catch
+            catch(Exception e)
             {
-                _logger.LogError("TROLOLO");
+                _logger.LogError("Error encountered while polling messages - Stream ID: {streamId}, Topic ID: {topicId}, Partition ID: {partitionId}",
+                    request.StreamId, request.TopicId, request.PartitionId);
             }
             
         }

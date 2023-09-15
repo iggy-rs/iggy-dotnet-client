@@ -1,9 +1,11 @@
 using Iggy_SDK.Configuration;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
+using Iggy_SDK.Kinds;
 using Iggy_SDK.Messages;
 using Microsoft.Extensions.Logging;
 using System.Buffers;
+using System.Buffers.Binary;
 using System.Threading.Channels;
 
 namespace Iggy_SDK.MessagesDispatcher;
@@ -33,9 +35,6 @@ internal sealed class MessageSenderDispatcherWithBatching : MessageSenderDispatc
     {
         _timerTask = SendMessages();
     }
-    //TODO - currently when SendMessagesAsync throws, whole program crashes,
-    //handle errors silently and allow user provide an delegate
-    //that allows logging the error
     protected override async Task SendMessages()
     {
         var messagesSendRequests = MemoryPool<MessageSendRequest>.Shared.Rent(_maxRequestsInPoll);
@@ -57,7 +56,16 @@ internal sealed class MessageSenderDispatcherWithBatching : MessageSenderDispatc
             {
                 for (int i = 0; i < idx; i++)
                 {
-                    await _messageInvoker.SendMessagesAsync(messagesSendRequests.Memory.Span[i], token: _cts.Token);
+                    try
+                    {
+                        await _messageInvoker.SendMessagesAsync(messagesSendRequests.Memory.Span[i], token: _cts.Token);
+                    }
+                    catch
+                    {
+                        var partId = BinaryPrimitives.ReadInt32LittleEndian(messagesSendRequests.Memory.Span[i].Partitioning.Value);
+                       _logger.LogError("Error encountered while sending messages - Stream ID:{streamId}, Topic ID:{topicId}, Partition ID: {partitionId}",
+                           messagesSendRequests.Memory.Span[i].StreamId, messagesSendRequests.Memory.Span[i].TopicId, partId); 
+                    }
                 }
 
                 continue;
