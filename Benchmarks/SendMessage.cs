@@ -11,7 +11,7 @@ namespace Benchmarks;
 
 public static class SendMessage
 {
-    public static async Task Create(IMessageStream bus, int producerNumber, int producerCount,
+    public static async Task Create(IIggyClient bus, int producerNumber, int producerCount,
         int messagesBatch, int messagesCount, int messageSize, Identifier streamId, Identifier topicId)
     {
         long totalMessages = messagesBatch * messagesCount;

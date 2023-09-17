@@ -18,10 +18,10 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
 {
     options.BaseAdress = "127.0.0.1:8090";
     options.Protocol = protocol;
-    options.SendMessagesOptions = x =>
+    options.IntervalBatchingConfig = x =>
     {
         x.MaxMessagesPerBatch = 1000;
-        x.PollingInterval = TimeSpan.FromMilliseconds(100);
+        x.Interval = TimeSpan.FromMilliseconds(100);
     };
 });
 
@@ -60,7 +60,7 @@ var actualTopic = await bus.GetTopicByIdAsync(streamId, topicId);
 
 await ProduceMessages(bus, actualStream, actualTopic);
 
-async Task ProduceMessages(IMessageClient bus, StreamResponse? stream, TopicResponse? topic)
+async Task ProduceMessages(IIggyClient bus, StreamResponse? stream, TopicResponse? topic)
 {
     var messageBatchCount = 1;
     int intervalInMs = 1000;

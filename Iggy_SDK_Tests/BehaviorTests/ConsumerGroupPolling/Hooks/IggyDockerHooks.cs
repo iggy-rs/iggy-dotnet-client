@@ -36,17 +36,17 @@ public sealed class IggyDockerHooks
     [BeforeScenario]
     public void RegisterDependencies()
     {
-        var clients = new List<IMessageStream>();
+        var clients = new List<IIggyClient>();
         var messageBus = MessageStreamFactory.CreateMessageStream(options =>
         {
             options.BaseAdress = $"127.0.0.1:{_container.GetMappedPublicPort(8090)}";
             options.Protocol = Protocol.Tcp;
             options.SendBufferSize = 10000;
             options.ReceiveBufferSize = 10000;
-            options.SendMessagesOptions = x =>
+            options.IntervalBatchingConfig = x =>
             {
                 x.MaxMessagesPerBatch = 1000;
-                x.PollingInterval = TimeSpan.FromMilliseconds(50);
+                x.Interval = TimeSpan.FromMilliseconds(50);
             };
         });
 
@@ -58,18 +58,18 @@ public sealed class IggyDockerHooks
                 options.Protocol = Protocol.Tcp;
                 options.SendBufferSize = 10000;
                 options.ReceiveBufferSize = 10000;
-                options.SendMessagesOptions = x =>
+                options.IntervalBatchingConfig = x =>
                 {
                     x.MaxMessagesPerBatch = 1000;
-                    x.PollingInterval = TimeSpan.FromMilliseconds(50);
+                    x.Interval = TimeSpan.FromMilliseconds(50);
                     x.MaxMessagesPerBatch = 8912;
                 };
             });
             clients.Add(client);
         }
 
-        _dependencyContainer.RegisterInstanceAs<IMessageStream>(messageBus);
-        _dependencyContainer.RegisterInstanceAs<List<IMessageStream>>(clients);
+        _dependencyContainer.RegisterInstanceAs<IIggyClient>(messageBus);
+        _dependencyContainer.RegisterInstanceAs<List<IIggyClient>>(clients);
         var listOfIds = new ConsumerPollStreamTopicId
         {
             StreamId = _streamRequest.StreamId,
@@ -90,10 +90,10 @@ public sealed class IggyDockerHooks
             options.Protocol = Protocol.Tcp;
             options.SendBufferSize = 10000;
             options.ReceiveBufferSize = 10000;
-            options.SendMessagesOptions = x =>
+            options.IntervalBatchingConfig = x =>
             {
                 x.MaxMessagesPerBatch = 1000;
-                x.PollingInterval = TimeSpan.FromMilliseconds(100);
+                x.Interval = TimeSpan.FromMilliseconds(100);
                 x.MaxMessagesPerBatch = 8912;
             };
         });

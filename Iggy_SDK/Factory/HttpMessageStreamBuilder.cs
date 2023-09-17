@@ -10,15 +10,15 @@ namespace Iggy_SDK.Factory;
 internal class HttpMessageStreamBuilder
 {
     private readonly HttpClient _client;
-    private readonly SendMessageConfigurator _options;
-    private Channel<MessageSendRequest> _channel;
-    private MessageSenderDispatcher _messageSenderDispatcher;
+    private readonly IntervalBatchingSettings _options;
+    private Channel<MessageSendRequest>? _channel;
+    private MessageSenderDispatcher? _messageSenderDispatcher;
     private readonly ILoggerFactory _loggerFactory;
 
     internal HttpMessageStreamBuilder(HttpClient client, IMessageStreamConfigurator options)
     {
-        var sendMessagesOptions = new SendMessageConfigurator();
-        options.SendMessagesOptions.Invoke(sendMessagesOptions);
+        var sendMessagesOptions = new IntervalBatchingSettings();
+        options.IntervalBatchingConfig.Invoke(sendMessagesOptions);
         _options = sendMessagesOptions;
         
         _loggerFactory = options.LoggerFactory ?? LoggerFactory.Create(builder =>
@@ -32,26 +32,21 @@ internal class HttpMessageStreamBuilder
         _client = client;
     }
     //TODO - this channel will probably need to be refactored, to accept a lambda instead of MessageSendRequest
-    internal HttpMessageStreamBuilder CreateChannel()
-    {
-        _channel = Channel.CreateBounded<MessageSendRequest>(_options.MaxRequestsInPoll);
-        return this;
-    }
     internal HttpMessageStreamBuilder WithSendMessagesDispatcher()
     {
-        var messageInvoker = new HttpMessageInvoker(_client);
-        _messageSenderDispatcher = _options.PollingInterval.Ticks switch
+        if (_options.Enabled)
         {
-            0 => new MessageSenderDispatcherNoBatching(_channel, messageInvoker, _loggerFactory),
-            > 0 => new MessageSenderDispatcherWithBatching(_options, _channel, messageInvoker, _loggerFactory),
-            _ => throw new ArgumentException($"{nameof(_options.PollingInterval)} has to be greater or equal than 0"),
-        };
+            _channel = Channel.CreateBounded<MessageSendRequest>(_options.MaxRequests);
+            var messageInvoker = new HttpMessageInvoker(_client);
+            _messageSenderDispatcher =
+                new MessageSenderDispatcher(_options, _channel, messageInvoker, _loggerFactory);
+        }
         return this;
     }
     internal HttpMessageStream Build()
     {
-        _messageSenderDispatcher.Start();
-        return new(_client, _channel, _loggerFactory);
+        _messageSenderDispatcher?.Start();
+        return new HttpMessageStream(_client, _channel, _loggerFactory);
     }
     
 }

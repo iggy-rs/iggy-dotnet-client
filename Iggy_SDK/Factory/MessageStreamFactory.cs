@@ -11,7 +11,7 @@ namespace Iggy_SDK.Factory;
 public static class MessageStreamFactory
 {
     //TODO - this whole setup will have to be refactored later,when adding support for ASP.NET Core DI
-    public static IMessageStream CreateMessageStream(Action<IMessageStreamConfigurator> options)
+    public static IIggyClient CreateMessageStream(Action<IMessageStreamConfigurator> options)
     {
         var config = new MessageStreamConfigurator();
         options.Invoke(config);
@@ -28,7 +28,7 @@ public static class MessageStreamFactory
     {
         var socket = CreateTcpSocket(options);
         return new TcpMessageStreamBuilder(socket, options)
-            .CreateChannel()
+        //this internally resolves whether the message dispatcher is created or not.
             .WithSendMessagesDispatcher()
             .Build();
     }
@@ -51,8 +51,8 @@ public static class MessageStreamFactory
     private static HttpMessageStream CreateHttpMessageStream(IMessageStreamConfigurator options)
     {
         var client = CreateHttpClient(options);
+        //this internally resolves whether the message dispatcher is created or not
         return new HttpMessageStreamBuilder(client, options)
-            .CreateChannel()
             .WithSendMessagesDispatcher()
             .Build();
     }

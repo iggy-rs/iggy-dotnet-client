@@ -23,7 +23,7 @@ public sealed class IggyTcpSendMessagesFixture : IAsyncLifetime
         //.WithPortBinding(8080, true)
         .Build();
 
-    internal MessageInvoker sut;
+    internal IMessageInvoker sut;
 
     private static readonly StreamRequest StreamRequest = StreamFactory.CreateStreamRequest();
     private static readonly StreamRequest NonExistingStreamRequest = StreamFactory.CreateStreamRequest();
@@ -47,9 +47,9 @@ public sealed class IggyTcpSendMessagesFixture : IAsyncLifetime
 
         var channel = Channel.CreateUnbounded<MessageSendRequest>();
 
-        var sendMessagesOptions = new SendMessageConfigurator
+        var sendMessagesOptions = new IntervalBatchingSettings
         {
-            PollingInterval = TimeSpan.FromMilliseconds(1),
+            Interval = TimeSpan.FromMilliseconds(1),
             MaxMessagesPerBatch = 1000
         };
         var loggerFactory = NullLoggerFactory.Instance;

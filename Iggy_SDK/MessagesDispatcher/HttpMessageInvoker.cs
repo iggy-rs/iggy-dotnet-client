@@ -7,7 +7,7 @@ using JsonConverterFactory = Iggy_SDK.JsonConfiguration.JsonConverterFactory;
 
 namespace Iggy_SDK.MessagesDispatcher;
 
-internal sealed class HttpMessageInvoker : MessageInvoker
+internal sealed class HttpMessageInvoker : IMessageInvoker
 {
     private readonly HttpClient _client;
 
@@ -15,7 +15,7 @@ internal sealed class HttpMessageInvoker : MessageInvoker
     {
         _client = client;
     }
-    internal override async Task SendMessagesAsync(MessageSendRequest request, CancellationToken token = default)
+    public async Task SendMessagesAsync(MessageSendRequest request, CancellationToken token = default)
     {
         var json = JsonSerializer.Serialize(request, JsonConverterFactory.MessagesOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");

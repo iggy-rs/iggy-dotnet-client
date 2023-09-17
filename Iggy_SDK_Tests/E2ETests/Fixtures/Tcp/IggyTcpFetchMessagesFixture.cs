@@ -22,7 +22,7 @@ public sealed class IggyTcpFetchMessagesFixture : IAsyncLifetime
         .Build();
 
 
-    public required IMessageStream sut;
+    public required IIggyClient sut;
 
     private static readonly StreamRequest StreamRequest = StreamFactory.CreateStreamRequest();
     private static readonly StreamRequest NonExistingStreamRequest = StreamFactory.CreateStreamRequest();
@@ -45,11 +45,11 @@ public sealed class IggyTcpFetchMessagesFixture : IAsyncLifetime
         {
             options.BaseAdress = $"127.0.0.1:{_container.GetMappedPublicPort(8090)}";
             options.Protocol = Protocol.Tcp;
-            options.SendMessagesOptions = x =>
+            options.IntervalBatchingConfig = x =>
             {
-                x.PollingInterval = TimeSpan.FromMilliseconds(100);
+                x.Interval = TimeSpan.FromMilliseconds(100);
                 x.MaxMessagesPerBatch = 1000;
-                x.MaxRequestsInPoll = 8912;
+                x.MaxRequests = 8912;
             };
             options.LoggerFactory = NullLoggerFactory.Instance;
         });

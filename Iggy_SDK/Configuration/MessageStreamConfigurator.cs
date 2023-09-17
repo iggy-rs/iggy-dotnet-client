@@ -10,11 +10,11 @@ public sealed class MessageStreamConfigurator : IMessageStreamConfigurator
     public Protocol Protocol { get; set; } = Protocol.Http;
     public IEnumerable<HttpRequestHeaderContract>? Headers { get; set; } = null;
     public ILoggerFactory? LoggerFactory { get; set; } = null;
-    public Action<SendMessageConfigurator> SendMessagesOptions { get; set; } = options =>
+    public Action<IntervalBatchingSettings> IntervalBatchingConfig { get; set; } = options =>
     {
-        options.PollingInterval = TimeSpan.FromMilliseconds(100);
+        options.Interval = TimeSpan.FromMilliseconds(100);
         options.MaxMessagesPerBatch = 1000;
-        options.MaxRequestsInPoll = 4096;
+        options.MaxRequests = 4096;
     };
     public int ReceiveBufferSize { get; set; } = 4096;
     public int SendBufferSize { get; set; } = 4096;

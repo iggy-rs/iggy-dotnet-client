@@ -14,7 +14,7 @@ namespace Iggy_SDK_Tests.E2ETests.Streams;
 public sealed class StreamsE2ETcp : IClassFixture<IggyTcpStreamFixture>
 {
     private readonly IggyTcpStreamFixture _fixture;
-    private readonly IMessageStream _sut;
+    private readonly IIggyClient _sut;
 
     public StreamsE2ETcp(IggyTcpStreamFixture fixture)
     {
@@ -23,10 +23,10 @@ public sealed class StreamsE2ETcp : IClassFixture<IggyTcpStreamFixture>
         {
             options.BaseAdress = $"127.0.0.1:{_fixture.Container.GetMappedPublicPort(8090)}";
             options.Protocol = Protocol.Tcp;
-            options.SendMessagesOptions = x =>
+            options.IntervalBatchingConfig = x =>
             {
                 x.MaxMessagesPerBatch = 1000;
-                x.PollingInterval = TimeSpan.FromMilliseconds(100);
+                x.Interval = TimeSpan.FromMilliseconds(100);
             };
         });
     }

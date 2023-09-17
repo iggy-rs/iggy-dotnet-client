@@ -19,7 +19,7 @@ public sealed class IggyTcpGeneralFixture : IAsyncLifetime
         .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8090))
         //.WithPortBinding(8080, true)
         .Build();
-    public IMessageStream sut;
+    public IIggyClient sut;
 
     public async Task InitializeAsync()
     {
@@ -28,10 +28,10 @@ public sealed class IggyTcpGeneralFixture : IAsyncLifetime
         {
             options.BaseAdress = $"127.0.0.1:{_container.GetMappedPublicPort(8090)}";
             options.Protocol = Protocol.Tcp;
-            options.SendMessagesOptions = x =>
+            options.IntervalBatchingConfig = x =>
             {
                 x.MaxMessagesPerBatch = 1000;
-                x.PollingInterval = TimeSpan.FromMilliseconds(100);
+                x.Interval = TimeSpan.FromMilliseconds(100);
             };
             options.LoggerFactory = NullLoggerFactory.Instance;            
         });

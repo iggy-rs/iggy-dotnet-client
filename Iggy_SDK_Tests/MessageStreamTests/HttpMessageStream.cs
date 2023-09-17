@@ -25,7 +25,7 @@ namespace Iggy_SDK_Tests.MessageStreamTests;
 public sealed class HttpMessageStream
 {
     private readonly MockHttpMessageHandler _httpHandler;
-    private readonly IMessageStream _sut;
+    private readonly IIggyClient _sut;
     private readonly Channel<MessageSendRequest> _channel;
 
     private JsonSerializerOptions _toSnakeCaseOptions;

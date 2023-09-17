@@ -2,7 +2,7 @@ using Iggy_SDK.Contracts.Http;
 
 namespace Iggy_SDK.MessageStream;
 
-public interface IConsumerGroupClient
+public interface IIggyConsumerGroup
 {
     Task<IReadOnlyList<ConsumerGroupResponse>> GetConsumerGroupsAsync(Identifier streamId, Identifier topicId,
         CancellationToken token = default);

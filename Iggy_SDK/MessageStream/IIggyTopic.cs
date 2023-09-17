@@ -2,7 +2,7 @@ using Iggy_SDK.Contracts.Http;
 
 namespace Iggy_SDK.MessageStream;
 
-public interface ITopicClient
+public interface IIggyTopic
 {
     Task<IReadOnlyList<TopicResponse>> GetTopicsAsync(Identifier streamId, CancellationToken token = default);
     Task<TopicResponse?> GetTopicByIdAsync(Identifier streamId, Identifier topicId, CancellationToken token = default);

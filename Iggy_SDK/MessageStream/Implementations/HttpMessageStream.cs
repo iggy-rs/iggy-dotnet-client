@@ -18,19 +18,18 @@ using System.Threading.Channels;
 namespace Iggy_SDK.MessageStream.Implementations;
 
 
-public class HttpMessageStream : IMessageStream
+public class HttpMessageStream : IIggyClient
 {
     //TODO - replace the HttpClient with IHttpClientFactory, when implementing support for ASP.NET Core DI
     private readonly HttpClient _httpClient;
-    private readonly Channel<MessageSendRequest> _channel;
+    private readonly Channel<MessageSendRequest>? _channel;
     private readonly ILogger<HttpMessageStream> _logger;
 
-    internal HttpMessageStream(HttpClient httpClient, Channel<MessageSendRequest> channel, ILoggerFactory loggerFactory)
+    internal HttpMessageStream(HttpClient httpClient, Channel<MessageSendRequest>? channel, ILoggerFactory loggerFactory)
     {
         _httpClient = httpClient;
         _channel = channel;
         _logger = loggerFactory.CreateLogger<HttpMessageStream>();
-        _logger.LogTrace("Started HttpMessageStream");
     }
     public async Task CreateStreamAsync(StreamRequest request, CancellationToken token = default)
     {
@@ -150,7 +149,7 @@ public class HttpMessageStream : IMessageStream
                 request.Messages[i] = request.Messages[i] with { Payload = encryptor(request.Messages[i].Payload) };
             }
         }
-        await _channel.Writer.WriteAsync(request, token);
+        await _channel!.Writer.WriteAsync(request, token);
     }
 
     public async Task SendMessagesAsync<TMessage>(Identifier streamId, Identifier topicId, Partitioning partitioning,
@@ -171,7 +170,7 @@ public class HttpMessageStream : IMessageStream
                 Payload = encryptor is not null ? encryptor(serializer(message)) : serializer(message),
             }).ToArray()
         };
-        await _channel.Writer.WriteAsync(request, token);
+        await _channel!.Writer.WriteAsync(request, token);
     }
 
     public async Task<PolledMessages> FetchMessagesAsync(MessageFetchRequest request,

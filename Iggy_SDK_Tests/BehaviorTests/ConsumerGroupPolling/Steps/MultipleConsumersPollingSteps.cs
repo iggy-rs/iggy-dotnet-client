@@ -13,16 +13,16 @@ namespace Iggy_SDK_Tests.BehaviorTests.ConsumerGroupPolling.Steps;
 public sealed class MultipleConsumersPollingSteps
 {
     private readonly ScenarioContext _scenarioContext;
-    private readonly IMessageStream _messageStream;
-    private readonly List<IMessageStream> _clients;
+    private readonly IIggyClient _messageStream;
+    private readonly List<IIggyClient> _clients;
     private readonly ConsumerPollStreamTopicId _streamAndTopicFixture;
 
     private readonly int[] _consumersIds = new int[] { 1, 2, 3, 4 };
     private static readonly int _partitionId = 1;
     private static readonly int _consumerGroupId = 1;
 
-    public MultipleConsumersPollingSteps(ScenarioContext scenarioContext, IMessageStream messageStream,
-        List<IMessageStream> clients, ConsumerPollStreamTopicId streamAndTopicFixture)
+    public MultipleConsumersPollingSteps(ScenarioContext scenarioContext, IIggyClient messageStream,
+        List<IIggyClient> clients, ConsumerPollStreamTopicId streamAndTopicFixture)
     {
         _scenarioContext = scenarioContext;
         _messageStream = messageStream;

@@ -2,7 +2,7 @@ using Iggy_SDK.Contracts.Http;
 
 namespace Iggy_SDK.MessageStream;
 
-public interface IStreamClient
+public interface IIggyStream
 {
     Task CreateStreamAsync(StreamRequest request, CancellationToken token = default);
     Task<StreamResponse?> GetStreamByIdAsync(Identifier streamId, CancellationToken token = default);

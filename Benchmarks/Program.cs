@@ -11,7 +11,7 @@ const int messageSize = 1000;
 const int producerCount = 7;
 const int startingStreamId = 100;
 const int topicId = 1;
-Dictionary<int, IMessageStream> clients = new();
+Dictionary<int, IIggyClient> clients = new();
 
 for (int i = 0; i < producerCount; i++)
 {
@@ -19,10 +19,11 @@ for (int i = 0; i < producerCount; i++)
     {
         options.BaseAdress = "127.0.0.1:8090";
         options.Protocol = Protocol.Tcp;
-        options.SendMessagesOptions = x =>
+        options.IntervalBatchingConfig = x =>
         {
+            x.Enabled = false;
             x.MaxMessagesPerBatch = 1000;
-            x.PollingInterval = TimeSpan.Zero;
+            x.Interval = TimeSpan.Zero;
         };
 #if OS_LINUX
 		options.ReceiveBufferSize = Int32.MaxValue;

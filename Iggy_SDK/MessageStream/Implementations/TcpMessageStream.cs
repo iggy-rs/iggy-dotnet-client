@@ -15,20 +15,17 @@ using System.Threading.Channels;
 
 namespace Iggy_SDK.MessageStream.Implementations;
 
-public sealed class TcpMessageStream : IMessageStream, IDisposable
+public sealed class TcpMessageStream : IIggyClient, IDisposable
 {
     private readonly Socket _socket;
-    private readonly Channel<MessageSendRequest> _channel;
+    private readonly Channel<MessageSendRequest>? _channel;
     private readonly ILogger<TcpMessageStream> _logger;
 
-    private readonly Memory<byte> _responseBuffer = new(new byte[BufferSizes.ExpectedResponseSize]);
-
-    internal TcpMessageStream(Socket socket, Channel<MessageSendRequest> channel, ILoggerFactory loggerFactory)
+    internal TcpMessageStream(Socket socket, Channel<MessageSendRequest>? channel, ILoggerFactory loggerFactory)
     {
         _socket = socket;
         _channel = channel;
         _logger = loggerFactory.CreateLogger<TcpMessageStream>();
-        _logger.LogInformation("Starting TcpMessageStream");
     }
     public async Task CreateStreamAsync(StreamRequest request, CancellationToken token = default)
     {
@@ -271,7 +268,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
             }
         }
 
-        await _channel.Writer.WriteAsync(request, token);
+        await _channel!.Writer.WriteAsync(request, token);
     }
     public async Task SendMessagesAsync<TMessage>(Identifier streamId, Identifier topicId, Partitioning partitioning,
         IList<TMessage> messages, Func<TMessage, byte[]> serializer,
@@ -305,7 +302,7 @@ public sealed class TcpMessageStream : IMessageStream, IDisposable
                 Partitioning = partitioning,
                 Messages = messagesBuffer.Span[..messages.Count].ToArray()
             };
-            await _channel.Writer.WriteAsync(request, token);
+            await _channel!.Writer.WriteAsync(request, token);
         }
         finally
         {

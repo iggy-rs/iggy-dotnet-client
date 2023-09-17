@@ -7,7 +7,7 @@ using System.Net.Sockets;
 
 namespace Iggy_SDK.MessagesDispatcher;
 
-internal sealed class TcpMessageInvoker : MessageInvoker
+internal class TcpMessageInvoker : IMessageInvoker
 {
     private readonly Socket _socket;
 
@@ -17,7 +17,7 @@ internal sealed class TcpMessageInvoker : MessageInvoker
     {
         _socket = socket;
     }
-    internal override async Task SendMessagesAsync(MessageSendRequest request,
+    public async Task SendMessagesAsync(MessageSendRequest request,
         CancellationToken token = default)
     {
         var messages = request.Messages;
@@ -26,16 +26,17 @@ internal sealed class TcpMessageInvoker : MessageInvoker
                        + request.Partitioning.Length + streamTopicIdLength + 2;
         var payloadBufferSize = messageBufferSize + 4 + BufferSizes.InitialBytesLength;
 
-        var message = ArrayPool<byte>.Shared.Rent(messageBufferSize);
-        var payload = ArrayPool<byte>.Shared.Rent(payloadBufferSize);
+        var messageBuffer = MemoryPool<byte>.Shared.Rent(messageBufferSize);
+        var payloadBuffer = MemoryPool<byte>.Shared.Rent(payloadBufferSize);
         try
         {
-            TcpContracts.CreateMessage(message.AsSpan()[..messageBufferSize], request.StreamId, request.TopicId,
+            TcpContracts.CreateMessage(messageBuffer.Memory.Span[..messageBufferSize], request.StreamId, request.TopicId,
                 request.Partitioning,
                 messages);
-            TcpMessageStreamHelpers.CreatePayload(payload.AsSpan()[..payloadBufferSize], message.AsSpan()[..messageBufferSize], CommandCodes.SEND_MESSAGES_CODE);
+            TcpMessageStreamHelpers.CreatePayload(payloadBuffer.Memory.Span[..payloadBufferSize], 
+                messageBuffer.Memory.Span[..messageBufferSize], CommandCodes.SEND_MESSAGES_CODE);
 
-            await _socket.SendAsync(payload.AsMemory()[..payloadBufferSize], token);
+            await _socket.SendAsync(payloadBuffer.Memory[..payloadBufferSize], token);
             await _socket.ReceiveAsync(_responseBuffer, token);
 
             var status = TcpMessageStreamHelpers.GetResponseStatus(_responseBuffer.Span);
@@ -46,8 +47,8 @@ internal sealed class TcpMessageInvoker : MessageInvoker
         }
         finally
         {
-            ArrayPool<byte>.Shared.Return(message);
-            ArrayPool<byte>.Shared.Return(payload);
+            messageBuffer.Dispose();
+            payloadBuffer.Dispose();
         }
     }
 }
