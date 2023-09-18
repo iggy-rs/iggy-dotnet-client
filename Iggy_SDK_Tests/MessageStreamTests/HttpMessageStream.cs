@@ -72,11 +72,7 @@ public sealed class HttpMessageStream
         var client = _httpHandler.ToHttpClient();
         client.BaseAddress = new Uri(URL);
         var loggerFactory = new LoggerFactory();
-        var sendMessagesOptions = new IntervalBatchingSettings
-        {
-            Enabled = true, MaxRequests = 1000, MaxMessagesPerBatch = 4096, Interval = TimeSpan.FromMilliseconds(150)
-        };
-        _sut = new Iggy_SDK.MessageStream.Implementations.HttpMessageStream(client, _channel, sendMessagesOptions, loggerFactory);
+        _sut = new Iggy_SDK.MessageStream.Implementations.HttpMessageStream(client, _channel, loggerFactory);
     }
 
     [Fact]

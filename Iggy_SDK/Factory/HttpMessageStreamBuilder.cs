@@ -14,6 +14,7 @@ internal class HttpMessageStreamBuilder
     private Channel<MessageSendRequest>? _channel;
     private MessageSenderDispatcher? _messageSenderDispatcher;
     private readonly ILoggerFactory _loggerFactory;
+    private HttpMessageInvoker? _messageInvoker;
 
     internal HttpMessageStreamBuilder(HttpClient client, IMessageStreamConfigurator options)
     {
@@ -37,16 +38,20 @@ internal class HttpMessageStreamBuilder
         if (_options.Enabled)
         {
             _channel = Channel.CreateBounded<MessageSendRequest>(_options.MaxRequests);
-            var messageInvoker = new HttpMessageInvoker(_client);
+            _messageInvoker =  new HttpMessageInvoker(_client);
             _messageSenderDispatcher =
-                new MessageSenderDispatcher(_options, _channel, messageInvoker, _loggerFactory);
+                new MessageSenderDispatcher(_options, _channel, _messageInvoker, _loggerFactory);
         }
         return this;
     }
     internal HttpMessageStream Build()
     {
         _messageSenderDispatcher?.Start();
-        return new HttpMessageStream(_client, _channel, _options, _loggerFactory);
+        return _options.Enabled switch
+        {
+            true => new HttpMessageStream(_client, _channel, _loggerFactory, _messageInvoker),
+            false => new HttpMessageStream(_client, _channel, _loggerFactory)
+        };
     }
     
 }

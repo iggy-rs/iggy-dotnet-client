@@ -14,6 +14,7 @@ internal class TcpMessageStreamBuilder
     private Channel<MessageSendRequest>? _channel;
     private MessageSenderDispatcher? _messageSenderDispatcher;
     private readonly ILoggerFactory _loggerFactory;
+    private TcpMessageInvoker? _messageInvoker;
 
     internal TcpMessageStreamBuilder(Socket socket, IMessageStreamConfigurator options)
     {
@@ -38,16 +39,20 @@ internal class TcpMessageStreamBuilder
         if (_options.Enabled)
         {
             _channel = Channel.CreateBounded<MessageSendRequest>(_options.MaxRequests);
-            var messageInvoker = new TcpMessageInvoker(_socket);
+            _messageInvoker = new TcpMessageInvoker(_socket);
             _messageSenderDispatcher =
-                new MessageSenderDispatcher(_options, _channel, messageInvoker, _loggerFactory);
+                new MessageSenderDispatcher(_options, _channel, _messageInvoker, _loggerFactory);
         }
         return this;
     }
     internal TcpMessageStream Build()
     {
         _messageSenderDispatcher?.Start();
-        return new(_socket, _channel, _options, _loggerFactory);
+        return _options.Enabled switch
+        {
+            true => new TcpMessageStream(_socket, _channel, _loggerFactory, _messageInvoker),
+            false => new TcpMessageStream(_socket, _channel, _loggerFactory)
+        };
     }
     
 }

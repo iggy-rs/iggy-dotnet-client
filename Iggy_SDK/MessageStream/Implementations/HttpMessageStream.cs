@@ -6,6 +6,7 @@ using Iggy_SDK.Headers;
 using Iggy_SDK.JsonConfiguration;
 using Iggy_SDK.Kinds;
 using Iggy_SDK.Messages;
+using Iggy_SDK.MessagesDispatcher;
 using Iggy_SDK.StringHandlers;
 using Iggy_SDK.Utils;
 using Microsoft.Extensions.Logging;
@@ -26,19 +27,14 @@ public class HttpMessageStream : IIggyClient
     //TODO - replace the HttpClient with IHttpClientFactory, when implementing support for ASP.NET Core DI
     private readonly HttpClient _httpClient;
     private readonly Channel<MessageSendRequest>? _channel;
-    private readonly IntervalBatchingSettings _settings;
     private readonly ILogger<HttpMessageStream> _logger;
-    private readonly HttpMessageInvoker? _messageInvoker;
+    private readonly IMessageInvoker? _messageInvoker;
 
-    internal HttpMessageStream(HttpClient httpClient, Channel<MessageSendRequest>? channel, IntervalBatchingSettings settings, ILoggerFactory loggerFactory)
+    internal HttpMessageStream(HttpClient httpClient, Channel<MessageSendRequest>? channel, ILoggerFactory loggerFactory, IMessageInvoker? messageInvoker = null)
     {
         _httpClient = httpClient;
         _channel = channel;
-        _settings = settings;
-        if (!settings.Enabled)
-        {
-            _messageInvoker = new HttpMessageInvoker(httpClient);
-        }
+        _messageInvoker = messageInvoker;
         _logger = loggerFactory.CreateLogger<HttpMessageStream>();
     }
     public async Task CreateStreamAsync(StreamRequest request, CancellationToken token = default)
@@ -160,11 +156,11 @@ public class HttpMessageStream : IIggyClient
             }
         }
         
-        if (!_settings.Enabled || _settings.Interval.Ticks == 0)
+        if (_messageInvoker is not null)
         {
             try
             {
-                await _messageInvoker!.SendMessagesAsync(request, token);
+                await _messageInvoker.SendMessagesAsync(request, token);
             }
             catch
             {
@@ -196,11 +192,11 @@ public class HttpMessageStream : IIggyClient
             }).ToArray()
         };
         
-        if (!_settings.Enabled || _settings.Interval.Ticks == 0)
+        if (_messageInvoker is not null)
         {
             try
             {
-                await _messageInvoker!.SendMessagesAsync(request, token);
+                await _messageInvoker.SendMessagesAsync(request, token);
             }
             catch
             {

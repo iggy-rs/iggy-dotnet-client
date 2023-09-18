@@ -22,19 +22,14 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
 {
     private readonly Socket _socket;
     private readonly Channel<MessageSendRequest>? _channel;
-    private readonly IntervalBatchingSettings _settings;
     private readonly ILogger<TcpMessageStream> _logger;
-    private readonly TcpMessageInvoker? _messageInvoker;
+    private readonly IMessageInvoker? _messageInvoker;
 
-    internal TcpMessageStream(Socket socket, Channel<MessageSendRequest>? channel, IntervalBatchingSettings settings, ILoggerFactory loggerFactory)
+    internal TcpMessageStream(Socket socket, Channel<MessageSendRequest>? channel,ILoggerFactory loggerFactory, IMessageInvoker? messageInvoker = null)
     {
         _socket = socket;
         _channel = channel;
-        _settings = settings;
-        if (!settings.Enabled)
-        {
-            _messageInvoker = new TcpMessageInvoker(socket);
-        }
+        _messageInvoker = messageInvoker;
         _logger = loggerFactory.CreateLogger<TcpMessageStream>();
     }
     public async Task CreateStreamAsync(StreamRequest request, CancellationToken token = default)
@@ -277,11 +272,11 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
                 request.Messages[i] = request.Messages[i] with { Payload = encryptor(request.Messages[i].Payload) };
             }
         }
-        if (!_settings.Enabled || _settings.Interval.Ticks == 0)
+        if (_messageInvoker is not null)
         {
             try
             {
-                await _messageInvoker!.SendMessagesAsync(request, token);
+                await _messageInvoker.SendMessagesAsync(request, token);
             }
             catch
             {
@@ -327,11 +322,11 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
                 Messages = messagesBuffer.Span[..messages.Count].ToArray()
             };
             
-            if (!_settings.Enabled || _settings.Interval.Ticks == 0)
+            if (_messageInvoker is not null)
             {
                 try
                 {
-                    await _messageInvoker!.SendMessagesAsync(request, token);
+                    await _messageInvoker.SendMessagesAsync(request, token);
                 }
                 catch
                 {
