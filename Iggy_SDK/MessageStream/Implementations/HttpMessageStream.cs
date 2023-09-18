@@ -1,4 +1,5 @@
-﻿using Iggy_SDK.Contracts.Http;
+﻿using Iggy_SDK.Configuration;
+using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Exceptions;
 using Iggy_SDK.Headers;
@@ -8,12 +9,14 @@ using Iggy_SDK.Messages;
 using Iggy_SDK.StringHandlers;
 using Iggy_SDK.Utils;
 using Microsoft.Extensions.Logging;
+using System.Buffers.Binary;
 using System.Net;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;
+using HttpMessageInvoker = Iggy_SDK.MessagesDispatcher.HttpMessageInvoker;
 
 namespace Iggy_SDK.MessageStream.Implementations;
 
@@ -23,12 +26,19 @@ public class HttpMessageStream : IIggyClient
     //TODO - replace the HttpClient with IHttpClientFactory, when implementing support for ASP.NET Core DI
     private readonly HttpClient _httpClient;
     private readonly Channel<MessageSendRequest>? _channel;
+    private readonly IntervalBatchingSettings _settings;
     private readonly ILogger<HttpMessageStream> _logger;
+    private readonly HttpMessageInvoker? _messageInvoker;
 
-    internal HttpMessageStream(HttpClient httpClient, Channel<MessageSendRequest>? channel, ILoggerFactory loggerFactory)
+    internal HttpMessageStream(HttpClient httpClient, Channel<MessageSendRequest>? channel, IntervalBatchingSettings settings, ILoggerFactory loggerFactory)
     {
         _httpClient = httpClient;
         _channel = channel;
+        _settings = settings;
+        if (!settings.Enabled)
+        {
+            _messageInvoker = new HttpMessageInvoker(httpClient);
+        }
         _logger = loggerFactory.CreateLogger<HttpMessageStream>();
     }
     public async Task CreateStreamAsync(StreamRequest request, CancellationToken token = default)
@@ -149,6 +159,21 @@ public class HttpMessageStream : IIggyClient
                 request.Messages[i] = request.Messages[i] with { Payload = encryptor(request.Messages[i].Payload) };
             }
         }
+        
+        if (!_settings.Enabled || _settings.Interval.Ticks == 0)
+        {
+            try
+            {
+                await _messageInvoker!.SendMessagesAsync(request, token);
+            }
+            catch
+            {
+                var partId = BinaryPrimitives.ReadInt32LittleEndian(request.Partitioning.Value);
+                _logger.LogError("Error encountered while sending messages - Stream ID:{streamId}, Topic ID:{topicId}, Partition ID: {partitionId}",
+                    request.StreamId, request.TopicId, partId);
+            }
+            return;
+        }
         await _channel!.Writer.WriteAsync(request, token);
     }
 
@@ -170,6 +195,21 @@ public class HttpMessageStream : IIggyClient
                 Payload = encryptor is not null ? encryptor(serializer(message)) : serializer(message),
             }).ToArray()
         };
+        
+        if (!_settings.Enabled || _settings.Interval.Ticks == 0)
+        {
+            try
+            {
+                await _messageInvoker!.SendMessagesAsync(request, token);
+            }
+            catch
+            {
+                var partId = BinaryPrimitives.ReadInt32LittleEndian(request.Partitioning.Value);
+                _logger.LogError("Error encountered while sending messages - Stream ID:{streamId}, Topic ID:{topicId}, Partition ID: {partitionId}",
+                    request.StreamId, request.TopicId, partId);
+            }
+            return;
+        }
         await _channel!.Writer.WriteAsync(request, token);
     }
 

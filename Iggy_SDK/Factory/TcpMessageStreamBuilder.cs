@@ -47,7 +47,7 @@ internal class TcpMessageStreamBuilder
     internal TcpMessageStream Build()
     {
         _messageSenderDispatcher?.Start();
-        return new(_socket, _channel, _loggerFactory);
+        return new(_socket, _channel, _options, _loggerFactory);
     }
     
 }

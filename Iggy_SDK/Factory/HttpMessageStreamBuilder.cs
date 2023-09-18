@@ -46,7 +46,7 @@ internal class HttpMessageStreamBuilder
     internal HttpMessageStream Build()
     {
         _messageSenderDispatcher?.Start();
-        return new HttpMessageStream(_client, _channel, _loggerFactory);
+        return new HttpMessageStream(_client, _channel, _options, _loggerFactory);
     }
     
 }

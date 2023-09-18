@@ -8,7 +8,7 @@ using Iggy_SDK.MessageStream;
 const int messagesCount = 1000;
 const int messagesBatch = 1000;
 const int messageSize = 1000;
-const int producerCount = 7;
+const int producerCount = 3;
 const int startingStreamId = 100;
 const int topicId = 1;
 Dictionary<int, IIggyClient> clients = new();

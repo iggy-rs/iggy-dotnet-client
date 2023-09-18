@@ -10,9 +10,6 @@ namespace Iggy_SDK.MessagesDispatcher;
 internal class TcpMessageInvoker : IMessageInvoker
 {
     private readonly Socket _socket;
-
-    private readonly Memory<byte> _responseBuffer = new(new byte[BufferSizes.ExpectedResponseSize]);
-
     public TcpMessageInvoker(Socket socket)
     {
         _socket = socket;
@@ -28,6 +25,7 @@ internal class TcpMessageInvoker : IMessageInvoker
 
         var messageBuffer = MemoryPool<byte>.Shared.Rent(messageBufferSize);
         var payloadBuffer = MemoryPool<byte>.Shared.Rent(payloadBufferSize);
+        var responseBuffer = MemoryPool<byte>.Shared.Rent(BufferSizes.ExpectedResponseSize);
         try
         {
             TcpContracts.CreateMessage(messageBuffer.Memory.Span[..messageBufferSize], request.StreamId, request.TopicId,
@@ -37,9 +35,9 @@ internal class TcpMessageInvoker : IMessageInvoker
                 messageBuffer.Memory.Span[..messageBufferSize], CommandCodes.SEND_MESSAGES_CODE);
 
             await _socket.SendAsync(payloadBuffer.Memory[..payloadBufferSize], token);
-            await _socket.ReceiveAsync(_responseBuffer, token);
+            await _socket.ReceiveAsync(responseBuffer.Memory, token);
 
-            var status = TcpMessageStreamHelpers.GetResponseStatus(_responseBuffer.Span);
+            var status = TcpMessageStreamHelpers.GetResponseStatus(responseBuffer.Memory.Span);
             if (status != 0)
             {
                 throw new InvalidResponseException($"Invalid response status code: {status}");

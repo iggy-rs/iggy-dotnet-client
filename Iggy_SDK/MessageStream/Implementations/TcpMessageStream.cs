@@ -1,3 +1,4 @@
+using Iggy_SDK.Configuration;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Contracts.Tcp;
 using Iggy_SDK.Enums;
@@ -6,9 +7,11 @@ using Iggy_SDK.Headers;
 using Iggy_SDK.Kinds;
 using Iggy_SDK.Mappers;
 using Iggy_SDK.Messages;
+using Iggy_SDK.MessagesDispatcher;
 using Iggy_SDK.Utils;
 using Microsoft.Extensions.Logging;
 using System.Buffers;
+using System.Buffers.Binary;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;
@@ -19,12 +22,19 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
 {
     private readonly Socket _socket;
     private readonly Channel<MessageSendRequest>? _channel;
+    private readonly IntervalBatchingSettings _settings;
     private readonly ILogger<TcpMessageStream> _logger;
+    private readonly TcpMessageInvoker? _messageInvoker;
 
-    internal TcpMessageStream(Socket socket, Channel<MessageSendRequest>? channel, ILoggerFactory loggerFactory)
+    internal TcpMessageStream(Socket socket, Channel<MessageSendRequest>? channel, IntervalBatchingSettings settings, ILoggerFactory loggerFactory)
     {
         _socket = socket;
         _channel = channel;
+        _settings = settings;
+        if (!settings.Enabled)
+        {
+            _messageInvoker = new TcpMessageInvoker(socket);
+        }
         _logger = loggerFactory.CreateLogger<TcpMessageStream>();
     }
     public async Task CreateStreamAsync(StreamRequest request, CancellationToken token = default)
@@ -267,6 +277,20 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
                 request.Messages[i] = request.Messages[i] with { Payload = encryptor(request.Messages[i].Payload) };
             }
         }
+        if (!_settings.Enabled || _settings.Interval.Ticks == 0)
+        {
+            try
+            {
+                await _messageInvoker!.SendMessagesAsync(request, token);
+            }
+            catch
+            {
+                var partId = BinaryPrimitives.ReadInt32LittleEndian(request.Partitioning.Value);
+                _logger.LogError("Error encountered while sending messages - Stream ID:{streamId}, Topic ID:{topicId}, Partition ID: {partitionId}",
+                    request.StreamId, request.TopicId, partId);
+            }
+            return;
+        }
 
         await _channel!.Writer.WriteAsync(request, token);
     }
@@ -302,6 +326,21 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
                 Partitioning = partitioning,
                 Messages = messagesBuffer.Span[..messages.Count].ToArray()
             };
+            
+            if (!_settings.Enabled || _settings.Interval.Ticks == 0)
+            {
+                try
+                {
+                    await _messageInvoker!.SendMessagesAsync(request, token);
+                }
+                catch
+                {
+                    var partId = BinaryPrimitives.ReadInt32LittleEndian(request.Partitioning.Value);
+                    _logger.LogError("Error encountered while sending messages - Stream ID:{streamId}, Topic ID:{topicId}, Partition ID: {partitionId}",
+                        request.StreamId, request.TopicId, partId); 
+                }
+                return;
+            }
             await _channel!.Writer.WriteAsync(request, token);
         }
         finally
