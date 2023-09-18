@@ -12,6 +12,13 @@ namespace Iggy_SDK.Contracts.Tcp;
 
 internal static class TcpContracts
 {
+
+    internal static byte[] GetClient(uint clientId)
+    {
+        var bytes = new byte[4];
+        BinaryPrimitives.WriteUInt32LittleEndian(bytes, clientId);
+        return bytes;
+    }
     internal static void GetMessages(Span<byte> bytes, MessageFetchRequest request)
     {
         bytes[0] = GetConsumerTypeByte(request.Consumer.Type);

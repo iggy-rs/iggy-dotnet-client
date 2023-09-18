@@ -1,4 +1,3 @@
-using Iggy_SDK.Configuration;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Contracts.Tcp;
 using Iggy_SDK.Enums;
@@ -780,6 +779,62 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         await _socket.ReceiveAsync(responseBuffer, token);
 
         return BinaryMapper.MapStats(responseBuffer);
+    }
+    public async Task<IReadOnlyList<ClientResponse>> GetClientsAsync(CancellationToken token = default)
+    {
+        var message = Array.Empty<byte>();
+        var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
+        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.GET_CLIENTS_CODE);
+        
+        await _socket.SendAsync(payload, token);
+
+        var buffer = new byte[BufferSizes.ExpectedResponseSize];
+        await _socket.ReceiveAsync(buffer, token);
+
+        var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
+
+        if (response.Status != 0)
+        {
+            throw new InvalidResponseException($"Invalid response status code: {response.Status}");
+        }
+
+        if (response.Length <= 1)
+        {
+            return EmptyList<ClientResponse>.Instance;
+        }
+
+        var responseBuffer = new byte[response.Length];
+        await _socket.ReceiveAsync(responseBuffer, token);
+
+        return BinaryMapper.MapClients(responseBuffer);
+    }
+    public async Task<ClientResponse?> GetClientByIdAsync(uint clientId, CancellationToken token = default)
+    {
+        var message = TcpContracts.GetClient(clientId);
+        var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
+        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.GET_CLIENT_CODE);
+        
+        await _socket.SendAsync(payload, token);
+
+        var buffer = new byte[BufferSizes.ExpectedResponseSize];
+        await _socket.ReceiveAsync(buffer, token);
+
+        var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
+
+        if (response.Status != 0)
+        {
+            throw new InvalidResponseException($"Invalid response status code: {response.Status}");
+        }
+
+        if (response.Length <= 1)
+        {
+            return null;
+        }
+
+        var responseBuffer = new byte[response.Length];
+        await _socket.ReceiveAsync(responseBuffer, token);
+
+        return BinaryMapper.MapClient(responseBuffer);
     }
 
     public void Dispose()

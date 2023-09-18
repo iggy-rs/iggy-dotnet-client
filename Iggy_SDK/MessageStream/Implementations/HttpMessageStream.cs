@@ -1,5 +1,4 @@
-﻿using Iggy_SDK.Configuration;
-using Iggy_SDK.Contracts.Http;
+﻿using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Exceptions;
 using Iggy_SDK.Headers;
@@ -17,7 +16,6 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;
-using HttpMessageInvoker = Iggy_SDK.MessagesDispatcher.HttpMessageInvoker;
 
 namespace Iggy_SDK.MessageStream.Implementations;
 
@@ -398,6 +396,27 @@ public class HttpMessageStream : IIggyClient
         {
             var result = await response.Content.ReadFromJsonAsync<StatsResponse>(JsonConverterFactory.SnakeCaseOptions, cancellationToken: token);
             return result?.ToStats();
+        }
+        await HandleResponseAsync(response);
+        return null;
+    }
+    public async Task<IReadOnlyList<ClientResponse>> GetClientsAsync(CancellationToken token = default)
+    {
+        var response = await _httpClient.GetAsync($"/clients", token);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<IReadOnlyList<ClientResponse>>(JsonConverterFactory.SnakeCaseOptions, token)
+                ?? EmptyList<ClientResponse>.Instance;
+        }
+        await HandleResponseAsync(response);
+        return EmptyList<ClientResponse>.Instance;
+    }
+    public async Task<ClientResponse?> GetClientByIdAsync(uint clientId, CancellationToken token = default)
+    {
+        var response = await _httpClient.GetAsync($"/clients/{clientId}", token);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<ClientResponse>(JsonConverterFactory.SnakeCaseOptions, token);
         }
         await HandleResponseAsync(response);
         return null;

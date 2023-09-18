@@ -10,6 +10,84 @@ namespace Iggy_SDK.Mappers;
 internal static class BinaryMapper
 {
     private const int PROPERTIES_SIZE = 45;
+
+    internal static ClientResponse MapClient(ReadOnlySpan<byte> payload)
+    {
+        var (response, position) = MapClientInfo(payload, 0);
+        var consumerGroups = new List<ConsumerGroupInfo>();
+        var length = payload.Length;
+        
+        while (position < length)
+        {
+            for (int i = 0; i < response.ConsumerGroupsCount; i++)
+            {
+                var streamId = BinaryPrimitives.ReadInt32LittleEndian(payload[position..(position + 4)]);
+                var topicId = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 4)..(position + 8)]);
+                var consumerGroupId = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 8)..(position + 12)]);
+                var consumerGroup = new ConsumerGroupInfo
+                {
+                    StreamId = streamId,
+                    TopicId = topicId,
+                    ConsumerGroupId = consumerGroupId
+                };
+                consumerGroups.Add(consumerGroup);
+                position += 12;
+            }
+        }
+        return new ClientResponse
+        {
+            Adress = response.Adress, 
+            Id = response.Id,
+            Transport = response.Transport, 
+            ConsumerGroupsCount = response.ConsumerGroupsCount,
+            ConsumerGroups = consumerGroups
+        };
+    }
+    internal static IReadOnlyList<ClientResponse> MapClients(ReadOnlySpan<byte> payload)
+    {
+        if (payload.Length == 0)
+        {
+            return Array.Empty<ClientResponse>(); 
+        }
+        
+        var response = new List<ClientResponse>();
+        var length = payload.Length;
+        var position = 0;
+        while (position < length)
+        {
+            var (client, readBytes) = MapClientInfo(payload, position);
+
+            response.Add(client);
+            position += readBytes;
+        }
+        return response;
+    }
+    private static (ClientResponse response, int position) MapClientInfo(ReadOnlySpan<byte> payload, int position)
+    {
+        int readBytes;
+        uint id = BinaryPrimitives.ReadUInt32LittleEndian(payload[position..(position + 4)]);
+        byte transportByte = payload[position + 4];
+        string transport = transportByte switch
+        {
+            1 => "TCP",
+            2 => "QUIC",
+            _ => "Unknown",
+        };
+        int addressLength = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 5)..(position + 9)]);
+        string address = Encoding.UTF8.GetString(payload[(position + 9)..(position + 9 + addressLength)]);
+        readBytes = 4 + 1 + 4 + addressLength;
+        position += readBytes;
+        int consumerGroupsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[position..(position + 4)]);
+        readBytes += 4;
+
+        return (new ClientResponse
+        {
+            Id = id,
+            Transport = transport, 
+            Adress = address, 
+            ConsumerGroupsCount = consumerGroupsCount
+        }, readBytes);
+    }
     internal static OffsetResponse MapOffsets(ReadOnlySpan<byte> payload)
     {
         var partitionId = BinaryPrimitives.ReadInt32LittleEndian(payload[0..4]);
