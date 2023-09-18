@@ -38,6 +38,7 @@ internal static class BinaryMapper
         {
             Adress = response.Adress, 
             Id = response.Id,
+            UserId = response.UserId,
             Transport = response.Transport, 
             ConsumerGroupsCount = response.ConsumerGroupsCount,
             ConsumerGroups = consumerGroups
@@ -66,16 +67,17 @@ internal static class BinaryMapper
     {
         int readBytes;
         uint id = BinaryPrimitives.ReadUInt32LittleEndian(payload[position..(position + 4)]);
-        byte transportByte = payload[position + 4];
+        uint userId = BinaryPrimitives.ReadUInt32LittleEndian(payload[(position + 4)..(position + 8)]);
+        byte transportByte = payload[position + 8];
         string transport = transportByte switch
         {
             1 => "TCP",
             2 => "QUIC",
             _ => "Unknown",
         };
-        int addressLength = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 5)..(position + 9)]);
-        string address = Encoding.UTF8.GetString(payload[(position + 9)..(position + 9 + addressLength)]);
-        readBytes = 4 + 1 + 4 + addressLength;
+        int addressLength = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 9)..(position + 13)]);
+        string address = Encoding.UTF8.GetString(payload[(position + 13)..(position + 13 + addressLength)]);
+        readBytes = 4 + 1 + 4 + 4 + addressLength;
         position += readBytes;
         int consumerGroupsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[position..(position + 4)]);
         readBytes += 4;
@@ -83,6 +85,7 @@ internal static class BinaryMapper
         return (new ClientResponse
         {
             Id = id,
+            UserId = userId,
             Transport = transport, 
             Adress = address, 
             ConsumerGroupsCount = consumerGroupsCount
