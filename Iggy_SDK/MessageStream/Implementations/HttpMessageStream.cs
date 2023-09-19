@@ -23,6 +23,7 @@ namespace Iggy_SDK.MessageStream.Implementations;
 public class HttpMessageStream : IIggyClient
 {
     //TODO - replace the HttpClient with IHttpClientFactory, when implementing support for ASP.NET Core DI
+    //TODO - the error handling pattern is pretty ugly, look into moving it into an extension method
     private readonly HttpClient _httpClient;
     private readonly Channel<MessageSendRequest>? _channel;
     private readonly ILogger<HttpMessageStream> _logger;
@@ -471,5 +472,55 @@ public class HttpMessageStream : IIggyClient
     private static string CreateUrl(ref MessageRequestInterpolationHandler message)
     {
         return message.ToString();
+    }
+    public async Task<UserResponse?> GetUser(Identifier userId, CancellationToken token = default)
+    {
+        //TODO - this doesn't work prob needs a custom json serializer
+        var response = await _httpClient.GetAsync($"/users/{userId}", token);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<UserResponse>(JsonConverterFactory.SnakeCaseOptions, token);
+        }
+        await HandleResponseAsync(response);
+        return null;
+    }
+    public async Task<IReadOnlyList<UserResponse>> GetUsers()
+    {
+        throw new NotImplementedException();
+    }
+    public Task CreateUser(CreateUserRequest request, CancellationToken token = default)
+    {
+        throw new NotImplementedException();
+    }
+    public Task DeleteUser(Identifier userId, CancellationToken token = default)
+    {
+        throw new NotImplementedException();
+    }
+    public Task UpdateUser(UpdateUserRequest request, CancellationToken token = default)
+    {
+        throw new NotImplementedException();
+    }
+    public Task UpdatePermissions(UpdateUserPermissionsRequest request, CancellationToken token = default)
+    {
+        throw new NotImplementedException();
+    }
+    public Task ChangePassword(ChangePasswordRequest request, CancellationToken token = default)
+    {
+        throw new NotImplementedException();
+    }
+    public async Task LoginUser(LoginUserRequest request, CancellationToken token = default)
+    {
+        var json = JsonSerializer.Serialize(request, JsonConverterFactory.SnakeCaseOptions);
+        var data = new StringContent(json, Encoding.UTF8, "application/json");
+
+        var response = await _httpClient.PostAsync("users/login", data, token);
+        if (!response.IsSuccessStatusCode)
+        {
+            await HandleResponseAsync(response);
+        }
+    }
+    public Task LogoutUser(CancellationToken token = default)
+    {
+        throw new NotImplementedException();
     }
 }

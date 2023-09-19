@@ -11,6 +11,139 @@ internal static class BinaryMapper
 {
     private const int PROPERTIES_SIZE = 45;
 
+    internal static UserResponse MapUser(ReadOnlySpan<byte> payload)
+    {
+        var (response, position) = MapToUserResponse(payload, 0);
+        var hasPermissions = payload[position];
+        if (hasPermissions == 1)
+        {
+            var permissionLength = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 1)..(position + 5)]);
+            var permissionsPayload = payload[(position + 5)..(position + 5 + permissionLength)];
+            var permissions = MapPermissions(permissionsPayload);
+            return new UserResponse
+            {
+                Permissions = permissions,
+                Id = response.Id,
+                CreatedAt = response.CreatedAt,
+                Username = response.Username,
+                Status = response.Status
+            };
+        }
+        return new UserResponse
+        {
+            Id = response.Id,
+            CreatedAt = response.CreatedAt,
+            Username = response.Username,
+            Status = response.Status,
+            Permissions = null
+        };
+
+    }
+    private static Permissions MapPermissions(ReadOnlySpan<byte> bytes)
+    {
+        var streamMap = new Dictionary<uint, StreamPermissions>();
+        int index = 0;
+
+        var globalPermissions = new GlobalPermissions
+        {
+            ManageServers = bytes[index++] == 1,
+            ReadServers = bytes[index++] == 1,
+            ManageUsers = bytes[index++] == 1,
+            ReadUsers = bytes[index++] == 1,
+            ManageStreams = bytes[index++] == 1,
+            ReadStreams = bytes[index++] == 1,
+            ManageTopics = bytes[index++] == 1,
+            ReadTopics = bytes[index++] == 1,
+            PollMessages = bytes[index++] == 1,
+            SendMessages = bytes[index++] == 1,
+        };
+
+        if (bytes[index++] == 1)
+        {
+            while (true)
+            {
+                var streamId = BitConverter.ToUInt32(bytes.Slice(index, sizeof(uint)));
+                index += sizeof(uint);
+
+                var manageStream = bytes[index++] == 1;
+                var readStream = bytes[index++] == 1;
+                var manageTopics = bytes[index++] == 1;
+                var readTopics = bytes[index++] == 1;
+                var pollMessagesStream = bytes[index++] == 1;
+                var sendMessagesStream = bytes[index++] == 1;
+                var topicsMap = new Dictionary<uint, TopicPermissions>();
+
+                if (bytes[index++] == 1)
+                {
+                    while (true)
+                    {
+                        var topicId = BitConverter.ToUInt32(bytes.Slice(index, sizeof(uint)));
+                        index += sizeof(uint);
+
+                        var manageTopic = bytes[index++] == 1;
+                        var readTopic = bytes[index++] == 1;
+                        var pollMessagesTopic = bytes[index++] == 1;
+                        var sendMessagesTopic = bytes[index++] == 1;
+
+                        topicsMap.Add(topicId, new TopicPermissions
+                        {
+                            ManageTopic = manageTopic,
+                            ReadTopic = readTopic,
+                            PollMessages = pollMessagesTopic,
+                            SendMessages = sendMessagesTopic,
+                        });
+
+                        if (bytes[index++] == 0)
+                            break;
+                    }
+                }
+
+                streamMap.Add(streamId, new StreamPermissions
+                {
+                    ManageStream = manageStream,
+                    ReadStream = readStream,
+                    ManageTopics = manageTopics,
+                    ReadTopics = readTopics,
+                    PollMessages = pollMessagesStream,
+                    SendMessages = sendMessagesStream,
+                    Topics = topicsMap.Count > 0 ? topicsMap : null,
+                });
+
+                if (bytes[index++] == 0)
+                    break;
+            }
+        }
+
+        return new Permissions
+        {
+            Global = globalPermissions, 
+            Streams = streamMap.Count > 0 ? streamMap : null
+        };
+    }
+    private static (UserResponse response, int position) MapToUserResponse(ReadOnlySpan<byte> payload, int position)
+    {
+        uint id = BinaryPrimitives.ReadUInt32LittleEndian(payload[position..(position + 4)]);
+        ulong createdAt = BinaryPrimitives.ReadUInt64LittleEndian(payload[(position + 4)..(position + 12)]);
+        byte status = payload[position + 12];
+        UserStatus userStatus = status switch
+        {
+            1 => UserStatus.Active,
+            2 => UserStatus.Inactive,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+        byte usernameLength = payload[position + 13];
+        string username = Encoding.UTF8.GetString(payload[(position + 14)..]);
+        int readBytes = 4 + 8 + 1 + 1 + usernameLength;
+        
+        return (new UserResponse
+        {
+            Id = id, 
+            CreatedAt = createdAt, 
+            Status = userStatus, 
+            Username = username
+        }, readBytes);
+    }
+
     internal static ClientResponse MapClient(ReadOnlySpan<byte> payload)
     {
         var (response, position) = MapClientInfo(payload, 0);

@@ -536,7 +536,7 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
     {
         var message = TcpContracts.UpdateOffset(request);
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
-        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.STORE_OFFSET_CODE);
+        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.STORE_CONSUMER_OFFSET_CODE);
 
         await _socket.SendAsync(payload, token);
 
@@ -555,7 +555,7 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
     {
         var message = TcpContracts.GetOffset(request);
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
-        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.GET_OFFSET_CODE);
+        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.GET_CONSUMER_OFFSET_CODE);
 
         await _socket.SendAsync(payload, token);
 
@@ -584,7 +584,7 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
     {
         var message = TcpContracts.GetGroups(streamId, topicId);
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
-        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.GET_GROUPS_CODE);
+        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.GET_CONSUMER_GROUP_CODE);
 
         await _socket.SendAsync(payload, token);
 
@@ -613,7 +613,7 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
     {
         var message = TcpContracts.GetGroup(streamId, topicId, groupId);
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
-        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.GET_GROUP_CODE);
+        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.GET_CONSUMER_GROUP_CODE);
 
         await _socket.SendAsync(payload, token);
 
@@ -641,7 +641,7 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
     {
         var message = TcpContracts.CreateGroup(request);
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
-        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.CREATE_GROUP_CODE);
+        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.CREATE_CONSUMER_GROUP_CODE);
 
         await _socket.SendAsync(payload, token);
 
@@ -661,7 +661,7 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
     {
         var message = TcpContracts.DeleteGroup(request.StreamId, request.TopicId, request.ConsumerGroupId);
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
-        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.DELETE_GROUP_CODE);
+        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.DELETE_CONSUMER_GROUP_CODE);
 
         await _socket.SendAsync(payload, token);
 
@@ -680,7 +680,7 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
     {
         var message = TcpContracts.JoinGroup(request);
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
-        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.JOIN_GROUP_CODE);
+        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.JOIN_CONSUMER_GROUP_CODE);
 
         await _socket.SendAsync(payload, token);
 
@@ -699,7 +699,7 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
     {
         var message = TcpContracts.LeaveGroup(request);
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
-        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.LEAVE_GROUP_CODE);
+        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.LEAVE_CONSUMER_GROUP_CODE);
 
         await _socket.SendAsync(payload, token);
 
@@ -842,5 +842,66 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         _socket.Close();
         _socket.Dispose();
     }
+    public async Task<UserResponse?> GetUser(Identifier userId, CancellationToken token = default)
+    {
+        var message = TcpContracts.GetUser(userId);
+        var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
+        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.GET_USER_CODE);
+        
+        await _socket.SendAsync(payload, token);
 
+        var buffer = new byte[BufferSizes.ExpectedResponseSize];
+        await _socket.ReceiveAsync(buffer, token);
+
+        var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
+
+        if (response.Status != 0)
+        {
+            throw new InvalidResponseException($"Invalid response status code: {response.Status}");
+        }
+
+        if (response.Length <= 1)
+        {
+            return null;
+        }
+
+        var responseBuffer = new byte[response.Length];
+        await _socket.ReceiveAsync(responseBuffer, token);
+
+        return BinaryMapper.MapUser(responseBuffer);
+    }
+    public Task<IReadOnlyList<UserResponse>> GetUsers()
+    {
+        throw new NotImplementedException();
+    }
+    public Task CreateUser(CreateUserRequest request, CancellationToken token = default)
+    {
+        var message = TcpContracts.CreateUser(request);
+        var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
+        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.CREATE_USER_CODE);
+    }
+    public Task DeleteUser(Identifier userId, CancellationToken token = default)
+    {
+        throw new NotImplementedException();
+    }
+    public Task UpdateUser(UpdateUserRequest request, CancellationToken token = default)
+    {
+        throw new NotImplementedException();
+    }
+    public Task UpdatePermissions(UpdateUserPermissionsRequest request, CancellationToken token = default)
+    {
+        throw new NotImplementedException();
+    }
+    public Task ChangePassword(ChangePasswordRequest request, CancellationToken token = default)
+    {
+        throw new NotImplementedException();
+    }
+    public Task LoginUser(LoginUserRequest request, CancellationToken token = default)
+    {
+        throw new NotImplementedException();
+    }
+    public Task LogoutUser(CancellationToken token = default)
+    {
+        throw new NotImplementedException();
+    }
 }

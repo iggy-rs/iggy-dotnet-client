@@ -19,6 +19,46 @@ internal static class TcpContracts
         BinaryPrimitives.WriteUInt32LittleEndian(bytes, clientId);
         return bytes;
     }
+    internal static byte[] GetUser(Identifier userId)
+    {
+        Span<byte> bytes = stackalloc byte[userId.Length + 2];
+        WriteBytesFromIdentifierToSpan(userId, bytes);
+        return bytes.ToArray();
+    }
+    internal static byte[] CreateUser(CreateUserRequest request)
+    {
+        int capacity = 2 + request.Username.Length + request.Password.Length + 1; // +1 for status byte
+        if (request.Permissions != null)
+        {
+            capacity += 1 + 4 + request.Permissions.; // +1 for permissions flag, +4 for permissions length
+        }
+
+        Span<byte> bytes = new byte[capacity];
+        int index = 0;
+
+        bytes[index++] = (byte)username.Length;
+        index += Encoding.UTF8.GetBytes(username, bytes.Slice(index));
+
+        bytes[index++] = (byte)password.Length;
+        index += Encoding.UTF8.GetBytes(password, bytes.Slice(index));
+
+        bytes[index++] = (byte)status; // Assuming status is an enum with byte values
+
+        if (permissions != null)
+        {
+            bytes[index++] = 1;
+            BitConverter.TryWriteBytes(bytes.Slice(index, 4), permissions.Length);
+            index += 4;
+            permissions.CopyTo(bytes.Slice(index));
+            index += permissions.Length;
+        }
+        else
+        {
+            bytes[index++] = 0;
+        }
+
+        return bytes.Slice(0, index);
+    }
     internal static void GetMessages(Span<byte> bytes, MessageFetchRequest request)
     {
         bytes[0] = GetConsumerTypeByte(request.Consumer.Type);
