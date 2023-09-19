@@ -874,19 +874,59 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
     {
         throw new NotImplementedException();
     }
-    public Task CreateUser(CreateUserRequest request, CancellationToken token = default)
+    public async Task CreateUser(CreateUserRequest request, CancellationToken token = default)
     {
         var message = TcpContracts.CreateUser(request);
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.CREATE_USER_CODE);
+        
+        await _socket.SendAsync(payload, token);
+
+        var buffer = new byte[BufferSizes.ExpectedResponseSize];
+        await _socket.ReceiveAsync(buffer, token);
+
+        var status = TcpMessageStreamHelpers.GetResponseStatus(buffer);
+
+        if (status != 0)
+        {
+            throw new InvalidResponseException($"Invalid response status code: {status}");
+        }
     }
-    public Task DeleteUser(Identifier userId, CancellationToken token = default)
+    public async Task DeleteUser(Identifier userId, CancellationToken token = default)
     {
-        throw new NotImplementedException();
+        var message = TcpContracts.DeleteUser(userId);
+        var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
+        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.DELETE_USER_CODE);
+        
+        await _socket.SendAsync(payload, token);
+
+        var buffer = new byte[BufferSizes.ExpectedResponseSize];
+        await _socket.ReceiveAsync(buffer, token);
+
+        var status = TcpMessageStreamHelpers.GetResponseStatus(buffer);
+
+        if (status != 0)
+        {
+            throw new InvalidResponseException($"Invalid response status code: {status}");
+        }
     }
-    public Task UpdateUser(UpdateUserRequest request, CancellationToken token = default)
+    public async Task UpdateUser(UpdateUserRequest request, CancellationToken token = default)
     {
-        throw new NotImplementedException();
+        var message = TcpContracts.UpdateUser(request);
+        var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
+        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.UPDATE_USER_CODE);
+        
+        await _socket.SendAsync(payload, token);
+
+        var buffer = new byte[BufferSizes.ExpectedResponseSize];
+        await _socket.ReceiveAsync(buffer, token);
+
+        var status = TcpMessageStreamHelpers.GetResponseStatus(buffer);
+
+        if (status != 0)
+        {
+            throw new InvalidResponseException($"Invalid response status code: {status}");
+        }
     }
     public Task UpdatePermissions(UpdateUserPermissionsRequest request, CancellationToken token = default)
     {

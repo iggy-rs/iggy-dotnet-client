@@ -8,5 +8,5 @@ public sealed class StreamPermissions
     public required bool ReadTopics { get; init; }
     public required bool PollMessages { get; init; }
     public required bool SendMessages { get; init; }
-    public required Dictionary<uint, TopicPermissions> Topics { get; init; }
+    public Dictionary<int, TopicPermissions>? Topics { get; init; }
 }

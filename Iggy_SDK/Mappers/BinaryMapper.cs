@@ -41,7 +41,7 @@ internal static class BinaryMapper
     }
     private static Permissions MapPermissions(ReadOnlySpan<byte> bytes)
     {
-        var streamMap = new Dictionary<uint, StreamPermissions>();
+        var streamMap = new Dictionary<int, StreamPermissions>();
         int index = 0;
 
         var globalPermissions = new GlobalPermissions
@@ -62,8 +62,8 @@ internal static class BinaryMapper
         {
             while (true)
             {
-                var streamId = BitConverter.ToUInt32(bytes.Slice(index, sizeof(uint)));
-                index += sizeof(uint);
+                var streamId = BinaryPrimitives.ReadInt32LittleEndian(bytes[index..(index + 4)]);
+                index += sizeof(int);
 
                 var manageStream = bytes[index++] == 1;
                 var readStream = bytes[index++] == 1;
@@ -71,14 +71,14 @@ internal static class BinaryMapper
                 var readTopics = bytes[index++] == 1;
                 var pollMessagesStream = bytes[index++] == 1;
                 var sendMessagesStream = bytes[index++] == 1;
-                var topicsMap = new Dictionary<uint, TopicPermissions>();
+                var topicsMap = new Dictionary<int, TopicPermissions>();
 
                 if (bytes[index++] == 1)
                 {
                     while (true)
                     {
-                        var topicId = BitConverter.ToUInt32(bytes.Slice(index, sizeof(uint)));
-                        index += sizeof(uint);
+                        var topicId = BinaryPrimitives.ReadInt32LittleEndian(bytes[index..(index + 4)]);
+                        index += sizeof(int);
 
                         var manageTopic = bytes[index++] == 1;
                         var readTopic = bytes[index++] == 1;
@@ -132,7 +132,7 @@ internal static class BinaryMapper
             _ => throw new ArgumentOutOfRangeException()
         };
         byte usernameLength = payload[position + 13];
-        string username = Encoding.UTF8.GetString(payload[(position + 14)..]);
+        string username = Encoding.UTF8.GetString(payload[(position + 14)..(position + 14 + usernameLength)]);
         int readBytes = 4 + 8 + 1 + 1 + usernameLength;
         
         return (new UserResponse

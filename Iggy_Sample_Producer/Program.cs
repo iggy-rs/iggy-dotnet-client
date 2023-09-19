@@ -24,6 +24,58 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
         x.Interval = TimeSpan.FromMilliseconds(100);
     };
 });
+/*
+var topicsPermissions = new Dictionary<int, TopicPermissions>();
+topicsPermissions.Add(
+    1, new TopicPermissions
+    {
+        ManageTopic = true, 
+        PollMessages = true, 
+        ReadTopic = false, 
+        SendMessages = false
+    });
+var streamPermission = new Dictionary<int, StreamPermissions>();
+streamPermission.Add(
+    1, new StreamPermissions
+    {
+        ManageStream = true,
+        ManageTopics = false,
+        PollMessages = true,
+        ReadStream = false,
+        ReadTopics = true,
+        SendMessages = true,
+        Topics = topicsPermissions
+    });
+await bus.CreateUser(new CreateUserRequest
+{
+    Username = "user3",
+    Password = "okon",
+    Status = UserStatus.Active,
+    Permissions = new Permissions
+    {
+        Global = new GlobalPermissions
+        {
+            ManageServers = true,
+            ReadServers = true,
+            ManageUsers = true,
+            ReadUsers = true,
+            ManageStreams = false,
+            ManageTopics = false,
+            PollMessages = false,
+            SendMessages = false,
+            ReadStreams = true,
+            ReadTopics = true
+        },
+        Streams = streamPermission
+    }
+
+});
+*/
+await bus.UpdateUser(new UpdateUserRequest
+{
+    UserId = Identifier.Numeric(7), Username = "user4", UserStatus = UserStatus.Active
+});
+var user = await bus.GetUser(Identifier.Numeric(7));
 
 Console.WriteLine("Using protocol : {0}", protocol.ToString());
 var streamIdVal = 1;

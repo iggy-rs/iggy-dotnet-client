@@ -12,7 +12,6 @@ namespace Iggy_SDK.Contracts.Tcp;
 
 internal static class TcpContracts
 {
-
     internal static byte[] GetClient(uint clientId)
     {
         var bytes = new byte[4];
@@ -25,31 +24,80 @@ internal static class TcpContracts
         WriteBytesFromIdentifierToSpan(userId, bytes);
         return bytes.ToArray();
     }
+    internal static byte[] DeleteUser(Identifier userId)
+    {
+        Span<byte> bytes = stackalloc byte[userId.Length + 2];
+        WriteBytesFromIdentifierToSpan(userId, bytes);
+        return bytes.ToArray();
+    }
+    internal static byte[] UpdateUser(UpdateUserRequest request)
+    {
+        var length = request.UserId.Length + 2 + (request.Username?.Length ?? 0)
+                     + (request.UserStatus is not null ? 2 : 1) + 1 + 4;
+        Span<byte> bytes = stackalloc byte[length];
+        
+        WriteBytesFromIdentifierToSpan(request.UserId, bytes);
+        int position = request.UserId.Length + 2;
+        if (request.Username is not null)
+        {
+            bytes[position] = 1;
+            position += 1;
+            BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], 
+                request.Username.Length);
+            Encoding.UTF8.GetBytes(request.Username, 
+                bytes[(position + 4)..(position + 4 + request.Username.Length)]);
+            position += 4 + request.Username.Length;
+        }
+        else
+        {
+           bytes[request.UserId.Length] = 0;
+           position += 1;
+        }
+        
+        if (request.UserStatus is not null)
+        {
+            bytes[position++] = 1;
+            bytes[position++] = request.UserStatus switch
+            {
+                UserStatus.Active => 1,
+                UserStatus.Inactive => 2,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+        }
+        else
+        {
+            bytes[position++] = 0;
+        }
+        return bytes.ToArray();
+    }
     internal static byte[] CreateUser(CreateUserRequest request)
     {
-        int capacity = 2 + request.Username.Length + request.Password.Length + 1; // +1 for status byte
-        if (request.Permissions != null)
-        {
-            capacity += 1 + 4 + request.Permissions.; // +1 for permissions flag, +4 for permissions length
-        }
+        int capacity = 4 + request.Username.Length + request.Password.Length 
+            + (request.Permissions is not null ? 1 + 4 + CalculatePermissionsSize(request.Permissions) : 0); // +1 for status byte
 
-        Span<byte> bytes = new byte[capacity];
+        Span<byte> bytes = stackalloc byte[capacity];
         int index = 0;
 
-        bytes[index++] = (byte)username.Length;
-        index += Encoding.UTF8.GetBytes(username, bytes.Slice(index));
+        bytes[index++] = (byte)request.Username.Length;
+        index += Encoding.UTF8.GetBytes(request.Username, bytes[index..(index + request.Username.Length)]);
 
-        bytes[index++] = (byte)password.Length;
-        index += Encoding.UTF8.GetBytes(password, bytes.Slice(index));
+        bytes[index++] = (byte)request.Password.Length;
+        index += Encoding.UTF8.GetBytes(request.Password, bytes[index..(index + request.Password.Length)]);
 
-        bytes[index++] = (byte)status; // Assuming status is an enum with byte values
+        bytes[index++] = request.Status switch
+        {
+            UserStatus.Active => (byte)1,
+            UserStatus.Inactive => (byte)2,
+            _ => throw new ArgumentOutOfRangeException()
+        }; 
 
-        if (permissions != null)
+        if (request.Permissions is not null)
         {
             bytes[index++] = 1;
-            BitConverter.TryWriteBytes(bytes.Slice(index, 4), permissions.Length);
+            var permissions = GetBytesFromPermissions(request.Permissions);
+            BinaryPrimitives.WriteInt32LittleEndian(bytes[index..(index + 4)], CalculatePermissionsSize(request.Permissions));
             index += 4;
-            permissions.CopyTo(bytes.Slice(index));
+            permissions.CopyTo(bytes[index..(index + permissions.Length)]);
             index += permissions.Length;
         }
         else
@@ -57,7 +105,102 @@ internal static class TcpContracts
             bytes[index++] = 0;
         }
 
-        return bytes.Slice(0, index);
+        return bytes.ToArray();
+    }
+    private static byte[] GetBytesFromPermissions(Permissions data)
+    {
+        int size = CalculatePermissionsSize(data);
+        Span<byte> bytes = stackalloc byte[size];
+
+        bytes[0] = data.Global.ManageServers ? (byte)1 : (byte)0;
+        bytes[1] = data.Global.ReadServers ? (byte)1 : (byte)0;
+        bytes[2] = data.Global.ManageUsers ? (byte)1 : (byte)0;
+        bytes[3] = data.Global.ReadUsers ? (byte)1 : (byte)0;
+        bytes[4] = data.Global.ManageStreams ? (byte)1 : (byte)0;
+        bytes[5] = data.Global.ReadStreams ? (byte)1 : (byte)0;
+        bytes[6] = data.Global.ManageTopics ? (byte)1 : (byte)0;
+        bytes[7] = data.Global.ReadTopics ? (byte)1 : (byte)0;
+        bytes[8] = data.Global.PollMessages ? (byte)1 : (byte)0;
+        bytes[9] = data.Global.SendMessages ? (byte)1 : (byte)0;
+
+
+        if (data.Streams is not null)
+        {
+            bytes[10] = (byte)1;
+            int position = 11;
+            foreach (var (streamId, stream) in data.Streams)
+            {
+                BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], streamId);
+                position += 4;
+
+                bytes[position] = stream.ManageStream ? (byte)1 : (byte)0;
+                bytes[position + 1] = stream.ReadStream ? (byte)1 : (byte)0;
+                bytes[position + 2] = stream.ManageTopics ? (byte)1 : (byte)0;
+                bytes[position + 3] = stream.ReadTopics ? (byte)1 : (byte)0;
+                bytes[position + 4] = stream.PollMessages ? (byte)1 : (byte)0;
+                bytes[position + 5] = stream.SendMessages ? (byte)1 : (byte)0;
+                position += 6;
+
+                if (stream.Topics != null)
+                {
+                    bytes[position] = (byte)1;
+                    position += 1;
+
+                    foreach (var (topicId, topic) in stream.Topics)
+                    {
+                        BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], topicId);
+                        position += 4;
+                        
+                        bytes[position] = topic.ManageTopic ? (byte)1 : (byte)0;
+                        bytes[position + 1] = topic.ReadTopic ? (byte)1 : (byte)0;
+                        bytes[position + 2] = topic.PollMessages ? (byte)1 : (byte)0;
+                        bytes[position + 3] = topic.SendMessages ? (byte)1 : (byte)0;
+                        position += 4;
+                    }
+                }
+                else
+                {
+                    bytes[0] = (byte)0;
+                    bytes = bytes[1..];
+                }
+            }
+        }
+        else
+        {
+            bytes[0] = (byte)0;
+        }
+
+        return bytes.ToArray();
+    }
+    private static int CalculatePermissionsSize(Permissions data)
+    {
+        int size = 10; 
+
+        if (data.Streams != null)
+        {
+            size += 3; 
+            foreach (var (_, stream) in data.Streams)
+            {
+                size += 4; 
+                size += 6; 
+
+                if (stream.Topics is not null)
+                {
+                    size += 3; 
+                    size += stream.Topics.Count * 8; 
+                }
+                else
+                {
+                    size += 1; 
+                }
+            }
+        }
+        else
+        {
+            size += 1; 
+        }
+
+        return size;
     }
     internal static void GetMessages(Span<byte> bytes, MessageFetchRequest request)
     {

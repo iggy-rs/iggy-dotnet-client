@@ -6,5 +6,5 @@ public sealed class CreateUserRequest
     public required string Username { get; init; }
     public required string Password { get; init; }
     public required UserStatus Status { get; init; }
-    public required Permissions? Permissions { get; init; }
+    public Permissions? Permissions { get; init; }
 }
