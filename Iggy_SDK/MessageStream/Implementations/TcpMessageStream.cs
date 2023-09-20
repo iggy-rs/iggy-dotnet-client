@@ -870,9 +870,26 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
 
         return BinaryMapper.MapUser(responseBuffer);
     }
-    public Task<IReadOnlyList<UserResponse>> GetUsers()
+    public async Task<IReadOnlyList<UserResponse>> GetUsers(CancellationToken token = default)
     {
-        throw new NotImplementedException();
+        var message = Array.Empty<byte>();
+        var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
+        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.GET_USERS_CODE);
+        
+        await _socket.SendAsync(payload, token);
+
+        var buffer = new byte[BufferSizes.ExpectedResponseSize];
+        await _socket.ReceiveAsync(buffer, token);
+
+        var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
+
+        if (response.Status != 0)
+        {
+            throw new InvalidResponseException($"Invalid response status code: {response.Status}");
+        }
+        var responseBuffer = new byte[response.Length];
+        await _socket.ReceiveAsync(responseBuffer, token);
+        return BinaryMapper.MapUsers(responseBuffer);
     }
     public async Task CreateUser(CreateUserRequest request, CancellationToken token = default)
     {

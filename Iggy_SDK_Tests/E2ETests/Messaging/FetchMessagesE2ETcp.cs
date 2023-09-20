@@ -9,6 +9,7 @@ using Iggy_SDK_Tests.Utils.Messages;
 
 namespace Iggy_SDK_Tests.E2ETests.Messaging;
 
+[TestCaseOrderer("Iggy_SDK_Tests.Utils.PriorityOrderer", "Iggy_SDK_Tests")]
 public sealed class FetchMessagesE2ETcp : IClassFixture<IggyTcpFetchMessagesFixture>
 {
     private readonly IggyTcpFetchMessagesFixture _fixture;

@@ -8,6 +8,7 @@ using Iggy_SDK.Enums;
 using Iggy_SDK.Kinds;
 namespace Iggy_SDK_Tests.E2ETests.Messaging;
 
+[TestCaseOrderer("Iggy_SDK_Tests.Utils.PriorityOrderer", "Iggy_SDK_Tests")]
 public sealed class PollMessagesE2ETcp : IClassFixture<IggyTcpPollMessagesFixture>
 {
     private readonly IggyTcpPollMessagesFixture _fixture;

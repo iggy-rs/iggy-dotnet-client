@@ -484,7 +484,7 @@ public class HttpMessageStream : IIggyClient
         await HandleResponseAsync(response);
         return null;
     }
-    public async Task<IReadOnlyList<UserResponse>> GetUsers()
+    public async Task<IReadOnlyList<UserResponse>> GetUsers(CancellationToken token = default)
     {
         throw new NotImplementedException();
     }

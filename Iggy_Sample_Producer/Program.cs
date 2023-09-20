@@ -70,12 +70,7 @@ await bus.CreateUser(new CreateUserRequest
 
 });
 */
-await bus.LoginUser(new LoginUserRequest
-{
-    Password = "allah", Username = "abdul"
-});
-await Task.Delay(2000);
-await bus.LogoutUser();
+await bus.DeleteUser(Identifier.Numeric(4));
 var user = await bus.GetUser(Identifier.Numeric(8));
 Console.WriteLine("Using protocol : {0}", protocol.ToString());
 var streamIdVal = 1;

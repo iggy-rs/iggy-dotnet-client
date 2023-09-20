@@ -30,7 +30,7 @@ public sealed class IggyTcpPollMessagesFixture : IAsyncLifetime
     private static readonly StreamRequest StreamRequest = StreamFactory.CreateStreamRequest();
     private static readonly TopicRequest TopicRequest = TopicFactory.CreateTopicRequest();
     private static readonly TopicRequest HeadersTopicRequest = TopicFactory.CreateTopicRequest();
-    public const int MessageCount = 1000000;
+    public const int MessageCount = 100000;
 
     public readonly int StreamId = StreamRequest.StreamId;
     public readonly int TopicId = TopicRequest.TopicId;

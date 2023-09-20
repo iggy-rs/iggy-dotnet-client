@@ -11,6 +11,23 @@ internal static class BinaryMapper
 {
     private const int PROPERTIES_SIZE = 45;
 
+    internal static IReadOnlyList<UserResponse> MapUsers(ReadOnlySpan<byte> payload)
+    {
+        if (payload.Length == 0)
+        {
+            return Array.Empty<UserResponse>();
+        }
+        var result = new List<UserResponse>();
+        int length = payload.Length;
+        int position = 0;
+        while (position < length)
+        {
+            var (response, readBytes) = MapToUserResponse(payload, position);
+            result.Add(response);
+            position += readBytes;
+        }
+        return result.AsReadOnly();
+    }
     internal static UserResponse MapUser(ReadOnlySpan<byte> payload)
     {
         var (response, position) = MapToUserResponse(payload, 0);
