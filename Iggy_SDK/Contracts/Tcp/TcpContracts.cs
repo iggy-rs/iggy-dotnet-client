@@ -30,19 +30,36 @@ internal static class TcpContracts
         WriteBytesFromIdentifierToSpan(userId, bytes);
         return bytes.ToArray();
     }
+    internal static byte[] LoginUser(LoginUserRequest request)
+    {
+        var length = request.Username.Length + request.Password.Length + 2;
+        Span<byte> bytes = stackalloc byte[length];
+
+        int position = 0;
+        bytes[position] = (byte)request.Username.Length;
+        position += 1;
+        Encoding.UTF8.GetBytes(request.Username, bytes[position..(position + request.Username.Length)]);
+        position += request.Username.Length;
+        bytes[position] = (byte)request.Password.Length;
+        position += 1;
+        Encoding.UTF8.GetBytes(request.Password, bytes[position..(position + request.Password.Length)]);
+        position += request.Password.Length;
+        
+        return bytes.ToArray();
+    }
     internal static byte[] ChangePassword(ChangePasswordRequest request)
     {
-        var length = request.UserId.Length + 2 + request.CurrentPassword.Length + request.NewPassword.Length + 8;
+        var length = request.UserId.Length + 2 + request.CurrentPassword.Length + request.NewPassword.Length + 2;
         Span<byte> bytes = stackalloc byte[length];
         
         WriteBytesFromIdentifierToSpan(request.UserId, bytes);
         int position = request.UserId.Length + 2;
-        BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], request.CurrentPassword.Length);
-        position += 4;
+        bytes[position] = (byte)request.CurrentPassword.Length;
+        position += 1;
         Encoding.UTF8.GetBytes(request.CurrentPassword, bytes[position..(position + request.CurrentPassword.Length)]);
         position += request.CurrentPassword.Length;
-        BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], request.NewPassword.Length);
-        position += 4;
+        bytes[position] = (byte)request.NewPassword.Length;
+        position += 1;
         Encoding.UTF8.GetBytes(request.NewPassword, bytes[position..(position + request.NewPassword.Length)]);
         position += request.NewPassword.Length;
         return bytes.ToArray();

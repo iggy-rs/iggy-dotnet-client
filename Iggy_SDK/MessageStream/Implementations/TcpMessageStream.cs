@@ -965,12 +965,44 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
             throw new InvalidResponseException($"Invalid response status code: {status}");
         }
     }
-    public Task LoginUser(LoginUserRequest request, CancellationToken token = default)
+    public async Task LoginUser(LoginUserRequest request, CancellationToken token = default)
     {
-        throw new NotImplementedException();
+        var message = TcpContracts.LoginUser(request);
+        var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
+        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.LOGIN_USER_CODE);
+        
+        await _socket.SendAsync(payload, token);
+
+        var buffer = new byte[BufferSizes.ExpectedResponseSize];
+        await _socket.ReceiveAsync(buffer, token);
+
+        var status = TcpMessageStreamHelpers.GetResponseStatus(buffer);
+
+        if (status != 0)
+        {
+            throw new InvalidResponseException($"Invalid response status code: {status}");
+        }
     }
-    public Task LogoutUser(CancellationToken token = default)
+    public async Task LogoutUser(CancellationToken token = default)
     {
-        throw new NotImplementedException();
+        var message = Array.Empty<byte>();
+        var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
+        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.LOGOUT_USER_CODE);
+        
+        await _socket.SendAsync(payload, token);
+
+        //this returns status code: 8 for unknown reason therefore Im disabling this code
+        //till the reason is found
+        /*
+        var buffer = new byte[BufferSizes.ExpectedResponseSize];
+        await _socket.ReceiveAsync(buffer, token);
+
+        var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
+
+        if (response.Status != 0)
+        {
+            throw new InvalidResponseException($"Invalid response status code: {response.Status}");
+        }
+        */
     }
 }

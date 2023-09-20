@@ -70,35 +70,14 @@ await bus.CreateUser(new CreateUserRequest
     }
 
 });
-await bus.UpdatePermissions(new UpdateUserPermissionsRequest
-{
-    UserId = Identifier.Numeric(2),
-    Permissions = new Permissions
-    {
-        Global = new GlobalPermissions
-        {
-            ManageServers = false,
-            ReadServers = false,
-            ManageUsers = false,
-            ReadUsers = false,
-            ManageStreams = false,
-            ManageTopics = false,
-            PollMessages = false,
-            SendMessages = false,
-            ReadStreams = false,
-            ReadTopics = false
-        },
-        Streams = streamPermission
-    }
-});
 */
-await bus.ChangePassword(new ChangePasswordRequest
+await bus.LoginUser(new LoginUserRequest
 {
-    CurrentPassword = "ahmed",
-    NewPassword = "allah",
-    UserId = Identifier.Numeric(2)
+    Password = "allah", Username = "abdul"
 });
-var user = await bus.GetUser(Identifier.Numeric(2));
+await Task.Delay(2000);
+await bus.LogoutUser();
+var user = await bus.GetUser(Identifier.Numeric(8));
 Console.WriteLine("Using protocol : {0}", protocol.ToString());
 var streamIdVal = 1;
 var topicIdVal = 1;
