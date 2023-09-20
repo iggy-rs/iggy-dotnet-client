@@ -30,10 +30,50 @@ internal static class TcpContracts
         WriteBytesFromIdentifierToSpan(userId, bytes);
         return bytes.ToArray();
     }
+    internal static byte[] ChangePassword(ChangePasswordRequest request)
+    {
+        var length = request.UserId.Length + 2 + request.CurrentPassword.Length + request.NewPassword.Length + 8;
+        Span<byte> bytes = stackalloc byte[length];
+        
+        WriteBytesFromIdentifierToSpan(request.UserId, bytes);
+        int position = request.UserId.Length + 2;
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], request.CurrentPassword.Length);
+        position += 4;
+        Encoding.UTF8.GetBytes(request.CurrentPassword, bytes[position..(position + request.CurrentPassword.Length)]);
+        position += request.CurrentPassword.Length;
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], request.NewPassword.Length);
+        position += 4;
+        Encoding.UTF8.GetBytes(request.NewPassword, bytes[position..(position + request.NewPassword.Length)]);
+        position += request.NewPassword.Length;
+        return bytes.ToArray();
+    }
+    internal static byte[] UpdatePermissions(UpdateUserPermissionsRequest request)
+    {
+        var length = request.UserId.Length + 2 + 
+                     (request.Permissions is not null ? 1 + 4 + CalculatePermissionsSize(request.Permissions) : 0); 
+        Span<byte> bytes = stackalloc byte[length];
+        WriteBytesFromIdentifierToSpan(request.UserId, bytes);
+        int position = request.UserId.Length + 2;
+        if (request.Permissions is not null)
+        {
+            bytes[position++] = 1;
+            var permissions = GetBytesFromPermissions(request.Permissions);
+            BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], 
+                CalculatePermissionsSize(request.Permissions));
+            position += 4;
+            permissions.CopyTo(bytes[position..(position + permissions.Length)]);
+            position += permissions.Length;
+        }
+        else
+        {
+            bytes[position++] = 0;
+        }
+        return bytes.ToArray();
+    }
     internal static byte[] UpdateUser(UpdateUserRequest request)
     {
         var length = request.UserId.Length + 2 + (request.Username?.Length ?? 0)
-                     + (request.UserStatus is not null ? 2 : 1) + 1 + 4;
+                     + (request.UserStatus is not null ? 2 : 1) + 1 + 1;
         Span<byte> bytes = stackalloc byte[length];
         
         WriteBytesFromIdentifierToSpan(request.UserId, bytes);
@@ -42,11 +82,11 @@ internal static class TcpContracts
         {
             bytes[position] = 1;
             position += 1;
-            BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], 
-                request.Username.Length);
+            bytes[position] = (byte)request.Username.Length;
+            position += 1;
             Encoding.UTF8.GetBytes(request.Username, 
-                bytes[(position + 4)..(position + 4 + request.Username.Length)]);
-            position += 4 + request.Username.Length;
+                bytes[(position)..(position + request.Username.Length)]);
+            position += request.Username.Length;
         }
         else
         {
@@ -73,18 +113,18 @@ internal static class TcpContracts
     internal static byte[] CreateUser(CreateUserRequest request)
     {
         int capacity = 4 + request.Username.Length + request.Password.Length 
-            + (request.Permissions is not null ? 1 + 4 + CalculatePermissionsSize(request.Permissions) : 0); // +1 for status byte
+            + (request.Permissions is not null ? 1 + 4 + CalculatePermissionsSize(request.Permissions) : 0); 
 
         Span<byte> bytes = stackalloc byte[capacity];
-        int index = 0;
+        int position = 0;
 
-        bytes[index++] = (byte)request.Username.Length;
-        index += Encoding.UTF8.GetBytes(request.Username, bytes[index..(index + request.Username.Length)]);
+        bytes[position++] = (byte)request.Username.Length;
+        position += Encoding.UTF8.GetBytes(request.Username, bytes[position..(position + request.Username.Length)]);
 
-        bytes[index++] = (byte)request.Password.Length;
-        index += Encoding.UTF8.GetBytes(request.Password, bytes[index..(index + request.Password.Length)]);
+        bytes[position++] = (byte)request.Password.Length;
+        position += Encoding.UTF8.GetBytes(request.Password, bytes[position..(position + request.Password.Length)]);
 
-        bytes[index++] = request.Status switch
+        bytes[position++] = request.Status switch
         {
             UserStatus.Active => (byte)1,
             UserStatus.Inactive => (byte)2,
@@ -93,16 +133,16 @@ internal static class TcpContracts
 
         if (request.Permissions is not null)
         {
-            bytes[index++] = 1;
+            bytes[position++] = 1;
             var permissions = GetBytesFromPermissions(request.Permissions);
-            BinaryPrimitives.WriteInt32LittleEndian(bytes[index..(index + 4)], CalculatePermissionsSize(request.Permissions));
-            index += 4;
-            permissions.CopyTo(bytes[index..(index + permissions.Length)]);
-            index += permissions.Length;
+            BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], CalculatePermissionsSize(request.Permissions));
+            position += 4;
+            permissions.CopyTo(bytes[position..(position + permissions.Length)]);
+            position += permissions.Length;
         }
         else
         {
-            bytes[index++] = 0;
+            bytes[position++] = 0;
         }
 
         return bytes.ToArray();

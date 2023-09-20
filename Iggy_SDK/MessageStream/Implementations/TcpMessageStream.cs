@@ -928,13 +928,42 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
             throw new InvalidResponseException($"Invalid response status code: {status}");
         }
     }
-    public Task UpdatePermissions(UpdateUserPermissionsRequest request, CancellationToken token = default)
+    public async Task UpdatePermissions(UpdateUserPermissionsRequest request, CancellationToken token = default)
     {
-        throw new NotImplementedException();
+        var message = TcpContracts.UpdatePermissions(request);
+        var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
+        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.UPDATE_PERMISSIONS_CODE);
+        
+        await _socket.SendAsync(payload, token);
+
+        var buffer = new byte[BufferSizes.ExpectedResponseSize];
+        await _socket.ReceiveAsync(buffer, token);
+
+        var status = TcpMessageStreamHelpers.GetResponseStatus(buffer);
+
+        if (status != 0)
+        {
+            throw new InvalidResponseException($"Invalid response status code: {status}");
+        }
+        
     }
-    public Task ChangePassword(ChangePasswordRequest request, CancellationToken token = default)
+    public async Task ChangePassword(ChangePasswordRequest request, CancellationToken token = default)
     {
-        throw new NotImplementedException();
+        var message = TcpContracts.ChangePassword(request);
+        var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
+        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.CHANGE_PASSWORD_CODE);
+        
+        await _socket.SendAsync(payload, token);
+
+        var buffer = new byte[BufferSizes.ExpectedResponseSize];
+        await _socket.ReceiveAsync(buffer, token);
+
+        var status = TcpMessageStreamHelpers.GetResponseStatus(buffer);
+
+        if (status != 0)
+        {
+            throw new InvalidResponseException($"Invalid response status code: {status}");
+        }
     }
     public Task LoginUser(LoginUserRequest request, CancellationToken token = default)
     {

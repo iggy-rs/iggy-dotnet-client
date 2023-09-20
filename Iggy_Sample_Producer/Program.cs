@@ -48,8 +48,8 @@ streamPermission.Add(
     });
 await bus.CreateUser(new CreateUserRequest
 {
-    Username = "user3",
-    Password = "okon",
+    Username = "abdul",
+    Password = "ahmed",
     Status = UserStatus.Active,
     Permissions = new Permissions
     {
@@ -70,13 +70,35 @@ await bus.CreateUser(new CreateUserRequest
     }
 
 });
-*/
-await bus.UpdateUser(new UpdateUserRequest
+await bus.UpdatePermissions(new UpdateUserPermissionsRequest
 {
-    UserId = Identifier.Numeric(7), Username = "user4", UserStatus = UserStatus.Active
+    UserId = Identifier.Numeric(2),
+    Permissions = new Permissions
+    {
+        Global = new GlobalPermissions
+        {
+            ManageServers = false,
+            ReadServers = false,
+            ManageUsers = false,
+            ReadUsers = false,
+            ManageStreams = false,
+            ManageTopics = false,
+            PollMessages = false,
+            SendMessages = false,
+            ReadStreams = false,
+            ReadTopics = false
+        },
+        Streams = streamPermission
+    }
 });
-var user = await bus.GetUser(Identifier.Numeric(7));
-
+*/
+await bus.ChangePassword(new ChangePasswordRequest
+{
+    CurrentPassword = "ahmed",
+    NewPassword = "allah",
+    UserId = Identifier.Numeric(2)
+});
+var user = await bus.GetUser(Identifier.Numeric(2));
 Console.WriteLine("Using protocol : {0}", protocol.ToString());
 var streamIdVal = 1;
 var topicIdVal = 1;
