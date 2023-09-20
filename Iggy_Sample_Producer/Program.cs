@@ -7,7 +7,6 @@ using Iggy_SDK.Headers;
 using Iggy_SDK.Kinds;
 using Iggy_SDK.Messages;
 using Iggy_SDK.MessageStream;
-using Microsoft.Extensions.Logging;
 using Shared;
 using System.Buffers.Binary;
 using System.Security.Cryptography;

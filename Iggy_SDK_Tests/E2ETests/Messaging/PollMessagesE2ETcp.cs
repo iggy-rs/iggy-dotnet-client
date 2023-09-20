@@ -19,8 +19,9 @@ public sealed class PollMessagesE2ETcp : IClassFixture<IggyTcpPollMessagesFixtur
     [Fact, TestPriority(1)]
     public async Task PollMessagesTMessage_WithNoHeaders_Should_PollMessages_Successfully()
     {
-        _ = Task.Run(async () =>
+        _ = Task.Run( async () =>
         {
+
             int i = 0;
             await foreach (var msgResponse in _fixture.sut.PollMessagesAsync(new PollMessagesRequest
                            {

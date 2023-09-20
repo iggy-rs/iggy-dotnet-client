@@ -42,6 +42,10 @@ internal class HttpMessageStreamBuilder
             _messageSenderDispatcher =
                 new MessageSenderDispatcher(_options, _channel, _messageInvoker, _loggerFactory);
         }
+        else
+        {
+            _messageInvoker =  new HttpMessageInvoker(_client);
+        }
         return this;
     }
     internal HttpMessageStream Build()
@@ -49,8 +53,8 @@ internal class HttpMessageStreamBuilder
         _messageSenderDispatcher?.Start();
         return _options.Enabled switch
         {
-            true => new HttpMessageStream(_client, _channel, _loggerFactory, _messageInvoker),
-            false => new HttpMessageStream(_client, _channel, _loggerFactory)
+            true => new HttpMessageStream(_client, _channel, _loggerFactory),
+            false => new HttpMessageStream(_client, _channel, _loggerFactory, _messageInvoker)
         };
     }
     

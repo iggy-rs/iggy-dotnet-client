@@ -39,8 +39,7 @@ public sealed class MultipleConsumersPollingSteps
                 _partitionId, messages);
 
         await _messageStream.SendMessagesAsync(messageConsumersSendRequest);
-        //waiting for the message dispatcher to batch the messages and send them to server
-        await Task.Delay(1500);
+        Console.WriteLine();
     }
 
     [When(@"Consumers polls messages")]

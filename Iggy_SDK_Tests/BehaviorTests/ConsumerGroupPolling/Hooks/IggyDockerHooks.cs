@@ -45,6 +45,7 @@ public sealed class IggyDockerHooks
             options.ReceiveBufferSize = 10000;
             options.IntervalBatchingConfig = x =>
             {
+                x.Enabled = false;
                 x.MaxMessagesPerBatch = 1000;
                 x.Interval = TimeSpan.FromMilliseconds(50);
             };
@@ -60,6 +61,7 @@ public sealed class IggyDockerHooks
                 options.ReceiveBufferSize = 10000;
                 options.IntervalBatchingConfig = x =>
                 {
+                    x.Enabled = false;
                     x.MaxMessagesPerBatch = 1000;
                     x.Interval = TimeSpan.FromMilliseconds(50);
                     x.MaxMessagesPerBatch = 8912;
@@ -92,6 +94,7 @@ public sealed class IggyDockerHooks
             options.ReceiveBufferSize = 10000;
             options.IntervalBatchingConfig = x =>
             {
+                x.Enabled = false;
                 x.MaxMessagesPerBatch = 1000;
                 x.Interval = TimeSpan.FromMilliseconds(100);
                 x.MaxMessagesPerBatch = 8912;

@@ -48,6 +48,7 @@ public sealed class IggyTcpPollMessagesFixture : IAsyncLifetime
             options.Protocol = Protocol.Tcp;
             options.IntervalBatchingConfig = x =>
             {
+                x.Enabled = false;
                 x.Interval = TimeSpan.FromMilliseconds(100);
                 x.MaxMessagesPerBatch = 1000;
                 x.MaxRequests = 8912;
@@ -65,7 +66,7 @@ public sealed class IggyTcpPollMessagesFixture : IAsyncLifetime
             Partitioning.PartitionId(PartitionId), MessageFactory.GenerateDummyMessages(MessageCount), MessageFactory.Serializer, 
             headers: MessageFactory.GenerateMessageHeaders(HeadersCount));
 
-        await Task.Delay(2500);
+        //await Task.Delay(2500);
     }
 
     public async Task DisposeAsync()

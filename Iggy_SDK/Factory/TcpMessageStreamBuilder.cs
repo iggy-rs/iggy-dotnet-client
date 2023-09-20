@@ -43,6 +43,10 @@ internal class TcpMessageStreamBuilder
             _messageSenderDispatcher =
                 new MessageSenderDispatcher(_options, _channel, _messageInvoker, _loggerFactory);
         }
+        else
+        {
+            _messageInvoker = new TcpMessageInvoker(_socket);
+        }
         return this;
     }
     internal TcpMessageStream Build()
@@ -50,8 +54,8 @@ internal class TcpMessageStreamBuilder
         _messageSenderDispatcher?.Start();
         return _options.Enabled switch
         {
-            true => new TcpMessageStream(_socket, _channel, _loggerFactory, _messageInvoker),
-            false => new TcpMessageStream(_socket, _channel, _loggerFactory)
+            true => new TcpMessageStream(_socket, _channel, _loggerFactory),
+            false => new TcpMessageStream(_socket, _channel, _loggerFactory, _messageInvoker)
         };
     }
     
