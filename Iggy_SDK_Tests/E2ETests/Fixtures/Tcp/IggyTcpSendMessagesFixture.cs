@@ -47,12 +47,6 @@ public sealed class IggyTcpSendMessagesFixture : IAsyncLifetime
 
         var channel = Channel.CreateUnbounded<MessageSendRequest>();
 
-        var sendMessagesOptions = new IntervalBatchingSettings
-        {
-            Enabled = true,
-            Interval = TimeSpan.FromMilliseconds(1),
-            MaxMessagesPerBatch = 1000
-        };
         var loggerFactory = NullLoggerFactory.Instance;
         sut = new TcpMessageInvoker(socket);
         var messageStream = new TcpMessageStream(socket, channel, loggerFactory, sut);

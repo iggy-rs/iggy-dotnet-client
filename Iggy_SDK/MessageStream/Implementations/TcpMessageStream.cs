@@ -271,6 +271,7 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
                 request.Messages[i] = request.Messages[i] with { Payload = encryptor(request.Messages[i].Payload) };
             }
         }
+        
         if (_messageInvoker is not null)
         {
             try
@@ -285,68 +286,60 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
             }
             return;
         }
-
         await _channel!.Writer.WriteAsync(request, token);
     }
-    public async Task SendMessagesAsync<TMessage>(Identifier streamId, Identifier topicId, Partitioning partitioning,
-        IList<TMessage> messages, Func<TMessage, byte[]> serializer,
+    public async Task SendMessagesAsync<TMessage>(MessageSendRequest<TMessage> request,
+         Func<TMessage, byte[]> serializer,
         Func<byte[], byte[]>? encryptor = null, Dictionary<HeaderKey, HeaderValue>? headers = null,
         CancellationToken token = default)
     {
+        var messages = request.Messages;
         if (messages.Count == 0)
         {
             return;
         }
 
         //TODO - explore making fields of Message class mutable, so there is no need to create em from scratch
-        var messagesPool = MemoryPool<Message>.Shared.Rent(messages.Count);
-        var messagesBuffer = messagesPool.Memory;
-        try
+        var messagesBuffer = new Message[messages.Count];
+        for (var i = 0; i < messages.Count || token.IsCancellationRequested; i++)
         {
-            for (var i = 0; i < messages.Count || token.IsCancellationRequested; i++)
+            messagesBuffer[i] = new Message
             {
-                messagesBuffer.Span[i] = new Message
-                {
-                    Payload = encryptor is not null ? encryptor(serializer(messages[i])) : serializer(messages[i]),
-                    Headers = headers,
-                    Id = Guid.NewGuid()
-                };
-            }
-
-            var request = new MessageSendRequest
-            {
-                StreamId = streamId,
-                TopicId = topicId,
-                Partitioning = partitioning,
-                Messages = messagesBuffer.Span[..messages.Count].ToArray()
+                Payload = encryptor is not null ? encryptor(serializer(messages[i])) : serializer(messages[i]),
+                Headers = headers,
+                Id = Guid.NewGuid()
             };
-            
-            if (_messageInvoker is not null)
-            {
-                try
-                {
-                    await _messageInvoker.SendMessagesAsync(request, token);
-                }
-                catch
-                {
-                    var partId = BinaryPrimitives.ReadInt32LittleEndian(request.Partitioning.Value);
-                    _logger.LogError("Error encountered while sending messages - Stream ID:{streamId}, Topic ID:{topicId}, Partition ID: {partitionId}",
-                        request.StreamId, request.TopicId, partId); 
-                }
-                return;
-            }
-            await _channel!.Writer.WriteAsync(request, token);
         }
-        finally
+        
+        var sendRequest = new MessageSendRequest
         {
-            messagesPool.Dispose();
+            StreamId = request.StreamId,
+            TopicId = request.TopicId,
+            Partitioning = request.Partitioning,
+            Messages = messagesBuffer
+        };
+
+        if (_messageInvoker is not null)
+        {
+            try
+            {
+                await _messageInvoker.SendMessagesAsync(sendRequest, token);
+            }
+            catch
+            {
+                var partId = BinaryPrimitives.ReadInt32LittleEndian(sendRequest.Partitioning.Value);
+                _logger.LogError("Error encountered while sending messages - Stream ID:{streamId}, Topic ID:{topicId}, Partition ID: {partitionId}",
+                    request.StreamId, request.TopicId, partId);
+            }
+            return;
         }
+        await _channel!.Writer.WriteAsync(sendRequest, token);
     }
     
     public async Task<PolledMessages<TMessage>> FetchMessagesAsync<TMessage>(MessageFetchRequest request,
         Func<byte[], TMessage> serializer, Func<byte[], byte[]>? decryptor = null, CancellationToken token = default)
     {
-        await SendMessagesPayload(request, token);
+        await SendFetchMessagesRequestPayload(request, token);
         var buffer = MemoryPool<byte>.Shared.Rent(BufferSizes.ExpectedResponseSize);
         try
         {
@@ -471,7 +464,7 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
     public async Task<PolledMessages> FetchMessagesAsync(MessageFetchRequest request,
         Func<byte[], byte[]>? decryptor = null, CancellationToken token = default)
     {
-        await SendMessagesPayload(request, token);
+        await SendFetchMessagesRequestPayload(request, token);
         var buffer = ArrayPool<byte>.Shared.Rent(BufferSizes.ExpectedResponseSize);
         try
         {
@@ -507,7 +500,7 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
             ArrayPool<byte>.Shared.Return(buffer);
         }
     }
-    private async Task SendMessagesPayload(MessageFetchRequest request, CancellationToken token)
+    private async Task SendFetchMessagesRequestPayload(MessageFetchRequest request, CancellationToken token)
     {
         var messageBufferSize = CalculateMessageBufferSize(request);
         var payloadBufferSize = CalculatePayloadBufferSize(messageBufferSize);

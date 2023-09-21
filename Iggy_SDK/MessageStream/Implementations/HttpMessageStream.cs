@@ -172,17 +172,18 @@ public class HttpMessageStream : IIggyClient
         await _channel!.Writer.WriteAsync(request, token);
     }
 
-    public async Task SendMessagesAsync<TMessage>(Identifier streamId, Identifier topicId, Partitioning partitioning,
-        IList<TMessage> messages, Func<TMessage, byte[]> serializer,
+    public async Task SendMessagesAsync<TMessage>(MessageSendRequest<TMessage> request,
+        Func<TMessage, byte[]> serializer,
         Func<byte[], byte[]>? encryptor = null, Dictionary<HeaderKey, HeaderValue>? headers = null,
         CancellationToken token = default)
     {
+        var messages = request.Messages;
         //TODO - maybe get rid of this closure ?
-        var request = new MessageSendRequest
+        var sendRequest = new MessageSendRequest
         {
-            StreamId = streamId,
-            TopicId = topicId,
-            Partitioning = partitioning,
+            StreamId = request.StreamId,
+            TopicId = request.TopicId,
+            Partitioning = request.Partitioning,
             Messages = messages.Select(message => new Message
             {
                 Id = Guid.NewGuid(),
@@ -195,17 +196,17 @@ public class HttpMessageStream : IIggyClient
         {
             try
             {
-                await _messageInvoker.SendMessagesAsync(request, token);
+                await _messageInvoker.SendMessagesAsync(sendRequest, token);
             }
             catch
             {
-                var partId = BinaryPrimitives.ReadInt32LittleEndian(request.Partitioning.Value);
+                var partId = BinaryPrimitives.ReadInt32LittleEndian(sendRequest.Partitioning.Value);
                 _logger.LogError("Error encountered while sending messages - Stream ID:{streamId}, Topic ID:{topicId}, Partition ID: {partitionId}",
-                    request.StreamId, request.TopicId, partId);
+                    sendRequest.StreamId, sendRequest.TopicId, partId);
             }
             return;
         }
-        await _channel!.Writer.WriteAsync(request, token);
+        await _channel!.Writer.WriteAsync(sendRequest, token);
     }
 
     public async Task<PolledMessages> FetchMessagesAsync(MessageFetchRequest request,

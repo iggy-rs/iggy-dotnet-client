@@ -1,5 +1,6 @@
 using DotNet.Testcontainers.Builders;
 using Iggy_SDK;
+using Iggy_SDK_Tests.Utils.DummyObj;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
@@ -59,13 +60,25 @@ public sealed class IggyTcpPollMessagesFixture : IAsyncLifetime
         await sut.CreateTopicAsync(Identifier.Numeric(StreamRequest.StreamId), TopicRequest);
         await sut.CreateTopicAsync(Identifier.Numeric(StreamRequest.StreamId), HeadersTopicRequest);
 
-        await sut.SendMessagesAsync(Identifier.Numeric(StreamId), Identifier.Numeric(TopicId),
-            Partitioning.PartitionId(PartitionId), MessageFactory.GenerateDummyMessages(MessageCount), MessageFactory.Serializer);
         
-        await sut.SendMessagesAsync(Identifier.Numeric(StreamId), Identifier.Numeric(HeadersTopicId),
-            Partitioning.PartitionId(PartitionId), MessageFactory.GenerateDummyMessages(MessageCount), MessageFactory.Serializer, 
+        await sut.SendMessagesAsync(new MessageSendRequest<DummyMessage>
+        {
+            Messages = MessageFactory.GenerateDummyMessages(MessageCount),
+            Partitioning = Partitioning.PartitionId(PartitionId),
+            StreamId = Identifier.Numeric(StreamId),
+            TopicId = Identifier.Numeric(TopicId),
+        },
+              MessageFactory.Serializer);
+        
+        await sut.SendMessagesAsync(new MessageSendRequest<DummyMessage>
+        {
+            Messages = MessageFactory.GenerateDummyMessages(MessageCount),
+            Partitioning = Partitioning.PartitionId(PartitionId),
+            StreamId = Identifier.Numeric(StreamId),
+            TopicId = Identifier.Numeric(TopicId),
+        },
+             MessageFactory.Serializer, 
             headers: MessageFactory.GenerateMessageHeaders(HeadersCount));
-
         //await Task.Delay(2500);
     }
 

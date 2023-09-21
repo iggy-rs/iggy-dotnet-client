@@ -12,11 +12,19 @@ using System.Text.Json;
 var jsonOptions = new JsonSerializerOptions();
 jsonOptions.PropertyNamingPolicy = new ToSnakeCaseNamingPolicy();
 jsonOptions.WriteIndented = true;
-var protocol = Protocol.Http;
+var protocol = Protocol.Tcp;
 var bus = MessageStreamFactory.CreateMessageStream(options =>
 {
-    options.BaseAdress = "http://127.0.0.1:3000";
+    options.BaseAdress = "127.0.0.1:8090";
     options.Protocol = protocol;
+
+    options.IntervalBatchingConfig = x =>
+    {
+        x.Enabled = true;
+        x.Interval = TimeSpan.FromMilliseconds(100);
+        x.MaxMessagesPerBatch = 1000;
+        x.MaxRequests = 4096;
+    };
 });
 
 Console.WriteLine("Using protocol : {0}", protocol.ToString());

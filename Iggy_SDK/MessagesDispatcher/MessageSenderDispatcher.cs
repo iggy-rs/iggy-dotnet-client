@@ -16,11 +16,11 @@ internal sealed class MessageSenderDispatcher
     private Task? _timerTask;
     private readonly CancellationTokenSource _cts = new();
     private readonly IMessageInvoker _messageInvoker;
-    private readonly Channel<MessageSendRequest>? _channel;
+    private readonly Channel<MessageSendRequest> _channel;
     private readonly int _maxMessages;
     private readonly int _maxRequestsInPoll;
 
-    internal MessageSenderDispatcher(IntervalBatchingSettings sendMessagesOptions, Channel<MessageSendRequest>? channel,
+    internal MessageSenderDispatcher(IntervalBatchingSettings sendMessagesOptions, Channel<MessageSendRequest> channel,
         IMessageInvoker messageInvoker, ILoggerFactory loggerFactory)
     {
         _timer = new (sendMessagesOptions.Interval);
@@ -34,15 +34,15 @@ internal sealed class MessageSenderDispatcher
     {
         _timerTask = SendMessages();
     }
-    private async Task SendMessages()
+    internal async Task SendMessages()
     {
-        var messagesSendRequests = MemoryPool<MessageSendRequest>.Shared.Rent(_maxRequestsInPoll);
+        var messagesSendRequests = new MessageSendRequest[_maxRequestsInPoll];
         while (await _timer.WaitForNextTickAsync(_cts.Token))
         {
             int idx = 0;
-            while (_channel!.Reader.TryRead(out var msg))
+            while (_channel.Reader.TryRead(out var msg))
             {
-                messagesSendRequests.Memory.Span[idx++] = msg;
+                messagesSendRequests[idx++] = msg;
             }
 
             if (idx == 0)
@@ -50,27 +50,27 @@ internal sealed class MessageSenderDispatcher
                 continue;
             }
 
-            var canBatchMessages = CanBatchMessages(messagesSendRequests.Memory.Span[..idx]);
+            var canBatchMessages = CanBatchMessages(messagesSendRequests.AsSpan()[..idx]);
             if (!canBatchMessages)
             {
                 for (int i = 0; i < idx; i++)
                 {
                     try
                     {
-                        await _messageInvoker.SendMessagesAsync(messagesSendRequests.Memory.Span[i], token: _cts.Token);
+                        await _messageInvoker.SendMessagesAsync(messagesSendRequests[i], token: _cts.Token);
                     }
                     catch
                     {
-                        var partId = BinaryPrimitives.ReadInt32LittleEndian(messagesSendRequests.Memory.Span[i].Partitioning.Value);
+                        var partId = BinaryPrimitives.ReadInt32LittleEndian(messagesSendRequests[i].Partitioning.Value);
                        _logger.LogError("Error encountered while sending messages - Stream ID:{streamId}, Topic ID:{topicId}, Partition ID: {partitionId}",
-                           messagesSendRequests.Memory.Span[i].StreamId, messagesSendRequests.Memory.Span[i].TopicId, partId); 
+                           messagesSendRequests[i].StreamId, messagesSendRequests[i].TopicId, partId); 
                     }
                 }
 
                 continue;
             }
 
-            var messagesBatches = BatchMessages(messagesSendRequests.Memory.Span[..idx]);
+            var messagesBatches = BatchMessages(messagesSendRequests.AsSpan()[..idx]);
             foreach (var messages in messagesBatches)
             {
                 try
@@ -152,8 +152,9 @@ internal sealed class MessageSenderDispatcher
                     TopicId = requests[0].TopicId,
                     Messages = messages[..idx].ToArray()
                 };
-                messagesBatchesBuffer.Memory.Span[batchCounter] = messageSendRequest;
+                messagesBatchesBuffer.Memory.Span[batchCounter++] = messageSendRequest;
             }
+            return messagesBatchesBuffer.Memory.Span[..batchCounter].ToArray();
         }
         finally
         {
@@ -161,7 +162,6 @@ internal sealed class MessageSenderDispatcher
             messagesBatchesBuffer.Dispose();
         }
 
-        return messagesBatchesBuffer.Memory.Span[..batchCounter].ToArray();
     }
     internal async Task StopAsync()
     {

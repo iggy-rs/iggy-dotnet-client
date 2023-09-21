@@ -12,65 +12,19 @@ using System.Buffers.Binary;
 using System.Security.Cryptography;
 using System.Text;
 
-var protocol = Protocol.Http;
+var protocol = Protocol.Tcp;
 var bus = MessageStreamFactory.CreateMessageStream(options =>
 {
-    options.BaseAdress = "http://localhost:3000";
+    options.BaseAdress = "127.0.0.1:8090";
     options.Protocol = protocol;
     options.IntervalBatchingConfig = x =>
     {
+        x.Enabled = true;
+        x.Interval = TimeSpan.FromMilliseconds(101);
         x.MaxMessagesPerBatch = 1000;
-        x.Interval = TimeSpan.FromMilliseconds(100);
+        x.MaxRequests = 4096;
     };
 });
-var topicsPermissions = new Dictionary<int, TopicPermissions>();
-topicsPermissions.Add(
-    1, new TopicPermissions
-    {
-        ManageTopic = true, 
-        PollMessages = true, 
-        ReadTopic = false, 
-        SendMessages = false
-    });
-var streamPermission = new Dictionary<int, StreamPermissions>();
-streamPermission.Add(
-    1, new StreamPermissions
-    {
-        ManageStream = true,
-        ManageTopics = false,
-        PollMessages = true,
-        ReadStream = false,
-        ReadTopics = true,
-        SendMessages = true,
-        Topics = topicsPermissions
-    });
-/*
-await bus.CreateUser(new CreateUserRequest
-{
-    Username = "user_new",
-    Password = "newuser",
-    Status = UserStatus.Active,
-    Permissions = new Permissions
-    {
-        Global = new GlobalPermissions
-        {
-            ManageServers = true,
-            ReadServers = true,
-            ManageUsers = true,
-            ReadUsers = true,
-            ManageStreams = false,
-            ManageTopics = false,
-            PollMessages = false,
-            SendMessages = false,
-            ReadStreams = true,
-            ReadTopics = true
-        },
-        Streams = streamPermission
-    }
-
-});
-*/
-await bus.LogoutUser();
 Console.WriteLine("Using protocol : {0}", protocol.ToString());
 var streamIdVal = 1;
 var topicIdVal = 1;
@@ -185,7 +139,13 @@ async Task ProduceMessages(IIggyClient bus, StreamResponse? stream, TopicRespons
 
         try
         {
-            await bus.SendMessagesAsync<Envelope>(streamId, topicId, Partitioning.PartitionId(3), messages,
+            await bus.SendMessagesAsync(new MessageSendRequest<Envelope>
+            {
+                StreamId = streamId,
+                TopicId = topicId,
+                Partitioning = Partitioning.PartitionId(3),
+                Messages = messages
+            },
                 serializer,
                 encryptor, headers);
         }
