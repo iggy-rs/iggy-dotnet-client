@@ -12,10 +12,10 @@ using System.Buffers.Binary;
 using System.Security.Cryptography;
 using System.Text;
 
-var protocol = Protocol.Tcp;
+var protocol = Protocol.Http;
 var bus = MessageStreamFactory.CreateMessageStream(options =>
 {
-    options.BaseAdress = "127.0.0.1:8090";
+    options.BaseAdress = "http://localhost:3000";
     options.Protocol = protocol;
     options.IntervalBatchingConfig = x =>
     {
@@ -23,7 +23,6 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
         x.Interval = TimeSpan.FromMilliseconds(100);
     };
 });
-/*
 var topicsPermissions = new Dictionary<int, TopicPermissions>();
 topicsPermissions.Add(
     1, new TopicPermissions
@@ -45,10 +44,11 @@ streamPermission.Add(
         SendMessages = true,
         Topics = topicsPermissions
     });
+/*
 await bus.CreateUser(new CreateUserRequest
 {
-    Username = "abdul",
-    Password = "ahmed",
+    Username = "user_new",
+    Password = "newuser",
     Status = UserStatus.Active,
     Permissions = new Permissions
     {
@@ -70,8 +70,7 @@ await bus.CreateUser(new CreateUserRequest
 
 });
 */
-await bus.DeleteUser(Identifier.Numeric(4));
-var user = await bus.GetUser(Identifier.Numeric(8));
+await bus.LogoutUser();
 Console.WriteLine("Using protocol : {0}", protocol.ToString());
 var streamIdVal = 1;
 var topicIdVal = 1;

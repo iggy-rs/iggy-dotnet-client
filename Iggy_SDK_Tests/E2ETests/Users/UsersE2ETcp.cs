@@ -73,13 +73,13 @@ public sealed class UsersE2ETcp : IClassFixture<IggyTcpUsersFixture>
         user!.Permissions!.Global.Should().NotBeNull();
         user.Permissions.Should().BeEquivalentTo(_fixture.UpdatePermissionsRequest);
     }
-    [Fact(Skip = "logout doesn't work yet"), TestPriority(7)]
+    [Fact(Skip = "auth doesnt work"), TestPriority(7)]
     public async Task LoginUser_Should_LoginUser_Successfully()
     {
         await _fixture.sut.Invoking(async x =>
             await x.LoginUser(_fixture.LoginRequest)).Should().NotThrowAsync();
     }
-    [Fact(Skip = "logout doesn't work yet"), TestPriority(8)]
+    [Fact(Skip = "auth doesnt work"), TestPriority(8)]
     public async Task LogoutUser_Should_LogoutUser_Successfully()
     {
         await _fixture.sut.Invoking(async x =>

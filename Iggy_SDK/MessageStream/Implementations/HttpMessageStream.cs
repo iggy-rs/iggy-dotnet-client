@@ -486,27 +486,62 @@ public class HttpMessageStream : IIggyClient
     }
     public async Task<IReadOnlyList<UserResponse>> GetUsers(CancellationToken token = default)
     {
-        throw new NotImplementedException();
+        var response = await _httpClient.GetAsync("/users", token);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<IReadOnlyList<UserResponse>>(JsonConverterFactory.SnakeCaseOptions, token)
+                ?? EmptyList<UserResponse>.Instance;
+        }
+        await HandleResponseAsync(response);
+        return EmptyList<UserResponse>.Instance;
     }
-    public Task CreateUser(CreateUserRequest request, CancellationToken token = default)
+    public async Task CreateUser(CreateUserRequest request, CancellationToken token = default)
     {
-        throw new NotImplementedException();
+        var json = JsonSerializer.Serialize(request, JsonConverterFactory.SnakeCaseOptions);
+        var content = new StringContent(json, Encoding.UTF8, "application/json"); 
+        var response = await _httpClient.PostAsync("/users", content, token);
+        if (!response.IsSuccessStatusCode)
+        {
+            await HandleResponseAsync(response);
+        }
     }
-    public Task DeleteUser(Identifier userId, CancellationToken token = default)
+    public async Task DeleteUser(Identifier userId, CancellationToken token = default)
     {
-        throw new NotImplementedException();
+        var response = await _httpClient.DeleteAsync($"/users/{userId}", token);
+        if (!response.IsSuccessStatusCode)
+        {
+            await HandleResponseAsync(response);
+        }
     }
-    public Task UpdateUser(UpdateUserRequest request, CancellationToken token = default)
+    public async Task UpdateUser(UpdateUserRequest request, CancellationToken token = default)
     {
-        throw new NotImplementedException();
+        var json = JsonSerializer.Serialize(request, JsonConverterFactory.SnakeCaseOptions);
+        var content = new StringContent(json, Encoding.UTF8, "application/json"); 
+        var response = await _httpClient.PutAsync($"/users/{request.UserId}", content, token);
+        if (!response.IsSuccessStatusCode)
+        {
+            await HandleResponseAsync(response);
+        }
     }
-    public Task UpdatePermissions(UpdateUserPermissionsRequest request, CancellationToken token = default)
+    public async Task UpdatePermissions(UpdateUserPermissionsRequest request, CancellationToken token = default)
     {
-        throw new NotImplementedException();
+        var json = JsonSerializer.Serialize(request, JsonConverterFactory.SnakeCaseOptions);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var response = await _httpClient.PutAsync($"/users/{request.UserId}/permissions", content, token);
+        if (!response.IsSuccessStatusCode)
+        {
+            await HandleResponseAsync(response);
+        }
     }
-    public Task ChangePassword(ChangePasswordRequest request, CancellationToken token = default)
+    public async Task ChangePassword(ChangePasswordRequest request, CancellationToken token = default)
     {
-        throw new NotImplementedException();
+        var json = JsonSerializer.Serialize(request, JsonConverterFactory.SnakeCaseOptions);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var response = await _httpClient.PutAsync($"/users/{request.UserId}/password", content, token);
+        if (!response.IsSuccessStatusCode)
+        {
+            await HandleResponseAsync(response);
+        }
     }
     public async Task LoginUser(LoginUserRequest request, CancellationToken token = default)
     {
@@ -519,8 +554,16 @@ public class HttpMessageStream : IIggyClient
             await HandleResponseAsync(response);
         }
     }
-    public Task LogoutUser(CancellationToken token = default)
+    public async Task LogoutUser(CancellationToken token = default)
     {
-        throw new NotImplementedException();
+        var json = JsonSerializer.Serialize(new
+        {
+        }, JsonConverterFactory.SnakeCaseOptions);
+        var content = new StringContent(json, Encoding.UTF8, "application/json"); 
+        var response = await _httpClient.PostAsync("users/logout", content, token);
+        if (!response.IsSuccessStatusCode)
+        {
+            await HandleResponseAsync(response);
+        }
     }
 }
