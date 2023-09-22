@@ -247,7 +247,7 @@ public class HttpMessageStream : IIggyClient
         [EnumeratorCancellation] CancellationToken token = default)
     {
         var channel = Channel.CreateUnbounded<MessageResponse<TMessage>>();
-        var autoCommit = request.StoreOffsetStragety switch
+        var autoCommit = request.StoreOffsetStrategy switch
         {
             StoreOffset.Never => false,
             StoreOffset.WhenMessagesAreReceived => true,
@@ -271,7 +271,7 @@ public class HttpMessageStream : IIggyClient
             yield return messageResponse;
             
             var currentOffset = messageResponse.Offset;
-            if (request.StoreOffsetStragety is StoreOffset.AfterProcessingEachMessage)
+            if (request.StoreOffsetStrategy is StoreOffset.AfterProcessingEachMessage)
             {
                 var storeOffsetRequest = new StoreOffsetRequest
                 {

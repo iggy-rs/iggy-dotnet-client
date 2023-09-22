@@ -19,7 +19,7 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
     options.Protocol = protocol;
     options.IntervalBatchingConfig = x =>
     {
-        x.Enabled = true;
+        x.Enabled = false;
         x.Interval = TimeSpan.FromMilliseconds(101);
         x.MaxMessagesPerBatch = 1000;
         x.MaxRequests = 4096;

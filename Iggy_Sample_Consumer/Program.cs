@@ -20,7 +20,7 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
 
     options.IntervalBatchingConfig = x =>
     {
-        x.Enabled = true;
+        x.Enabled = false;
         x.Interval = TimeSpan.FromMilliseconds(100);
         x.MaxMessagesPerBatch = 1000;
         x.MaxRequests = 4096;
@@ -84,7 +84,7 @@ async Task ConsumeMessages()
                        PartitionId = partitionId,
                        PollingStrategy = PollingStrategy.Next(),
                        Interval = TimeSpan.FromMilliseconds(intervalInMs),
-                       StoreOffsetStragety = StoreOffset.AfterProcessingEachMessage,
+                       StoreOffsetStrategy = StoreOffset.AfterProcessingEachMessage,
                    }, deserializer, decryptor))
     {
         HandleMessage(msgResponse);

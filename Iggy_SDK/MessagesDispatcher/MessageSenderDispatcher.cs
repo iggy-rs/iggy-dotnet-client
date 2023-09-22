@@ -17,8 +17,8 @@ internal sealed class MessageSenderDispatcher
     private readonly CancellationTokenSource _cts = new();
     private readonly IMessageInvoker _messageInvoker;
     private readonly Channel<MessageSendRequest> _channel;
-    private readonly int _maxMessages;
-    private readonly int _maxRequestsInPoll;
+    private readonly int _maxMessagesPerBatch;
+    private readonly int _maxRequests;
 
     internal MessageSenderDispatcher(IntervalBatchingSettings sendMessagesOptions, Channel<MessageSendRequest> channel,
         IMessageInvoker messageInvoker, ILoggerFactory loggerFactory)
@@ -26,8 +26,8 @@ internal sealed class MessageSenderDispatcher
         _timer = new (sendMessagesOptions.Interval);
         _logger = loggerFactory.CreateLogger<MessageSenderDispatcher>();
         _messageInvoker = messageInvoker;
-        _maxMessages = sendMessagesOptions.MaxMessagesPerBatch;
-        _maxRequestsInPoll = sendMessagesOptions.MaxRequests;
+        _maxMessagesPerBatch = sendMessagesOptions.MaxMessagesPerBatch;
+        _maxRequests = sendMessagesOptions.MaxRequests;
         _channel = channel;
     }
     internal void Start()
@@ -36,7 +36,7 @@ internal sealed class MessageSenderDispatcher
     }
     internal async Task SendMessages()
     {
-        var messagesSendRequests = new MessageSendRequest[_maxRequestsInPoll];
+        var messagesSendRequests = new MessageSendRequest[_maxRequests];
         while (await _timer.WaitForNextTickAsync(_cts.Token))
         {
             int idx = 0;
@@ -111,10 +111,10 @@ internal sealed class MessageSenderDispatcher
         {
             messagesCount += requests[i].Messages.Count;
         }
-        int batchesCount = (int)Math.Ceiling((decimal)messagesCount / _maxMessages);
+        int batchesCount = (int)Math.Ceiling((decimal)messagesCount / _maxMessagesPerBatch);
 
-        var messagesBuffer = ArrayPool<Message>.Shared.Rent(_maxMessages);
-        var messages = messagesBuffer.AsSpan()[.._maxMessages];
+        var messagesBuffer = ArrayPool<Message>.Shared.Rent(_maxMessagesPerBatch);
+        var messages = messagesBuffer.AsSpan()[.._maxMessagesPerBatch];
         var messagesBatchesBuffer = MemoryPool<MessageSendRequest>.Shared.Rent(batchesCount);
 
         int idx = 0;
@@ -126,7 +126,7 @@ internal sealed class MessageSenderDispatcher
                 foreach (var message in request.Messages)
                 {
                     messages[idx++] = message;
-                    if (idx >= _maxMessages)
+                    if (idx >= _maxMessagesPerBatch)
                     {
                         var messageSendRequest = new MessageSendRequest
                         {

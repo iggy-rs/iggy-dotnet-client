@@ -33,7 +33,7 @@ public sealed class PollMessagesE2ETcp : IClassFixture<IggyTcpPollMessagesFixtur
                                PollingStrategy = PollingStrategy.Next(),
                                StreamId = Identifier.Numeric(_fixture.StreamId),
                                TopicId = Identifier.Numeric(_fixture.TopicId),
-                               StoreOffsetStragety = StoreOffset.WhenMessagesAreReceived
+                               StoreOffsetStrategy = StoreOffset.WhenMessagesAreReceived
                            }, MessageFactory.DeserializeDummyMessage))
             {
                 msgResponse.Headers.Should().BeNull();
@@ -59,7 +59,7 @@ public sealed class PollMessagesE2ETcp : IClassFixture<IggyTcpPollMessagesFixtur
                                PollingStrategy = PollingStrategy.Next(),
                                StreamId = Identifier.Numeric(_fixture.StreamId),
                                TopicId = Identifier.Numeric(_fixture.HeadersTopicId),
-                               StoreOffsetStragety = StoreOffset.WhenMessagesAreReceived
+                               StoreOffsetStrategy = StoreOffset.WhenMessagesAreReceived
                            }, MessageFactory.DeserializeDummyMessage))
             {
                 msgResponse.Headers.Should().NotBeNull();

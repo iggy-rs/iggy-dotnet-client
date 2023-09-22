@@ -274,16 +274,7 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         
         if (_messageInvoker is not null)
         {
-            try
-            {
-                await _messageInvoker.SendMessagesAsync(request, token);
-            }
-            catch
-            {
-                var partId = BinaryPrimitives.ReadInt32LittleEndian(request.Partitioning.Value);
-                _logger.LogError("Error encountered while sending messages - Stream ID:{streamId}, Topic ID:{topicId}, Partition ID: {partitionId}",
-                    request.StreamId, request.TopicId, partId);
-            }
+            await _messageInvoker.SendMessagesAsync(request, token);
             return;
         }
         await _channel!.Writer.WriteAsync(request, token);
@@ -321,16 +312,7 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
 
         if (_messageInvoker is not null)
         {
-            try
-            {
-                await _messageInvoker.SendMessagesAsync(sendRequest, token);
-            }
-            catch
-            {
-                var partId = BinaryPrimitives.ReadInt32LittleEndian(sendRequest.Partitioning.Value);
-                _logger.LogError("Error encountered while sending messages - Stream ID:{streamId}, Topic ID:{topicId}, Partition ID: {partitionId}",
-                    request.StreamId, request.TopicId, partId);
-            }
+            await _messageInvoker.SendMessagesAsync(sendRequest, token);
             return;
         }
         await _channel!.Writer.WriteAsync(sendRequest, token);
@@ -379,7 +361,7 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         [EnumeratorCancellation] CancellationToken token = default)
     {
         var channel = Channel.CreateUnbounded<MessageResponse<TMessage>>();
-        var autoCommit = request.StoreOffsetStragety switch
+        var autoCommit = request.StoreOffsetStrategy switch
         {
             StoreOffset.Never => false,
             StoreOffset.WhenMessagesAreReceived => true,
@@ -403,7 +385,7 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
             yield return messageResponse;
             
             var currentOffset = messageResponse.Offset;
-            if (request.StoreOffsetStragety is StoreOffset.AfterProcessingEachMessage)
+            if (request.StoreOffsetStrategy is StoreOffset.AfterProcessingEachMessage)
             {
                 var storeOffsetRequest = new StoreOffsetRequest
                 {

@@ -1,11 +1,15 @@
 using DotNet.Testcontainers.Builders;
 using Iggy_SDK;
+using Iggy_SDK_Tests.Utils.Messages;
 using Iggy_SDK.Configuration;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.MessagesDispatcher;
 using Iggy_SDK.MessageStream.Implementations;
 using Iggy_SDK_Tests.Utils.Streams;
 using Iggy_SDK_Tests.Utils.Topics;
+using Iggy_SDK.Enums;
+using Iggy_SDK.Factory;
+using Iggy_SDK.MessageStream;
 using System.Net.Sockets;
 using System.Threading.Channels;
 using Microsoft.Extensions.Logging;
@@ -23,7 +27,7 @@ public sealed class IggyTcpSendMessagesFixture : IAsyncLifetime
         //.WithPortBinding(8080, true)
         .Build();
 
-    internal IMessageInvoker sut;
+    public IIggyClient sut;
 
     private static readonly StreamRequest StreamRequest = StreamFactory.CreateStreamRequest();
     private static readonly StreamRequest NonExistingStreamRequest = StreamFactory.CreateStreamRequest();
@@ -40,19 +44,22 @@ public sealed class IggyTcpSendMessagesFixture : IAsyncLifetime
     public async Task InitializeAsync()
     {
         await _container.StartAsync();
-        var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        await socket.ConnectAsync("127.0.0.1", _container.GetMappedPublicPort(8090));
-        socket.SendBufferSize = 10000;
-        socket.ReceiveBufferSize = 10000;
+        sut = MessageStreamFactory.CreateMessageStream(options =>
+        {
+            options.BaseAdress = $"127.0.0.1:{_container.GetMappedPublicPort(8090)}";
+            options.Protocol = Protocol.Tcp;
+            options.IntervalBatchingConfig = x =>
+            {
+                x.Enabled = false;
+                x.Interval = TimeSpan.FromMilliseconds(100);
+                x.MaxMessagesPerBatch = 1000;
+                x.MaxRequests = 8912;
+            };
+            options.LoggerFactory = NullLoggerFactory.Instance;
+        });
 
-        var channel = Channel.CreateUnbounded<MessageSendRequest>();
-
-        var loggerFactory = NullLoggerFactory.Instance;
-        sut = new TcpMessageInvoker(socket);
-        var messageStream = new TcpMessageStream(socket, channel, loggerFactory, sut);
-
-        await messageStream.CreateStreamAsync(StreamRequest);
-        await messageStream.CreateTopicAsync(Identifier.Numeric(StreamRequest.StreamId), TopicRequest);
+        await sut.CreateStreamAsync(StreamRequest);
+        await sut.CreateTopicAsync(Identifier.Numeric(StreamRequest.StreamId), TopicRequest);
     }
 
     public async Task DisposeAsync()

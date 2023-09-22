@@ -9,7 +9,7 @@ public sealed class PollMessagesRequest
     public required Identifier TopicId { get; init; }
     public required int PartitionId { get; init; }
     public required TimeSpan Interval { get; init; }
-    public required StoreOffset StoreOffsetStragety { get; init; }
+    public required StoreOffset StoreOffsetStrategy { get; init; }
     public required PollingStrategy PollingStrategy { get; set; }
     public required int Count { get; init; }
 }

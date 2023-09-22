@@ -31,7 +31,7 @@ public sealed class IggyTcpPollMessagesFixture : IAsyncLifetime
     private static readonly StreamRequest StreamRequest = StreamFactory.CreateStreamRequest();
     private static readonly TopicRequest TopicRequest = TopicFactory.CreateTopicRequest();
     private static readonly TopicRequest HeadersTopicRequest = TopicFactory.CreateTopicRequest();
-    public const int MessageCount = 100000;
+    public const int MessageCount = 1000000;
 
     public readonly int StreamId = StreamRequest.StreamId;
     public readonly int TopicId = TopicRequest.TopicId;
@@ -49,7 +49,7 @@ public sealed class IggyTcpPollMessagesFixture : IAsyncLifetime
             options.Protocol = Protocol.Tcp;
             options.IntervalBatchingConfig = x =>
             {
-                x.Enabled = false;
+                x.Enabled = true;
                 x.Interval = TimeSpan.FromMilliseconds(100);
                 x.MaxMessagesPerBatch = 1000;
                 x.MaxRequests = 8912;
