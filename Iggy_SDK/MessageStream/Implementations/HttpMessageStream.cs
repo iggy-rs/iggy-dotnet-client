@@ -1,6 +1,7 @@
 ﻿using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Exceptions;
+using Iggy_SDK.Extensions;
 using Iggy_SDK.Headers;
 using Iggy_SDK.JsonConfiguration;
 using Iggy_SDK.Kinds;
@@ -24,6 +25,8 @@ public class HttpMessageStream : IIggyClient
 {
     //TODO - replace the HttpClient with IHttpClientFactory, when implementing support for ASP.NET Core DI
     //TODO - the error handling pattern is pretty ugly, look into moving it into an extension method
+    //TODO - I can create a good extension method for reading the response and handling the errors
+    //but first I need to move the JsonConverters to attributes in contracts.
     private readonly HttpClient _httpClient;
     private readonly Channel<MessageSendRequest>? _channel;
     private readonly ILogger<HttpMessageStream> _logger;

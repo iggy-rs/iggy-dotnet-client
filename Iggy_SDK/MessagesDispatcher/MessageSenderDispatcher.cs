@@ -71,18 +71,29 @@ internal sealed class MessageSenderDispatcher
             }
 
             var messagesBatches = BatchMessages(messagesSendRequests.AsSpan()[..idx]);
-            foreach (var messages in messagesBatches)
+            try
             {
-                try
+                foreach (var messages in messagesBatches)
                 {
-                    await _messageInvoker.SendMessagesAsync(messages, _cts.Token);
-                }
-                catch
-                {
+                    try
+                    {
+                        if (messages is null)
+                        {
+                            break;
+                        }
+                        await _messageInvoker.SendMessagesAsync(messages, _cts.Token);
+                    }
+                    catch
+                    {
                         var partId = BinaryPrimitives.ReadInt32LittleEndian(messages.Partitioning.Value);
-                       _logger.LogError("Error encountered while sending messages - Stream ID:{streamId}, Topic ID:{topicId}, Partition ID: {partitionId}",
-                           messages.StreamId, messages.TopicId, partId); 
+                        _logger.LogError("Error encountered while sending messages - Stream ID:{streamId}, Topic ID:{topicId}, Partition ID: {partitionId}",
+                            messages.StreamId, messages.TopicId, partId);
+                    }
                 }
+            }
+            finally
+            {
+                ArrayPool<MessageSendRequest?>.Shared.Return(messagesBatches);
             }
         }
     }
@@ -104,7 +115,7 @@ internal sealed class MessageSenderDispatcher
         return true;
     }
 
-    private MessageSendRequest[] BatchMessages(Span<MessageSendRequest> requests)
+    private MessageSendRequest?[] BatchMessages(Span<MessageSendRequest> requests)
     {
         int messagesCount = 0;
         for (int i = 0; i < requests.Length; i++)
@@ -115,7 +126,7 @@ internal sealed class MessageSenderDispatcher
 
         var messagesBuffer = ArrayPool<Message>.Shared.Rent(_maxMessagesPerBatch);
         var messages = messagesBuffer.AsSpan()[.._maxMessagesPerBatch];
-        var messagesBatchesBuffer = MemoryPool<MessageSendRequest>.Shared.Rent(batchesCount);
+        var messagesBatchesBuffer = ArrayPool<MessageSendRequest?>.Shared.Rent(batchesCount);
 
         int idx = 0;
         int batchCounter = 0;
@@ -135,7 +146,7 @@ internal sealed class MessageSenderDispatcher
                             TopicId = request.TopicId,
                             Messages = messages.ToArray()
                         };
-                        messagesBatchesBuffer.Memory.Span[batchCounter] = messageSendRequest;
+                        messagesBatchesBuffer[batchCounter] = messageSendRequest;
                         batchCounter++;
                         idx = 0;
                         messages.Clear();
@@ -152,16 +163,14 @@ internal sealed class MessageSenderDispatcher
                     TopicId = requests[0].TopicId,
                     Messages = messages[..idx].ToArray()
                 };
-                messagesBatchesBuffer.Memory.Span[batchCounter++] = messageSendRequest;
+                messagesBatchesBuffer[batchCounter++] = messageSendRequest;
             }
-            return messagesBatchesBuffer.Memory.Span[..batchCounter].ToArray();
+            return messagesBatchesBuffer;
         }
         finally
         {
             ArrayPool<Message>.Shared.Return(messagesBuffer);
-            messagesBatchesBuffer.Dispose();
         }
-
     }
     internal async Task StopAsync()
     {

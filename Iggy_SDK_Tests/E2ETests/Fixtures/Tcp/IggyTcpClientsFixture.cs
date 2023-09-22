@@ -43,7 +43,6 @@ public sealed class IggyTcpClientsFixture : IAsyncLifetime
         });
         for (int i = 0; i < freshClientsCount; i++)
         {
-
             MessageStreamFactory.CreateMessageStream(options =>
             {
                 options.BaseAdress = $"127.0.0.1:{_container.GetMappedPublicPort(8090)}";

@@ -7,7 +7,6 @@ public interface IIggyPublisher
 {
     Task SendMessagesAsync(MessageSendRequest request, Func<byte[], byte[]>?
         encryptor = null, CancellationToken token = default);
-    //TODO - should I create a MessageSendRequest<TMessage> to clean up function arguments ?
     Task SendMessagesAsync<TMessage>(MessageSendRequest<TMessage> request,
          Func<TMessage, byte[]> serializer,
         Func<byte[], byte[]>? encryptor = null, Dictionary<HeaderKey, HeaderValue>? headers = null,

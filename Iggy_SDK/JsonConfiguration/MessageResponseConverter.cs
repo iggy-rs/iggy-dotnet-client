@@ -51,11 +51,9 @@ internal sealed class MessageResponseConverter : JsonConverter<PolledMessages>
                 var headersJsonArray = headersElement.EnumerateObject();
                 foreach (var header in headersJsonArray)
                 {
-                    //TODO - look into getting rid of this boxing 
                     var headerKey = header.Name;
-                    var headerObj = header.Value.EnumerateObject();
-                    var headerKind = headerObj.First().Value.GetString();
-                    var headerValue = headerObj.Last().Value.GetBytesFromBase64();
+                    var headerKind = header.Value.GetProperty(nameof(HeaderValue.Kind).ToSnakeCase()).GetString();
+                    var headerValue = header.Value.GetProperty(nameof(HeaderValue.Value).ToSnakeCase()).GetBytesFromBase64();
                     headers.Add(HeaderKey.New(headerKey), new HeaderValue
                     {
                         Kind = headerKind switch

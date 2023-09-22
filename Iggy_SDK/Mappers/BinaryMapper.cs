@@ -7,6 +7,7 @@ using System.Buffers.Binary;
 using System.Text;
 
 namespace Iggy_SDK.Mappers;
+//TODO - write unit tests for all the users related mappers
 internal static class BinaryMapper
 {
     private const int PROPERTIES_SIZE = 45;

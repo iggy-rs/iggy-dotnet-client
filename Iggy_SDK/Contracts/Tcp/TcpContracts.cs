@@ -10,6 +10,7 @@ using System.Text;
 
 namespace Iggy_SDK.Contracts.Tcp;
 
+//TODO - write unit tests for all the user related contracts
 internal static class TcpContracts
 {
     internal static byte[] GetClient(uint clientId)
