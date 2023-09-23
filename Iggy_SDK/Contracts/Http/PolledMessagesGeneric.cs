@@ -9,7 +9,7 @@ public sealed class PolledMessages<T>
     public static PolledMessages<T> Empty =>
         new()
         {
-            Messages = new List<MessageResponse<T>>().AsReadOnly(),
+            Messages = Array.Empty<MessageResponse<T>>().AsReadOnly(),
             CurrentOffset = 0,
             PartitionId = 0,
         };

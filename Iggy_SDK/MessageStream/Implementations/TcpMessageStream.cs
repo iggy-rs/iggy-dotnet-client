@@ -115,7 +115,7 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
 
         if (response.Length <= 1)
         {
-            return EmptyList<StreamResponse>.Instance;
+            return Array.Empty<StreamResponse>();
         }
 
         await _socket.ReceiveAsync(responseBuffer, token);
@@ -160,7 +160,7 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
 
         if (response.Length <= 1)
         {
-            return EmptyList<TopicResponse>.Instance;
+            return Array.Empty<TopicResponse>();
         }
 
         var responseBuffer = new byte[response.Length];
@@ -574,7 +574,7 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
 
         if (response.Length <= 1)
         {
-            return EmptyList<ConsumerGroupResponse>.Instance;
+            return Array.Empty<ConsumerGroupResponse>();
         }
 
         var responseBuffer = new byte[response.Length];
@@ -774,7 +774,7 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
 
         if (response.Length <= 1)
         {
-            return EmptyList<ClientResponse>.Instance;
+            return Array.Empty<ClientResponse>();
         }
 
         var responseBuffer = new byte[response.Length];

@@ -11,6 +11,7 @@ using Iggy_SDK.StringHandlers;
 using Iggy_SDK.Utils;
 using Microsoft.Extensions.Logging;
 using System.Buffers.Binary;
+using System.Collections.Immutable;
 using System.Net;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
@@ -87,10 +88,10 @@ public class HttpMessageStream : IIggyClient
         {
             return await response.Content.ReadFromJsonAsync<IReadOnlyList<StreamResponse>>(JsonConverterFactory.StreamResponseOptions,
                        cancellationToken: token)
-                   ?? EmptyList<StreamResponse>.Instance;
+                   ?? Array.Empty<StreamResponse>();
         }
         await HandleResponseAsync(response);
-        return EmptyList<StreamResponse>.Instance;
+        return Array.Empty<StreamResponse>();
     }
     public async Task CreateTopicAsync(Identifier streamId, TopicRequest topic, CancellationToken token = default)
     {
@@ -129,10 +130,10 @@ public class HttpMessageStream : IIggyClient
         if (response.IsSuccessStatusCode)
         {
             return await response.Content.ReadFromJsonAsync<IReadOnlyList<TopicResponse>>(JsonConverterFactory.TopicResponseOptions, cancellationToken: token)
-                   ?? EmptyList<TopicResponse>.Instance;
+                   ?? Array.Empty<TopicResponse>();
         }
         await HandleResponseAsync(response);
-        return EmptyList<TopicResponse>.Instance;
+        return Array.Empty<TopicResponse>();
     }
 
     public async Task<TopicResponse?> GetTopicByIdAsync(Identifier streamId, Identifier topicId, CancellationToken token = default)
@@ -360,10 +361,10 @@ public class HttpMessageStream : IIggyClient
         if (response.IsSuccessStatusCode)
         {
             return await response.Content.ReadFromJsonAsync<IReadOnlyList<ConsumerGroupResponse>>(JsonConverterFactory.SnakeCaseOptions, cancellationToken: token)
-                   ?? EmptyList<ConsumerGroupResponse>.Instance;
+                   ?? Array.Empty<ConsumerGroupResponse>();
         }
         await HandleResponseAsync(response);
-        return EmptyList<ConsumerGroupResponse>.Instance;
+        return Array.Empty<ConsumerGroupResponse>();
     }
     public async Task<ConsumerGroupResponse?> GetConsumerGroupByIdAsync(Identifier streamId, Identifier topicId,
         int groupId, CancellationToken token = default)
@@ -411,10 +412,10 @@ public class HttpMessageStream : IIggyClient
         if (response.IsSuccessStatusCode)
         {
             return await response.Content.ReadFromJsonAsync<IReadOnlyList<ClientResponse>>(JsonConverterFactory.SnakeCaseOptions, token)
-                ?? EmptyList<ClientResponse>.Instance;
+                   ?? Array.Empty<ClientResponse>();
         }
         await HandleResponseAsync(response);
-        return EmptyList<ClientResponse>.Instance;
+        return Array.Empty<ClientResponse>();
     }
     public async Task<ClientResponse?> GetClientByIdAsync(uint clientId, CancellationToken token = default)
     {
@@ -494,10 +495,10 @@ public class HttpMessageStream : IIggyClient
         if (response.IsSuccessStatusCode)
         {
             return await response.Content.ReadFromJsonAsync<IReadOnlyList<UserResponse>>(JsonConverterFactory.SnakeCaseOptions, token)
-                ?? EmptyList<UserResponse>.Instance;
+                ?? Array.Empty<UserResponse>();
         }
         await HandleResponseAsync(response);
-        return EmptyList<UserResponse>.Instance;
+        return Array.Empty<UserResponse>();
     }
     public async Task CreateUser(CreateUserRequest request, CancellationToken token = default)
     {
