@@ -10,7 +10,6 @@ using Iggy_SDK.MessagesDispatcher;
 using Iggy_SDK.Utils;
 using Microsoft.Extensions.Logging;
 using System.Buffers;
-using System.Buffers.Binary;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;

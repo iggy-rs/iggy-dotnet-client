@@ -184,6 +184,8 @@ internal static class TcpContracts
 
         if (data.Streams is not null)
         {
+            int streamsCount = data.Streams.Count;
+            int currentStream = 1;
             bytes[10] = (byte)1;
             int position = 11;
             foreach (var (streamId, stream) in data.Streams)
@@ -201,6 +203,8 @@ internal static class TcpContracts
 
                 if (stream.Topics != null)
                 {
+                    int topicsCount = stream.Topics.Count;
+                    int currentTopic = 1;
                     bytes[position] = (byte)1;
                     position += 1;
 
@@ -214,12 +218,29 @@ internal static class TcpContracts
                         bytes[position + 2] = topic.PollMessages ? (byte)1 : (byte)0;
                         bytes[position + 3] = topic.SendMessages ? (byte)1 : (byte)0;
                         position += 4;
+                        if (currentTopic < topicsCount)
+                        {
+                            currentTopic++;
+                            bytes[position++] = (byte)1;
+                        }
+                        else
+                        {
+                            bytes[position++] = (byte)0;
+                        }
                     }
                 }
                 else
                 {
-                    bytes[0] = (byte)0;
-                    bytes = bytes[1..];
+                    bytes[position++] = (byte)0;
+                }
+                if (currentStream < streamsCount)
+                {
+                    currentStream++;
+                    bytes[position++] = (byte)1;
+                }
+                else
+                {
+                    bytes[position++] = (byte)0;
                 }
             }
         }
@@ -234,18 +255,19 @@ internal static class TcpContracts
     {
         int size = 10; 
 
-        if (data.Streams != null)
+        if (data.Streams is not null)
         {
-            size += 3; 
+            size += 1; 
             foreach (var (_, stream) in data.Streams)
             {
                 size += 4; 
-                size += 6; 
+                size += 6;
+                size += 1;
 
                 if (stream.Topics is not null)
                 {
-                    size += 3; 
-                    size += stream.Topics.Count * 8; 
+                    size += 1;
+                    size += stream.Topics.Count * 9; 
                 }
                 else
                 {

@@ -199,11 +199,11 @@ internal static class MessageFactory
         for (int i = 0; i < count; i++)
         {
             headers.Add(
-                HeaderKey.New(Utility.RandomString(Random.Shared.Next(50, 254))),
+                HeaderKey.New(Utility.RandomString(Random.Shared.Next(50, 100))),
                 Random.Shared.Next(1, 12) switch
                 {
-                    1 => HeaderValue.FromBytes(Encoding.UTF8.GetBytes(Utility.RandomString(Random.Shared.Next(50, 254)))),
-                    2 => HeaderValue.FromString(Utility.RandomString(Random.Shared.Next(25, 254))),
+                    1 => HeaderValue.FromBytes(Encoding.UTF8.GetBytes(Utility.RandomString(Random.Shared.Next(50, 100)))),
+                    2 => HeaderValue.FromString(Utility.RandomString(Random.Shared.Next(25, 100))),
                     3 => HeaderValue.FromBool(Random.Shared.Next(0, 1) switch { 0 => false, 1 => true, _ => false }),
                     4 => HeaderValue.FromInt32(Random.Shared.Next(69, 420)),
                     5 => HeaderValue.FromInt64(Random.Shared.NextInt64(6942023, 98723131)),

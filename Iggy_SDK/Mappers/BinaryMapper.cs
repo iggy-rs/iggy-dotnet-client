@@ -115,7 +115,6 @@ internal static class BinaryMapper
                             break;
                     }
                 }
-
                 streamMap.Add(streamId, new StreamPermissions
                 {
                     ManageStream = manageStream,
