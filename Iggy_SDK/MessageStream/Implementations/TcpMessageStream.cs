@@ -10,6 +10,7 @@ using Iggy_SDK.MessagesDispatcher;
 using Iggy_SDK.Utils;
 using Microsoft.Extensions.Logging;
 using System.Buffers;
+using System.Buffers.Binary;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;
@@ -956,7 +957,7 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
             throw new InvalidResponseException($"Invalid response status code: {status}");
         }
     }
-    public async Task LoginUser(LoginUserRequest request, CancellationToken token = default)
+    public async Task<AuthResponse?> LoginUser(LoginUserRequest request, CancellationToken token = default)
     {
         var message = TcpContracts.LoginUser(request);
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
@@ -968,12 +969,22 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var buffer = new byte[12];
         await _socket.ReceiveAsync(buffer, token);
 
-        var status = TcpMessageStreamHelpers.GetResponseStatus(buffer);
-
-        if (status != 0)
+        var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
+        if (response.Status != 0)
         {
-            throw new InvalidResponseException($"Invalid response status code: {status}");
+            throw new InvalidResponseException($"Invalid response status code: {response.Status}");
         }
+        
+        if (response.Length <= 1)
+        {
+            return null;
+        }
+        
+        var userId = BinaryPrimitives.ReadInt32LittleEndian(buffer.AsSpan()[8..(8 + response.Length)]);
+        return new AuthResponse
+        {
+            UserId = userId
+        };
     }
     public async Task LogoutUser(CancellationToken token = default)
     {

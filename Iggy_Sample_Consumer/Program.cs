@@ -26,88 +26,12 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
         x.MaxRequests = 4096;
     };
 });
-var permission = new Permissions
-        {
-            Global = new GlobalPermissions
-            {
-                ManageServers = true,
-                ReadServers = false,
-                ManageUsers = true,
-                ReadUsers = false,
-                ManageStreams = true,
-                ReadStreams = false,
-                ManageTopics = true,
-                ReadTopics = false,
-                PollMessages = true,
-                SendMessages = false
-            },
-            Streams = new Dictionary<int, StreamPermissions>
-            {
-                {
-                    1,
-                    new StreamPermissions
-                    {
-                        ManageStream = true,
-                        ReadStream = false,
-                        ManageTopics = true,
-                        ReadTopics = false,
-                        PollMessages = true,
-                        SendMessages = false,
-                        Topics = new Dictionary<int, TopicPermissions>
-                        {
-                            {
-                                101,
-                                new TopicPermissions
-                                {
-                                    ManageTopic = true,
-                                    ReadTopic = false,
-                                    PollMessages = true,
-                                    SendMessages = false
-                                }
-                            },
-                            /*
-                            {
-                                102,
-                                new TopicPermissions
-                                {
-                                    ManageTopic = false,
-                                    ReadTopic = true,
-                                    PollMessages = false,
-                                    SendMessages = true
-                                }
-                            }
-                            */
-                        }
-                    }
-                },
-                {
-                    2,
-                    new StreamPermissions
-                    {
-                        ManageStream = false,
-                        ReadStream = true,
-                        ManageTopics = false,
-                        ReadTopics = true,
-                        PollMessages = false,
-                        SendMessages = true,
-                        Topics = new Dictionary<int, TopicPermissions>
-                        {
-                            {
-                                101,
-                                new TopicPermissions
-                                {
-                                    ManageTopic = true,
-                                    ReadTopic = false,
-                                    PollMessages = true,
-                                    SendMessages = false
-                                }
-                            },
-                        } 
-                    }
-                }
-            }
-        };
 
+await bus.LoginUser(new LoginUserRequest
+{
+    Password = "pass",
+    Username = "okon",
+});
 Console.WriteLine("Using protocol : {0}", protocol.ToString());
 
 int streamIdVal = 1;

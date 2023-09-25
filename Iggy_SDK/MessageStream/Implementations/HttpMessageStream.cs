@@ -548,16 +548,18 @@ public class HttpMessageStream : IIggyClient
             await HandleResponseAsync(response);
         }
     }
-    public async Task LoginUser(LoginUserRequest request, CancellationToken token = default)
+    public async Task<AuthResponse?> LoginUser(LoginUserRequest request, CancellationToken token = default)
     {
         var json = JsonSerializer.Serialize(request, JsonConverterFactory.SnakeCaseOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
 
         var response = await _httpClient.PostAsync("users/login", data, token);
-        if (!response.IsSuccessStatusCode)
+        if (response.IsSuccessStatusCode)
         {
-            await HandleResponseAsync(response);
+            return await response.Content.ReadFromJsonAsync<AuthResponse>(JsonConverterFactory.SnakeCaseOptions, cancellationToken: token);
         }
+        await HandleResponseAsync(response);
+        return null;
     }
     public async Task LogoutUser(CancellationToken token = default)
     {

@@ -10,6 +10,6 @@ public interface IIggyUsers
     public Task UpdateUser(UpdateUserRequest request, CancellationToken token = default);
     public Task UpdatePermissions(UpdateUserPermissionsRequest request, CancellationToken token = default);
     public Task ChangePassword(ChangePasswordRequest request, CancellationToken token = default);
-    public Task LoginUser(LoginUserRequest request, CancellationToken token = default);
+    public Task<AuthResponse?> LoginUser(LoginUserRequest request, CancellationToken token = default);
     public Task LogoutUser(CancellationToken token = default);
 }
