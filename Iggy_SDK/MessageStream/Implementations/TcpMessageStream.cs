@@ -964,7 +964,8 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         
         await _socket.SendAsync(payload, token);
 
-        var buffer = new byte[BufferSizes.ExpectedResponseSize];
+        // TODO: maybe refactor later, for now static 12
+        var buffer = new byte[12];
         await _socket.ReceiveAsync(buffer, token);
 
         var status = TcpMessageStreamHelpers.GetResponseStatus(buffer);
