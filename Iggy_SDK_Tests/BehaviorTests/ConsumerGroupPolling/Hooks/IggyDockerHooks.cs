@@ -34,7 +34,7 @@ public sealed class IggyDockerHooks
     }
 
     [BeforeScenario]
-    public void RegisterDependencies()
+    public async Task RegisterDependencies()
     {
         var clients = new List<IIggyClient>();
         var messageBus = MessageStreamFactory.CreateMessageStream(options =>
@@ -49,6 +49,11 @@ public sealed class IggyDockerHooks
                 x.MaxMessagesPerBatch = 1000;
                 x.Interval = TimeSpan.FromMilliseconds(50);
             };
+        });
+        await messageBus.LoginUser(new LoginUserRequest
+        {
+            Password = "iggy",
+            Username = "iggy"
         });
 
         for (int i = 0; i < 2; i++)
@@ -66,6 +71,11 @@ public sealed class IggyDockerHooks
                     x.Interval = TimeSpan.FromMilliseconds(50);
                     x.MaxMessagesPerBatch = 8912;
                 };
+            });
+            await client.LoginUser(new LoginUserRequest
+            {
+                Password = "iggy",
+                Username = "iggy"
             });
             clients.Add(client);
         }
@@ -99,6 +109,11 @@ public sealed class IggyDockerHooks
                 x.Interval = TimeSpan.FromMilliseconds(100);
                 x.MaxMessagesPerBatch = 8912;
             };
+        });
+        await messageBus.LoginUser(new LoginUserRequest
+        {
+            Password = "iggy",
+            Username = "iggy"
         });
 
         await messageBus.CreateStreamAsync(_streamRequest);

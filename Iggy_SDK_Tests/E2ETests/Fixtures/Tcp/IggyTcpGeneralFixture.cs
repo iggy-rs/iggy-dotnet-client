@@ -35,6 +35,12 @@ public sealed class IggyTcpGeneralFixture : IAsyncLifetime
             };
             options.LoggerFactory = NullLoggerFactory.Instance;            
         });
+        
+        await sut.LoginUser(new LoginUserRequest
+        {
+            Password = "iggy",
+            Username = "iggy"
+        });
     }
 
     public async Task DisposeAsync()

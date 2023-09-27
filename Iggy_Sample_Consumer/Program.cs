@@ -27,13 +27,30 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
     };
 });
 
-await bus.LoginUser(new LoginUserRequest
+try
 {
-    Password = "pass",
-    Username = "okon",
-});
+    await bus.LoginUser(new LoginUserRequest
+    {
+        Password = "iggy",
+        Username = "iggy",
+    });
+}
+catch
+{
+    await bus.CreateUser(new CreateUserRequest
+    {
+        Password = "iggy",
+        Status = UserStatus.Active,
+        Username = "iggy",
+    });
+    
+    await bus.LoginUser(new LoginUserRequest
+    {
+        Password = "iggy",
+        Username = "iggy",
+    });
+}
 Console.WriteLine("Using protocol : {0}", protocol.ToString());
-
 int streamIdVal = 1;
 int topicIdVal = 1;
 var streamId = Identifier.Numeric(streamIdVal);

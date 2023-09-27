@@ -41,6 +41,11 @@ public sealed class IggyTcpClientsFixture : IAsyncLifetime
             };
             options.LoggerFactory = NullLoggerFactory.Instance;
         });
+        await sut.LoginUser(new LoginUserRequest
+        {
+            Password = "iggy",
+            Username = "iggy"
+        });
         for (int i = 0; i < freshClientsCount; i++)
         {
             MessageStreamFactory.CreateMessageStream(options =>

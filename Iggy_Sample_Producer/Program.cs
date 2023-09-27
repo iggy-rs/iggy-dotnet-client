@@ -25,6 +25,30 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
         x.MaxRequests = 4096;
     };
 });
+
+try
+{
+    await bus.LoginUser(new LoginUserRequest
+    {
+        Password = "iggy",
+        Username = "iggy",
+    });
+}
+catch
+{
+    await bus.CreateUser(new CreateUserRequest
+    {
+        Password = "iggy",
+        Status = UserStatus.Active,
+        Username = "iggy",
+    });
+    
+    await bus.LoginUser(new LoginUserRequest
+    {
+        Password = "iggy",
+        Username = "iggy",
+    });
+}
 Console.WriteLine("Using protocol : {0}", protocol.ToString());
 var streamIdVal = 1;
 var topicIdVal = 1;

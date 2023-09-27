@@ -53,6 +53,12 @@ public sealed class IggyTcpFetchMessagesFixture : IAsyncLifetime
             };
             options.LoggerFactory = NullLoggerFactory.Instance;
         });
+        
+        await sut.LoginUser(new LoginUserRequest
+        {
+            Password = "iggy",
+            Username = "iggy"
+        });
         await sut.CreateStreamAsync(StreamRequest);
         await sut.CreateTopicAsync(Identifier.Numeric(StreamRequest.StreamId), TopicRequest);
         await sut.CreateTopicAsync(Identifier.Numeric(StreamRequest.StreamId), HeadersTopicRequest);

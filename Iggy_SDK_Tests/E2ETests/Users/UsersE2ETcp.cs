@@ -74,22 +74,16 @@ public sealed class UsersE2ETcp : IClassFixture<IggyTcpUsersFixture>
         user.Permissions.Should().BeEquivalentTo(_fixture.UpdatePermissionsRequest);
     }
     [Fact, TestPriority(7)]
-    public async Task LoginUser_Should_LoginUser_Successfully()
+    public async Task DeleteUser_Should_DeleteUser_Successfully()
     {
         await _fixture.sut.Invoking(async x =>
-            await x.LoginUser(_fixture.LoginRequest)).Should().NotThrowAsync();
+            await x.DeleteUser(Identifier.Numeric(2))).Should().NotThrowAsync();
     }
     [Fact, TestPriority(8)]
     public async Task LogoutUser_Should_LogoutUser_Successfully()
     {
         await _fixture.sut.Invoking(async x =>
             await x.LogoutUser()).Should().NotThrowAsync();
-    }
-    [Fact, TestPriority(9)]
-    public async Task DeleteUser_Should_DeleteUser_Successfully()
-    {
-        await _fixture.sut.Invoking(async x =>
-            await x.DeleteUser(Identifier.Numeric(2))).Should().NotThrowAsync();
     }
 }
 
