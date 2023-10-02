@@ -61,6 +61,11 @@ var consumerId = 1;
 Console.WriteLine($"Consumer has started, selected protocol {protocol}");
 
 await ValidateSystem(streamId, topicId, partitionId);
+await bus.UpdateTopicAsync(Identifier.Numeric(streamIdVal), Identifier.Numeric(12),  new UpdateTopicRequest
+{
+    Name = "trololo",
+    MessageExpiry = 12
+});
 await ConsumeMessages();
 
 async Task ConsumeMessages()

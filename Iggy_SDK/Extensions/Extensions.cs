@@ -1,5 +1,7 @@
+using Iggy_SDK.Enums;
 using System.Buffers.Binary;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 
@@ -85,6 +87,32 @@ internal static class Extensions
         {
             slice[i + 1] = slice[i];
         }
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void WriteBytesFromStreamAndTopicIdentifiers(this Span<byte> bytes, Identifier streamId, Identifier topicId, int startPos = 0)
+    {
+        bytes[startPos] = streamId.Kind.GetByte();
+        bytes[startPos + 1] = (byte)streamId.Length;
+        streamId.Value.CopyTo(bytes[(startPos + 2)..(startPos + 2 + streamId.Length)]);
+
+        var position = startPos + 2 + streamId.Length;
+        bytes[position] = topicId.Kind.GetByte();
+        bytes[position + 1] = (byte)topicId.Length;
+        topicId.Value.CopyTo(bytes[(position + 2)..(position + 2 + topicId.Length)]);
+    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void WriteBytesFromIdentifier(this Span<byte> bytes, Identifier identifier)
+    {
+        bytes[0] = identifier.Kind.GetByte();
+        bytes[1] = (byte)identifier.Length;
+        identifier.Value.CopyTo(bytes[2..]);
+    }
+    private static void WriteBytesFromIdentifierToSpan(Identifier identifier, Span<byte> bytes)
+    {
+        bytes[0] = identifier.Kind.GetByte();
+        bytes[1] = (byte)identifier.Length;
+        identifier.Value.CopyTo(bytes[2..]);
     }
 }
 

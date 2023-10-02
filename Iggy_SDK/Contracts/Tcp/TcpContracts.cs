@@ -1,5 +1,6 @@
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
+using Iggy_SDK.Extensions;
 using Iggy_SDK.Headers;
 using Iggy_SDK.Kinds;
 using Iggy_SDK.Messages;
@@ -22,13 +23,13 @@ internal static class TcpContracts
     internal static byte[] GetUser(Identifier userId)
     {
         Span<byte> bytes = stackalloc byte[userId.Length + 2];
-        WriteBytesFromIdentifierToSpan(userId, bytes);
+        bytes.WriteBytesFromIdentifier(userId);
         return bytes.ToArray();
     }
     internal static byte[] DeleteUser(Identifier userId)
     {
         Span<byte> bytes = stackalloc byte[userId.Length + 2];
-        WriteBytesFromIdentifierToSpan(userId, bytes);
+        bytes.WriteBytesFromIdentifier(userId);
         return bytes.ToArray();
     }
     internal static byte[] LoginUser(LoginUserRequest request)
@@ -53,7 +54,7 @@ internal static class TcpContracts
         var length = request.UserId.Length + 2 + request.CurrentPassword.Length + request.NewPassword.Length + 2;
         Span<byte> bytes = stackalloc byte[length];
         
-        WriteBytesFromIdentifierToSpan(request.UserId, bytes);
+        bytes.WriteBytesFromIdentifier(request.UserId);
         int position = request.UserId.Length + 2;
         bytes[position] = (byte)request.CurrentPassword.Length;
         position += 1;
@@ -70,7 +71,7 @@ internal static class TcpContracts
         var length = request.UserId.Length + 2 + 
                      (request.Permissions is not null ? 1 + 4 + CalculatePermissionsSize(request.Permissions) : 0); 
         Span<byte> bytes = stackalloc byte[length];
-        WriteBytesFromIdentifierToSpan(request.UserId, bytes);
+        bytes.WriteBytesFromIdentifier(request.UserId);
         int position = request.UserId.Length + 2;
         if (request.Permissions is not null)
         {
@@ -94,7 +95,7 @@ internal static class TcpContracts
                      + (request.UserStatus is not null ? 2 : 1) + 1 + 1;
         Span<byte> bytes = stackalloc byte[length];
         
-        WriteBytesFromIdentifierToSpan(request.UserId, bytes);
+        bytes.WriteBytesFromIdentifier(request.UserId);
         int position = request.UserId.Length + 2;
         if (request.Username is not null)
         {
@@ -286,7 +287,7 @@ internal static class TcpContracts
     {
         bytes[0] = GetConsumerTypeByte(request.Consumer.Type);
         BinaryPrimitives.WriteInt32LittleEndian(bytes[1..5], request.Consumer.Id);
-        WriteBytesFromStreamAndTopicIdToSpan(request.StreamId, request.TopicId, bytes, 5);
+        bytes.WriteBytesFromStreamAndTopicIdentifiers(request.StreamId, request.TopicId, 5);
         var position = 5 + 2 + request.StreamId.Length + 2 + request.TopicId.Length;
         BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], request.PartitionId);
         bytes[position + 4] = GetPollingStrategyByte(request.PollingStrategy.Kind);
@@ -299,7 +300,7 @@ internal static class TcpContracts
     {
         bytes[0] = GetConsumerTypeByte(request.Consumer.Type);
         BinaryPrimitives.WriteInt32LittleEndian(bytes[1..5], request.Consumer.Id);
-        WriteBytesFromStreamAndTopicIdToSpan(request.StreamId, request.TopicId, bytes, 5);
+        bytes.WriteBytesFromStreamAndTopicIdentifiers(request.StreamId, request.TopicId, 5);
         var position = 5 + 2 + request.StreamId.Length + 2 + request.TopicId.Length;
         BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], request.PartitionId);
         bytes[position + 4] = GetPollingStrategyByte(request.PollingStrategy.Kind);
@@ -312,7 +313,7 @@ internal static class TcpContracts
     internal static void CreateMessage(Span<byte> bytes, Identifier streamId, Identifier topicId,
         Partitioning partitioning, IList<Message> messages)
     {
-        WriteBytesFromStreamAndTopicIdToSpan(streamId, topicId, bytes);
+        bytes.WriteBytesFromStreamAndTopicIdentifiers(streamId, topicId);
         int streamTopicIdPosition = 2 + streamId.Length + 2 + topicId.Length;
         bytes[streamTopicIdPosition] = GetPartitioningKindByte(partitioning.Kind);
         bytes[streamTopicIdPosition + 1] = (byte)partitioning.Length;
@@ -494,7 +495,7 @@ internal static class TcpContracts
     internal static byte[] UpdateStream(Identifier streamId, UpdateStreamRequest request)
     {
         Span<byte> bytes = stackalloc byte[streamId.Length + request.Name.Length + 3];
-        WriteBytesFromIdentifierToSpan(streamId, bytes);
+        bytes.WriteBytesFromIdentifier(streamId);
         int position = 2 + streamId.Length;
         bytes[position] = (byte)request.Name.Length;
         Encoding.UTF8.GetBytes(request.Name, bytes[(position + 1)..]);
@@ -504,7 +505,7 @@ internal static class TcpContracts
     internal static byte[] CreateGroup(CreateConsumerGroupRequest request)
     {
         Span<byte> bytes = stackalloc byte[2 + request.StreamId.Length + 2 + request.TopicId.Length + sizeof(int)];
-        WriteBytesFromStreamAndTopicIdToSpan(request.StreamId, request.TopicId, bytes);
+        bytes.WriteBytesFromStreamAndTopicIdentifiers(request.StreamId , request.TopicId);
         int position = 2 + request.StreamId.Length + 2 + request.TopicId.Length;
         BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], request.ConsumerGroupId);
         return bytes.ToArray();
@@ -513,7 +514,7 @@ internal static class TcpContracts
     internal static byte[] JoinGroup(JoinConsumerGroupRequest request)
     {
         Span<byte> bytes = stackalloc byte[2 + request.StreamId.Length + 2 + request.TopicId.Length + sizeof(int)];
-        WriteBytesFromStreamAndTopicIdToSpan(request.StreamId, request.TopicId, bytes);
+        bytes.WriteBytesFromStreamAndTopicIdentifiers(request.StreamId , request.TopicId);
         int position = 2 + request.StreamId.Length + 2 + request.TopicId.Length;
         BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], request.ConsumerGroupId);
         return bytes.ToArray();
@@ -521,7 +522,7 @@ internal static class TcpContracts
     internal static byte[] LeaveGroup(LeaveConsumerGroupRequest request)
     {
         Span<byte> bytes = stackalloc byte[2 + request.StreamId.Length + 2 + request.TopicId.Length + sizeof(int)];
-        WriteBytesFromStreamAndTopicIdToSpan(request.StreamId, request.TopicId, bytes);
+        bytes.WriteBytesFromStreamAndTopicIdentifiers(request.StreamId , request.TopicId);
         int position = 2 + request.StreamId.Length + 2 + request.TopicId.Length;
         BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], request.ConsumerGroupId);
         return bytes.ToArray();
@@ -529,7 +530,7 @@ internal static class TcpContracts
     internal static byte[] DeleteGroup(Identifier streamId, Identifier topicId, int groupId)
     {
         Span<byte> bytes = stackalloc byte[2 + streamId.Length + 2 + topicId.Length + sizeof(int)];
-        WriteBytesFromStreamAndTopicIdToSpan(streamId, topicId, bytes);
+        bytes.WriteBytesFromStreamAndTopicIdentifiers(streamId , topicId);
         int position = 2 + streamId.Length + 2 + topicId.Length;
         BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], groupId);
         return bytes.ToArray();
@@ -538,14 +539,14 @@ internal static class TcpContracts
     internal static byte[] GetGroups(Identifier streamId, Identifier topicId)
     {
         Span<byte> bytes = stackalloc byte[2 + streamId.Length + 2 + topicId.Length];
-        WriteBytesFromStreamAndTopicIdToSpan(streamId, topicId, bytes);
+        bytes.WriteBytesFromStreamAndTopicIdentifiers(streamId , topicId);
         return bytes.ToArray();
     }
 
     internal static byte[] GetGroup(Identifier streamId, Identifier topicId, int groupId)
     {
         Span<byte> bytes = stackalloc byte[2 + streamId.Length + 2 + topicId.Length + sizeof(int)];
-        WriteBytesFromStreamAndTopicIdToSpan(streamId, topicId, bytes);
+        bytes.WriteBytesFromStreamAndTopicIdentifiers(streamId , topicId);
         int position = 2 + streamId.Length + 2 + topicId.Length;
         BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], groupId);
         return bytes.ToArray();
@@ -554,7 +555,7 @@ internal static class TcpContracts
     internal static byte[] UpdateTopic(Identifier streamId, Identifier topicId, UpdateTopicRequest request)
     {
         Span<byte> bytes = stackalloc byte[streamId.Length + topicId.Length + 9 + request.Name.Length];
-        WriteBytesFromStreamAndTopicIdToSpan(streamId, topicId, bytes);
+        bytes.WriteBytesFromStreamAndTopicIdentifiers(streamId , topicId);
         var position = 4 + streamId.Length + topicId.Length;
         BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)],
             request.MessageExpiry ?? 0);
@@ -566,7 +567,7 @@ internal static class TcpContracts
     internal static byte[] CreateTopic(Identifier streamId, TopicRequest request)
     {
         Span<byte> bytes = stackalloc byte[2 + streamId.Length + 13 + request.Name.Length];
-        WriteBytesFromIdentifierToSpan(streamId, bytes);
+        bytes.WriteBytesFromIdentifier(streamId);
         var streamIdBytesLength = 2 + streamId.Length;
         BinaryPrimitives.WriteInt32LittleEndian(bytes[streamIdBytesLength..(streamIdBytesLength + 4)], request.TopicId);
         int position = 4 + streamIdBytesLength;
@@ -580,7 +581,7 @@ internal static class TcpContracts
     internal static byte[] GetTopicById(Identifier streamId, Identifier topicId)
     {
         Span<byte> bytes = stackalloc byte[2 + streamId.Length + 2 + topicId.Length];
-        WriteBytesFromStreamAndTopicIdToSpan(streamId, topicId, bytes);
+        bytes.WriteBytesFromStreamAndTopicIdentifiers(streamId , topicId);
         return bytes.ToArray();
     }
 
@@ -588,7 +589,7 @@ internal static class TcpContracts
     internal static byte[] DeleteTopic(Identifier streamId, Identifier topicId)
     {
         Span<byte> bytes = stackalloc byte[2 + streamId.Length + 2 + topicId.Length];
-        WriteBytesFromStreamAndTopicIdToSpan(streamId, topicId, bytes);
+        bytes.WriteBytesFromStreamAndTopicIdentifiers(streamId , topicId);
         return bytes.ToArray();
     }
 
@@ -598,7 +599,7 @@ internal static class TcpContracts
             stackalloc byte[2 + request.StreamId.Length + 2 + request.TopicId.Length + 17];
         bytes[0] = GetConsumerTypeByte(request.Consumer.Type);
         BinaryPrimitives.WriteInt32LittleEndian(bytes[1..5], request.Consumer.Id);
-        WriteBytesFromStreamAndTopicIdToSpan(request.StreamId, request.TopicId, bytes, 5);
+        bytes.WriteBytesFromStreamAndTopicIdentifiers(request.StreamId , request.TopicId, 5);
         var position = 5 + 2 + request.StreamId.Length + 2 + request.TopicId.Length;
         BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], request.PartitionId);
         BinaryPrimitives.WriteUInt64LittleEndian(bytes[(position + 4)..(position + 12)], request.Offset);
@@ -611,7 +612,7 @@ internal static class TcpContracts
             stackalloc byte[2 + request.StreamId.Length + 2 + request.TopicId.Length + sizeof(int) * 2 + 1];
         bytes[0] = GetConsumerTypeByte(request.Consumer.Type);
         BinaryPrimitives.WriteInt32LittleEndian(bytes[1..5], request.Consumer.Id);
-        WriteBytesFromStreamAndTopicIdToSpan(request.StreamId, request.TopicId, bytes, 5);
+        bytes.WriteBytesFromStreamAndTopicIdentifiers(request.StreamId , request.TopicId, 5);
         var position = 5 + 2 + request.StreamId.Length + 2 + request.TopicId.Length;
         BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], request.PartitionId);
         return bytes.ToArray();
@@ -620,7 +621,7 @@ internal static class TcpContracts
     internal static byte[] CreatePartitions(CreatePartitionsRequest request)
     {
         Span<byte> bytes = stackalloc byte[2 + request.StreamId.Length + 2 + request.TopicId.Length + sizeof(int)];
-        WriteBytesFromStreamAndTopicIdToSpan(request.StreamId, request.TopicId, bytes);
+        bytes.WriteBytesFromStreamAndTopicIdentifiers(request.StreamId , request.TopicId);
         int position = 2 + request.StreamId.Length + 2 + request.TopicId.Length;
         BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], request.PartitionsCount);
         return bytes.ToArray();
@@ -629,7 +630,7 @@ internal static class TcpContracts
     internal static byte[] DeletePartitions(DeletePartitionsRequest request)
     {
         Span<byte> bytes = stackalloc byte[2 + request.StreamId.Length + 2 + request.TopicId.Length + sizeof(int)];
-        WriteBytesFromStreamAndTopicIdToSpan(request.StreamId, request.TopicId, bytes);
+        bytes.WriteBytesFromStreamAndTopicIdentifiers(request.StreamId , request.TopicId);
         int position = 2 + request.StreamId.Length + 2 + request.TopicId.Length;
         BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], request.PartitionsCount);
         return bytes.ToArray();
@@ -645,17 +646,7 @@ internal static class TcpContracts
             _ => throw new ArgumentOutOfRangeException()
         };
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static byte GetIdKindByte(IdKind kind)
-    {
-        return kind switch
-        {
-            IdKind.Numeric => 1,
-            IdKind.String => 2,
-            _ => throw new ArgumentOutOfRangeException()
-        };
-    }
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static byte GetPartitioningKindByte(PartitioningKind kind)
     {
@@ -680,26 +671,5 @@ internal static class TcpContracts
             MessagePolling.Next => 5,
             _ => throw new ArgumentOutOfRangeException()
         };
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void WriteBytesFromIdentifierToSpan(Identifier identifier, Span<byte> bytes)
-    {
-        bytes[0] = GetIdKindByte(identifier.Kind);
-        bytes[1] = (byte)identifier.Length;
-        identifier.Value.CopyTo(bytes[2..]);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void WriteBytesFromStreamAndTopicIdToSpan(Identifier streamId, Identifier topicId, Span<byte> bytes, int startPos = 0)
-    {
-        bytes[startPos] = GetIdKindByte(streamId.Kind);
-        bytes[startPos + 1] = (byte)streamId.Length;
-        streamId.Value.CopyTo(bytes[(startPos + 2)..(startPos + 2 + streamId.Length)]);
-
-        var position = startPos + 2 + streamId.Length;
-        bytes[position] = GetIdKindByte(topicId.Kind);
-        bytes[position + 1] = (byte)topicId.Length;
-        topicId.Value.CopyTo(bytes[(position + 2)..(position + 2 + topicId.Length)]);
     }
 }
