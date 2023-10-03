@@ -29,7 +29,7 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
 
 try
 {
-    await bus.LoginUser(new LoginUserRequest
+    var response = await bus.LoginUser(new LoginUserRequest
     {
         Password = "iggy",
         Username = "iggy",
@@ -44,11 +44,12 @@ catch
         Username = "iggy",
     });
     
-    await bus.LoginUser(new LoginUserRequest
+    var response = await bus.LoginUser(new LoginUserRequest
     {
         Password = "iggy",
         Username = "iggy",
     });
+    Console.WriteLine(response!.Token);
 }
 Console.WriteLine("Using protocol : {0}", protocol.ToString());
 int streamIdVal = 1;
@@ -58,14 +59,10 @@ var topicId = Identifier.Numeric(topicIdVal);
 var partitionId = 3;
 var consumerId = 1;
 
+
 Console.WriteLine($"Consumer has started, selected protocol {protocol}");
 
 await ValidateSystem(streamId, topicId, partitionId);
-await bus.UpdateTopicAsync(Identifier.Numeric(streamIdVal), Identifier.Numeric(12),  new UpdateTopicRequest
-{
-    Name = "trololo",
-    MessageExpiry = 12
-});
 await ConsumeMessages();
 
 async Task ConsumeMessages()
@@ -193,7 +190,7 @@ async Task ValidateSystem(Identifier streamId, Identifier topicId, int partition
         await bus.CreateTopicAsync(streamId, new TopicRequest
         {
             Name = "Test Consumer Topic",
-            PartitionsCount = 12,
+            PartitionsCount = 3,
             TopicId = topicIdVal
         });
         var topicRes = await bus.GetTopicByIdAsync(streamId, topicId);

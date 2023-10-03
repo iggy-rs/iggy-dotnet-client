@@ -11,6 +11,7 @@ using Shared;
 using System.Buffers.Binary;
 using System.Security.Cryptography;
 using System.Text;
+using Partitioning = Iggy_SDK.Kinds.Partitioning;
 
 var protocol = Protocol.Tcp;
 var bus = MessageStreamFactory.CreateMessageStream(options =>
@@ -28,7 +29,7 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
 
 try
 {
-    await bus.LoginUser(new LoginUserRequest
+    var response = await bus.LoginUser(new LoginUserRequest
     {
         Password = "iggy",
         Username = "iggy",
@@ -43,7 +44,7 @@ catch
         Username = "iggy",
     });
     
-    await bus.LoginUser(new LoginUserRequest
+    var response = await bus.LoginUser(new LoginUserRequest
     {
         Password = "iggy",
         Username = "iggy",

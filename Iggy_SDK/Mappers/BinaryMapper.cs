@@ -133,7 +133,7 @@ internal static class BinaryMapper
 
         return new Permissions
         {
-            Global = globalPermissions, 
+            Global = globalPermissions,
             Streams = streamMap.Count > 0 ? streamMap : null
         };
     }
@@ -151,12 +151,12 @@ internal static class BinaryMapper
         byte usernameLength = payload[position + 13];
         string username = Encoding.UTF8.GetString(payload[(position + 14)..(position + 14 + usernameLength)]);
         int readBytes = 4 + 8 + 1 + 1 + usernameLength;
-        
+
         return (new UserResponse
         {
-            Id = id, 
-            CreatedAt = createdAt, 
-            Status = userStatus, 
+            Id = id,
+            CreatedAt = createdAt,
+            Status = userStatus,
             Username = username
         }, readBytes);
     }
@@ -166,7 +166,7 @@ internal static class BinaryMapper
         var (response, position) = MapClientInfo(payload, 0);
         var consumerGroups = new List<ConsumerGroupInfo>();
         var length = payload.Length;
-        
+
         while (position < length)
         {
             for (int i = 0; i < response.ConsumerGroupsCount; i++)
@@ -186,10 +186,10 @@ internal static class BinaryMapper
         }
         return new ClientResponse
         {
-            Adress = response.Adress, 
+            Adress = response.Adress,
             Id = response.Id,
             UserId = response.UserId,
-            Transport = response.Transport, 
+            Transport = response.Transport,
             ConsumerGroupsCount = response.ConsumerGroupsCount,
             ConsumerGroups = consumerGroups
         };
@@ -198,9 +198,9 @@ internal static class BinaryMapper
     {
         if (payload.Length == 0)
         {
-            return Array.Empty<ClientResponse>(); 
+            return Array.Empty<ClientResponse>();
         }
-        
+
         var response = new List<ClientResponse>();
         var length = payload.Length;
         var position = 0;
@@ -236,8 +236,8 @@ internal static class BinaryMapper
         {
             Id = id,
             UserId = userId,
-            Transport = transport, 
-            Adress = address, 
+            Transport = transport,
+            Adress = address,
             ConsumerGroupsCount = consumerGroupsCount
         }, readBytes);
     }
@@ -452,7 +452,7 @@ internal static class BinaryMapper
             position += 4;
             var value = payload[position..(position + valueLength)];
             position += valueLength;
-            headers.Add(HeaderKey.New(key), new() 
+            headers.Add(HeaderKey.New(key), new()
                 {
                     Kind = headerKind, Value = value.ToArray()
                 }
@@ -712,15 +712,54 @@ internal static class BinaryMapper
     internal static ConsumerGroupResponse MapConsumerGroup(ReadOnlySpan<byte> payload)
     {
         (ConsumerGroupResponse consumerGroup, int position) = MapToConsumerGroup(payload, 0);
-        return consumerGroup;
+        var members = new List<ConsumerGroupMember>();
+        while (position < payload.Length)
+        {
+            (var member, int readBytes) = MapToMember(payload, position);
+            members.Add(member);
+            position += readBytes;
+        }
+        return new ConsumerGroupResponse
+        {
+            Id = consumerGroup.Id,
+            MembersCount = consumerGroup.MembersCount,
+            PartitionsCount = consumerGroup.PartitionsCount,
+            Name = consumerGroup.Name,
+            Members = members
+        };
     }
-    private static (ConsumerGroupResponse consumerGroup, int readBytes) MapToConsumerGroup(ReadOnlySpan<byte> payload,
+    private static (ConsumerGroupMember, int readBytes) MapToMember(ReadOnlySpan<byte> payload, int position)
+    {
+        var id = BinaryPrimitives.ReadInt32LittleEndian(payload[position..(position + 4)]);
+        var partitionsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 4)..(position + 8)]);
+        var partitions = new List<int>();
+        for (int i = 0; i < partitionsCount; i++)
+        {
+            var partitionId = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 8 + (i * 4))..(position + 8 + ((i + 1) * 4))]);
+            partitions.Add(partitionId);
+        }
+        return (new ConsumerGroupMember
+        {
+            Id = id, 
+            PartitionsCount = partitionsCount, 
+            Partitions = partitions
+        }, 8 + partitionsCount * 4);
+    }
+
+private static (ConsumerGroupResponse consumerGroup, int readBytes) MapToConsumerGroup(ReadOnlySpan<byte> payload,
         int position)
     {
         int id = BinaryPrimitives.ReadInt32LittleEndian(payload[position..(position + 4)]);
         int partitionsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 4)..(position + 8)]);
         int membersCount = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 8)..(position + 12)]);
+        int nameLength = payload[position + 12];
+        string name = Encoding.UTF8.GetString(payload[(position + 13)..(position + 13 + nameLength)]); 
 
-        return (new ConsumerGroupResponse { Id = id, MembersCount = membersCount, PartitionsCount = partitionsCount }, 12);
+        return (new ConsumerGroupResponse { Id = id,
+                Name = name,
+                MembersCount = membersCount, 
+                PartitionsCount = partitionsCount 
+            },
+            13 + name.Length);
     }
 }

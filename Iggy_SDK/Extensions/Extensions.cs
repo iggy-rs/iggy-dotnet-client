@@ -102,17 +102,11 @@ internal static class Extensions
         topicId.Value.CopyTo(bytes[(position + 2)..(position + 2 + topicId.Length)]);
     }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void WriteBytesFromIdentifier(this Span<byte> bytes, Identifier identifier)
+    internal static void WriteBytesFromIdentifier(this Span<byte> bytes, Identifier identifier, int startPos = 0)
     {
-        bytes[0] = identifier.Kind.GetByte();
-        bytes[1] = (byte)identifier.Length;
-        identifier.Value.CopyTo(bytes[2..]);
-    }
-    private static void WriteBytesFromIdentifierToSpan(Identifier identifier, Span<byte> bytes)
-    {
-        bytes[0] = identifier.Kind.GetByte();
-        bytes[1] = (byte)identifier.Length;
-        identifier.Value.CopyTo(bytes[2..]);
+        bytes[startPos + 0] = identifier.Kind.GetByte();
+        bytes[startPos + 1] = (byte)identifier.Length;
+        identifier.Value.CopyTo(bytes[(startPos + 2)..]);
     }
 }
 

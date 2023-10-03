@@ -1,5 +1,7 @@
 using FluentAssertions;
+using FluentAssertions.Extensions;
 using Iggy_SDK;
+using Iggy_SDK_Tests.Utils;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Contracts.Tcp;
 using Iggy_SDK.Enums;
@@ -10,6 +12,7 @@ using Iggy_SDK_Tests.Utils.Partitions;
 using Iggy_SDK_Tests.Utils.Streams;
 using Iggy_SDK_Tests.Utils.Topics;
 using Iggy_SDK_Tests.Utils.Users;
+using Org.BouncyCastle.Asn1.IsisMtt.Ocsp;
 using System.Buffers.Binary;
 using System.Text;
 
@@ -424,9 +427,9 @@ public sealed class TcpContract
     [Fact]
     public void TcpContracts_MessageFetchRequest_HasCorrectBytes()
     {
-        const int messageBufferSize = 23 + 2 + 4 + 2 + 4;
         // Arrange
         var request = MessageFactory.CreateMessageFetchRequestConsumer();
+        int messageBufferSize = 23 + 2 + 4 + 2 + 2 + request.Consumer.Id.Length;
         var result = new byte[messageBufferSize];
 
         // Act
@@ -439,16 +442,16 @@ public sealed class TcpContract
             2 => ConsumerType.ConsumerGroup,
             _ => throw new ArgumentOutOfRangeException()
         }, request.Consumer.Type);
-        Assert.Equal(request.Consumer.Id, BitConverter.ToInt32(result[1..5]));
-        Assert.Equal(request.StreamId.Value, BytesToIdentifierNumeric(result, 5).Value);
-        Assert.Equal(request.TopicId.Value, BytesToIdentifierNumeric(result, 11).Value);
-        Assert.Equal(request.StreamId.Kind, BytesToIdentifierNumeric(result, 5).Kind);
-        Assert.Equal(request.TopicId.Kind, BytesToIdentifierNumeric(result, 11).Kind);
-        Assert.Equal(request.StreamId.Length, BytesToIdentifierNumeric(result, 5).Length);
-        Assert.Equal(request.TopicId.Length, BytesToIdentifierNumeric(result, 11).Length);
-        Assert.Equal(request.PartitionId, BitConverter.ToInt32(result[17..21]));
+        Assert.Equal(request.Consumer.Id.Kind.GetByte(), result[1]);
+        Assert.Equal(request.StreamId.Value, BytesToIdentifierNumeric(result, 7).Value);
+        Assert.Equal(request.TopicId.Value, BytesToIdentifierNumeric(result, 13).Value);
+        Assert.Equal(request.StreamId.Kind, BytesToIdentifierNumeric(result, 7).Kind);
+        Assert.Equal(request.TopicId.Kind, BytesToIdentifierNumeric(result, 13).Kind);
+        Assert.Equal(request.StreamId.Length, BytesToIdentifierNumeric(result, 7).Length);
+        Assert.Equal(request.TopicId.Length, BytesToIdentifierNumeric(result, 13).Length);
+        Assert.Equal(request.PartitionId, BitConverter.ToInt32(result[19..23]));
         Assert.Equal(
-            result[21] switch
+            result[23] switch
             {
                 1 => MessagePolling.Offset,
                 2 => MessagePolling.Timestamp,
@@ -457,9 +460,9 @@ public sealed class TcpContract
                 5 => MessagePolling.Next,
                 _ => throw new ArgumentOutOfRangeException()
             }, request.PollingStrategy.Kind);
-        Assert.Equal(request.PollingStrategy.Value, BitConverter.ToUInt64(result[22..30]));
-        Assert.Equal(request.Count, BitConverter.ToInt32(result[30..34]));
-        Assert.Equal(request.AutoCommit, result[34] switch
+        Assert.Equal(request.PollingStrategy.Value, BitConverter.ToUInt64(result[24..32]));
+        Assert.Equal(request.Count, BitConverter.ToInt32(result[32..36]));
+        Assert.Equal(request.AutoCommit, result[36] switch
         {
             0 => false,
             1 => true,
@@ -493,9 +496,9 @@ public sealed class TcpContract
         Assert.Equal(topicId.Kind, BytesToIdentifierNumeric(result, 6).Kind);
         Assert.Equal(request.Partitioning.Kind, result[12] switch
         {
-            1 => PartitioningKind.Balanced,
-            2 => PartitioningKind.PartitionId,
-            3 => PartitioningKind.MessageKey,
+            1 => Partitioning.Balanced,
+            2 => Partitioning.PartitionId,
+            3 => Partitioning.MessageKey,
             _ => throw new ArgumentOutOfRangeException()
         });
         Assert.Equal(request.Partitioning.Length, result[13]);
@@ -546,15 +549,16 @@ public sealed class TcpContract
         var topicId = Identifier.String("my-topic");
         var request = new CreateConsumerGroupRequest
         {
+            Name = Utility.RandomString(69),
             StreamId = streamId,
             TopicId = topicId,
-            ConsumerGroupId = Random.Shared.Next(1, 69)
+            ConsumerGroupId = Random.Shared.Next(1,69)
         };
         // Act
         var result = TcpContracts.CreateGroup(request).AsSpan();
 
         // Assert
-        int expectedBytesLength = 2 + streamId.Length + 2 + topicId.Length + 4;
+        int expectedBytesLength = 2 + streamId.Length + 2 + topicId.Length + 4 + 1 + request.Name.Length;
 
         Assert.Equal(expectedBytesLength, result.Length);
         Assert.Equal(streamId.Value, BytesToIdentifierString(result, 0).Value);
@@ -563,8 +567,9 @@ public sealed class TcpContract
         Assert.Equal(topicId.Kind, BytesToIdentifierString(result, 2 + streamId.Length).Kind);
         Assert.Equal(streamId.Length, BytesToIdentifierString(result, 0).Length);
         Assert.Equal(topicId.Length, BytesToIdentifierString(result, 2 + streamId.Length).Length);
-        var position = 2 + streamId.Length + 2 + topicId.Length;
-        Assert.Equal(request.ConsumerGroupId, BitConverter.ToInt32(result[position..(position + 4)]));
+        var position = 2 + streamId.Length + 2 + topicId.Length + 4;
+        Assert.Equal(request.Name.Length, result[position]);
+
     }
 
     [Fact]
@@ -573,21 +578,18 @@ public sealed class TcpContract
         // Arrange
         var streamId = Identifier.Numeric(1);
         var topicId = Identifier.Numeric(1);
-        int groupId = 1;
+        var groupId = Identifier.Numeric(1);
 
         // Act
         var result = TcpContracts.DeleteGroup(streamId, topicId, groupId).AsSpan();
 
         // Assert
-        int expectedBytesLength = 2 + streamId.Length + 2 + topicId.Length + 4;
+        int expectedBytesLength = 2 + streamId.Length + 2 + topicId.Length + groupId.Length + 2;
 
         Assert.Equal(expectedBytesLength, result.Length);
         Assert.Equal(streamId.Value, BytesToIdentifierNumeric(result, 0).Value);
         Assert.Equal(topicId.Value, BytesToIdentifierNumeric(result, 6).Value);
-        Assert.Equal(streamId.Length, BytesToIdentifierNumeric(result, 0).Length);
-        Assert.Equal(topicId.Length, BytesToIdentifierNumeric(result, 6).Length);
-        Assert.Equal(streamId.Kind, BytesToIdentifierNumeric(result, 0).Kind);
-        Assert.Equal(groupId, BitConverter.ToInt32(result[12..16]));
+        Assert.Equal(groupId.Value,  BytesToIdentifierNumeric(result, 12).Value);
     }
 
     [Fact]
@@ -606,11 +608,6 @@ public sealed class TcpContract
         Assert.Equal(expectedBytesLength, result.Length);
         Assert.Equal(streamId.Value, BytesToIdentifierString(result, 0).Value);
         Assert.Equal(topicId.Value, BytesToIdentifierNumeric(result, 2 + streamId.Length).Value);
-        Assert.Equal(streamId.Kind, BytesToIdentifierString(result, 0).Kind);
-        Assert.Equal(topicId.Kind, BytesToIdentifierNumeric(result, 2 + streamId.Length).Kind);
-        Assert.Equal(streamId.Length, BytesToIdentifierString(result, 0).Length);
-        Assert.Equal(topicId.Length, BytesToIdentifierNumeric(result, 2 + streamId.Length).Length);
-
     }
 
     [Fact]
@@ -623,16 +620,12 @@ public sealed class TcpContract
         var result = TcpContracts.JoinGroup(request).AsSpan();
 
         // Assert
-        int expectedBytesLength = 2 + request.StreamId.Length + 2 + request.TopicId.Length + 4;
+        int expectedBytesLength = 2 + request.StreamId.Length + 2 + request.TopicId.Length + request.ConsumerGroupId.Length + 2;
 
         Assert.Equal(expectedBytesLength, result.Length);
         Assert.Equal(request.StreamId.Value, BytesToIdentifierNumeric(result, 0).Value);
         Assert.Equal(request.TopicId.Value, BytesToIdentifierNumeric(result, 6).Value);
-        Assert.Equal(request.StreamId.Length, BytesToIdentifierNumeric(result, 0).Length);
-        Assert.Equal(request.StreamId.Kind, BytesToIdentifierNumeric(result, 0).Kind);
-        Assert.Equal(request.TopicId.Kind, BytesToIdentifierNumeric(result, 6).Kind);
-        Assert.Equal(request.TopicId.Length, BytesToIdentifierNumeric(result, 6).Length);
-        Assert.Equal(request.ConsumerGroupId, BitConverter.ToInt32(result[12..16]));
+        Assert.Equal(request.ConsumerGroupId.Value, BytesToIdentifierNumeric(result, 12).Value);
     }
 
 
@@ -646,16 +639,12 @@ public sealed class TcpContract
         var result = TcpContracts.LeaveGroup(request).AsSpan();
 
         // Assert
-        int expectedBytesLength = 2 + request.StreamId.Length + 2 + request.TopicId.Length + 4;
+        int expectedBytesLength = 2 + request.StreamId.Length + 2 + request.TopicId.Length + request.ConsumerGroupId.Length + 2;
 
         Assert.Equal(expectedBytesLength, result.Length);
         Assert.Equal(request.StreamId.Value, BytesToIdentifierNumeric(result, 0).Value);
         Assert.Equal(request.TopicId.Value, BytesToIdentifierNumeric(result, 6).Value);
-        Assert.Equal(request.StreamId.Length, BytesToIdentifierNumeric(result, 0).Length);
-        Assert.Equal(request.StreamId.Kind, BytesToIdentifierNumeric(result, 0).Kind);
-        Assert.Equal(request.TopicId.Kind, BytesToIdentifierNumeric(result, 6).Kind);
-        Assert.Equal(request.TopicId.Length, BytesToIdentifierNumeric(result, 6).Length);
-        Assert.Equal(request.ConsumerGroupId, BitConverter.ToInt32(result[12..16]));
+        Assert.Equal(request.ConsumerGroupId.Value, BytesToIdentifierNumeric(result, 12).Value);
     }
 
 
@@ -666,12 +655,13 @@ public sealed class TcpContract
         var streamId = Identifier.String("my-stream");
         var topicId = Identifier.Numeric(1);
         int groupId = 1;
+        var groupIdentifier = Identifier.Numeric(groupId);
 
         // Act
-        var result = TcpContracts.GetGroup(streamId, topicId, groupId).AsSpan();
+        var result = TcpContracts.GetGroup(streamId, topicId, groupIdentifier).AsSpan();
 
         // Assert
-        int expectedBytesLength = 2 + streamId.Length + 2 + topicId.Length + 4;
+        int expectedBytesLength = 2 + streamId.Length + 2 + topicId.Length + groupIdentifier.Length + 2;
 
         Assert.Equal(expectedBytesLength, result.Length);
         Assert.Equal(streamId.Value, BytesToIdentifierString(result, 0).Value);
@@ -681,7 +671,7 @@ public sealed class TcpContract
         Assert.Equal(streamId.Length, BytesToIdentifierString(result, 0).Length);
         Assert.Equal(topicId.Length, BytesToIdentifierNumeric(result, 2 + streamId.Length).Length);
         var position = 2 + streamId.Length + 2 + topicId.Length;
-        Assert.Equal(groupId, BitConverter.ToInt32(result[position..(position + 4)]));
+        Assert.Equal(groupIdentifier.Kind.GetByte(), result[position]);
     }
 
 
@@ -765,19 +755,19 @@ public sealed class TcpContract
         var result = TcpContracts.UpdateOffset(contract).AsSpan();
 
         // Assert
-        int expectedBytesLength = 2 + contract.StreamId.Length + 2 + contract.TopicId.Length + 5 + 4 + 8;
+        int expectedBytesLength = 2 + contract.StreamId.Length + 2 + contract.TopicId.Length + 5 + 2 + contract.Consumer.Id.Length + 8;
 
         Assert.Equal(expectedBytesLength, result.Length);
         Assert.Equal(1, result[0]);
-        Assert.Equal(contract.Consumer.Id, BitConverter.ToInt32(result[1..5]));
-        Assert.Equal(contract.StreamId.Value, BytesToIdentifierNumeric(result, 5).Value);
-        Assert.Equal(contract.StreamId.Length, BytesToIdentifierNumeric(result, 5).Length);
-        Assert.Equal(contract.StreamId.Kind, BytesToIdentifierNumeric(result, 5).Kind);
-        Assert.Equal(contract.TopicId.Value, BytesToIdentifierNumeric(result, 11).Value);
-        Assert.Equal(contract.TopicId.Length, BytesToIdentifierNumeric(result, 11).Length);
-        Assert.Equal(contract.TopicId.Kind, BytesToIdentifierNumeric(result, 11).Kind);
-        Assert.Equal(contract.PartitionId, BitConverter.ToInt32(result[17..21]));
-        Assert.Equal(contract.Offset, BitConverter.ToUInt64(result[21..29]));
+        Assert.Equal(contract.Consumer.Id.Kind.GetByte(), result[1]);
+        Assert.Equal(contract.StreamId.Value, BytesToIdentifierNumeric(result, 7).Value);
+        Assert.Equal(contract.StreamId.Length, BytesToIdentifierNumeric(result, 7).Length);
+        Assert.Equal(contract.StreamId.Kind, BytesToIdentifierNumeric(result, 7).Kind);
+        Assert.Equal(contract.TopicId.Value, BytesToIdentifierNumeric(result, 13).Value);
+        Assert.Equal(contract.TopicId.Length, BytesToIdentifierNumeric(result, 13).Length);
+        Assert.Equal(contract.TopicId.Kind, BytesToIdentifierNumeric(result, 13).Kind);
+        Assert.Equal(contract.PartitionId, BitConverter.ToInt32(result[19..23]));
+        Assert.Equal(contract.Offset, BitConverter.ToUInt64(result[23..31]));
     }
 
 
@@ -792,18 +782,18 @@ public sealed class TcpContract
         var result = TcpContracts.GetOffset(request).AsSpan();
 
         // Assert
-        int expectedBytesLength = 2 + request.StreamId.Length + 2 + request.TopicId.Length + 5 + 4;
+        int expectedBytesLength = 2 + request.StreamId.Length + 2 + request.TopicId.Length + 5 + 2 + request.Consumer.Id.Length;
 
         Assert.Equal(expectedBytesLength, result.Length);
         Assert.Equal(1, result[0]);
-        Assert.Equal(request.Consumer.Id, BitConverter.ToInt32(result[1..5]));
-        Assert.Equal(request.StreamId.Value, BytesToIdentifierNumeric(result, 5).Value);
-        Assert.Equal(request.StreamId.Length, BytesToIdentifierNumeric(result, 5).Length);
-        Assert.Equal(request.StreamId.Kind, BytesToIdentifierNumeric(result, 5).Kind);
-        Assert.Equal(request.TopicId.Value, BytesToIdentifierNumeric(result, 11).Value);
-        Assert.Equal(request.TopicId.Length, BytesToIdentifierNumeric(result, 11).Length);
-        Assert.Equal(request.TopicId.Kind, BytesToIdentifierNumeric(result, 11).Kind);
-        Assert.Equal(request.PartitionId, BitConverter.ToInt32(result[17..21]));
+        Assert.Equal(request.Consumer.Id.Kind.GetByte(), result[1]);
+        Assert.Equal(request.StreamId.Value, BytesToIdentifierNumeric(result, 7).Value);
+        Assert.Equal(request.StreamId.Length, BytesToIdentifierNumeric(result, 7).Length);
+        Assert.Equal(request.StreamId.Kind, BytesToIdentifierNumeric(result, 7).Kind);
+        Assert.Equal(request.TopicId.Value, BytesToIdentifierNumeric(result, 13).Value);
+        Assert.Equal(request.TopicId.Length, BytesToIdentifierNumeric(result, 13).Length);
+        Assert.Equal(request.TopicId.Kind, BytesToIdentifierNumeric(result, 13).Kind);
+        Assert.Equal(request.PartitionId, BitConverter.ToInt32(result[19..23]));
     }
 
     [Fact]

@@ -13,6 +13,7 @@ using Iggy_SDK.Configuration;
 using Iggy_SDK.Kinds;
 using Microsoft.Extensions.Logging.Abstractions;
 using IContainer = DotNet.Testcontainers.Containers.IContainer;
+using Partitioning = Iggy_SDK.Kinds.Partitioning;
 
 namespace Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
 

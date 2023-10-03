@@ -36,9 +36,9 @@ internal sealed class MessagesConverter : JsonConverter<MessageSendRequest>
 
             writer.WriteString(nameof(MessageSendRequest.Partitioning.Kind).ToSnakeCase(), value: value.Partitioning.Kind switch
             {
-                PartitioningKind.Balanced => "none",
-                PartitioningKind.MessageKey => "entity_id",
-                PartitioningKind.PartitionId => "partition_id",
+                Partitioning.Balanced => "none",
+                Partitioning.MessageKey => "entity_id",
+                Partitioning.PartitionId => "partition_id",
                 _ => throw new InvalidEnumArgumentException()
             });
             writer.WriteBase64String(nameof(MessageSendRequest.Partitioning.Value).ToSnakeCase(), value.Partitioning.Value);

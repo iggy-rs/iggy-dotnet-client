@@ -81,12 +81,24 @@ internal sealed class BinaryFactory
         return payload;
     }
 
-    internal static byte[] CreateGroupPayload(int id, int membersCount, int partitionsCount)
+    internal static byte[] CreateGroupPayload(int id, int membersCount, int partitionsCount, string name, List<int>? partitionsOnMember = null)
     {
-        var payload = new byte[12];
+        var payload = new byte[13 + name.Length + ((partitionsOnMember?.Count * 4) + 8 ?? 0)];
         BinaryPrimitives.WriteInt32LittleEndian(payload, id);
         BinaryPrimitives.WriteInt32LittleEndian(payload.AsSpan(4), partitionsCount);
         BinaryPrimitives.WriteInt32LittleEndian(payload.AsSpan(8), membersCount);
+        payload[12] = (byte)name.Length;
+        var nameBytes = Encoding.UTF8.GetBytes(name);
+        nameBytes.CopyTo(payload.AsSpan(13 ));
+        if (partitionsOnMember is not null)
+        {
+            BinaryPrimitives.WriteInt32LittleEndian(payload.AsSpan(13 + name.Length), 30);
+            BinaryPrimitives.WriteInt32LittleEndian(payload.AsSpan(17 + name.Length), partitionsOnMember.Count);
+            for (int i = 0; i < partitionsOnMember.Count; i++)
+            {
+                BinaryPrimitives.WriteInt32LittleEndian(payload.AsSpan(21 + name.Length + i * 4), partitionsOnMember[i]);
+            }
+        }
         return payload;
     }
 

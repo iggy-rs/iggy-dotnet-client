@@ -6,7 +6,7 @@ public interface IIggyConsumerGroup
 {
     Task<IReadOnlyList<ConsumerGroupResponse>> GetConsumerGroupsAsync(Identifier streamId, Identifier topicId,
         CancellationToken token = default);
-    Task<ConsumerGroupResponse?> GetConsumerGroupByIdAsync(Identifier streamId, Identifier topicId, int groupId,
+    Task<ConsumerGroupResponse?> GetConsumerGroupByIdAsync(Identifier streamId, Identifier topicId, Identifier groupId,
         CancellationToken token = default);
     Task CreateConsumerGroupAsync(CreateConsumerGroupRequest request, CancellationToken token = default);
     Task DeleteConsumerGroupAsync(DeleteConsumerGroupRequest request, CancellationToken token = default);

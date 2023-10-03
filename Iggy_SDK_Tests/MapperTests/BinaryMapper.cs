@@ -265,10 +265,10 @@ public sealed class BinaryMapper
     public void MapConsumerGroups_ReturnsValidConsumerGroupsResponses()
     {
         // Arrange
-        var (id1, membersCount1, partitionsCount1) = ConsumerGroupFactory.CreateConsumerGroupResponseFields();
-        byte[] payload1 = BinaryFactory.CreateGroupPayload(id1, membersCount1, partitionsCount1);
-        var (id2, membersCount2, partitionsCount2) = ConsumerGroupFactory.CreateConsumerGroupResponseFields();
-        byte[] payload2 = BinaryFactory.CreateGroupPayload(id2, membersCount2, partitionsCount2);
+        var (id1, membersCount1, partitionsCount1, name) = ConsumerGroupFactory.CreateConsumerGroupResponseFields();
+        byte[] payload1 = BinaryFactory.CreateGroupPayload(id1, membersCount1, partitionsCount1, name);
+        var (id2, membersCount2, partitionsCount2, name2) = ConsumerGroupFactory.CreateConsumerGroupResponseFields();
+        byte[] payload2 = BinaryFactory.CreateGroupPayload(id2, membersCount2, partitionsCount2, name2);
 
         byte[] combinedPayload = new byte[payload1.Length + payload2.Length];
         payload1.CopyTo(combinedPayload.AsSpan());
@@ -296,8 +296,9 @@ public sealed class BinaryMapper
     public void MapConsumerGroup_ReturnsValidConsumerGroupResponse()
     {
         // Arrange
-        var (groupId, membersCount, partitionsCount) = ConsumerGroupFactory.CreateConsumerGroupResponseFields();
-        byte[] groupPayload = BinaryFactory.CreateGroupPayload(groupId, membersCount, partitionsCount);
+        var (groupId, membersCount, partitionsCount, name) = ConsumerGroupFactory.CreateConsumerGroupResponseFields();
+        var memberPartitions = Enumerable.Range(0, partitionsCount).ToList();
+        byte[] groupPayload = BinaryFactory.CreateGroupPayload(groupId, membersCount, partitionsCount, name, memberPartitions);
 
         // Act
         ConsumerGroupResponse response = Iggy_SDK.Mappers.BinaryMapper.MapConsumerGroup(groupPayload);
@@ -307,6 +308,8 @@ public sealed class BinaryMapper
         Assert.Equal(groupId, response.Id);
         Assert.Equal(membersCount, response.MembersCount);
         Assert.Equal(partitionsCount, response.PartitionsCount);
+        Assert.Equal(memberPartitions.Count, partitionsCount);
+        Assert.Equal(response.Members.Count, 1);
     }
 
     [Fact]

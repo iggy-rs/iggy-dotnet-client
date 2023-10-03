@@ -84,6 +84,7 @@ public sealed class MultipleConsumersPollingSteps
 
         await _messageStream.CreateConsumerGroupAsync(new CreateConsumerGroupRequest
         {
+            Name = "test_cg",
             StreamId = Identifier.Numeric(_streamAndTopicFixture.StreamId),
             TopicId = Identifier.Numeric(_streamAndTopicFixture.ConsumerGroupTopicId),
             ConsumerGroupId = _consumerGroupId
@@ -106,7 +107,7 @@ public sealed class MultipleConsumersPollingSteps
             {
                 StreamId = Identifier.Numeric(_streamAndTopicFixture.StreamId),
                 TopicId = Identifier.Numeric(_streamAndTopicFixture.ConsumerGroupTopicId),
-                ConsumerGroupId = _consumerGroupId
+                ConsumerGroupId = Identifier.Numeric(_consumerGroupId)
             });
         }
 
@@ -137,7 +138,7 @@ public sealed class MultipleConsumersPollingSteps
         {
             StreamId = Identifier.Numeric(_streamAndTopicFixture.StreamId),
             TopicId = Identifier.Numeric(_streamAndTopicFixture.ConsumerGroupTopicId),
-            ConsumerGroupId = _consumerGroupId
+            ConsumerGroupId = Identifier.Numeric(_consumerGroupId)
         });
     }
 }

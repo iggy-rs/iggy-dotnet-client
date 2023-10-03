@@ -9,6 +9,7 @@ using Iggy_SDK_Tests.Utils.DummyObj;
 using System.Buffers.Binary;
 using System.Text;
 using System.Text.Json;
+using Partitioning = Iggy_SDK.Enums.Partitioning;
 
 namespace Iggy_SDK_Tests.Utils.Messages;
 
@@ -75,9 +76,9 @@ internal static class MessageFactory
 
             StreamId = streamId,
             TopicId = topicId,
-            Partitioning = new Partitioning
+            Partitioning = new Iggy_SDK.Kinds.Partitioning
             {
-                Kind = PartitioningKind.PartitionId,
+                Kind = Partitioning.PartitionId,
                 Length = 4,
                 Value = valBytes,
             },
@@ -106,7 +107,7 @@ internal static class MessageFactory
 
             StreamId = Identifier.Numeric(streamId),
             TopicId = Identifier.Numeric(topicId),
-            Partitioning = Partitioning.PartitionId(partitionId),
+            Partitioning = Iggy_SDK.Kinds.Partitioning.PartitionId(partitionId),
             Messages = messages ?? GenerateDummyMessages(Random.Shared.Next(1, 69), Random.Shared.Next(69, 420))
         };
     }

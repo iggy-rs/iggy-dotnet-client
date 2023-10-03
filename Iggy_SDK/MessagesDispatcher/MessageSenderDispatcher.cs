@@ -106,7 +106,7 @@ internal sealed class MessageSenderDispatcher
 
             if (!start.StreamId.Equals(next.StreamId)
                 || !start.TopicId.Equals(next.TopicId)
-                || start.Partitioning.Kind is not PartitioningKind.PartitionId
+                || start.Partitioning.Kind is not Partitioning.PartitionId
                 || !start.Partitioning.Value.SequenceEqual(next.Partitioning.Value))
             {
                 return false;

@@ -18,6 +18,7 @@ public sealed class ConsumerGroupE2ETcp : IClassFixture<IggyTcpConsumerGroupFixt
     private readonly DeleteConsumerGroupRequest _deleteConsumerGroupRequest;
 
     private const int GROUP_ID = 1;
+    private Identifier ConsumerGroupId = Identifier.Numeric(GROUP_ID);
 
     public ConsumerGroupE2ETcp(IggyTcpConsumerGroupFixture fixture)
     {
@@ -53,7 +54,7 @@ public sealed class ConsumerGroupE2ETcp : IClassFixture<IggyTcpConsumerGroupFixt
     {
         var response = await _fixture.sut.GetConsumerGroupByIdAsync(
             Identifier.Numeric(_fixture.StreamRequest.StreamId), Identifier.Numeric(_fixture.TopicRequest.TopicId),
-            GROUP_ID);
+            ConsumerGroupId);
 
         response.Should().NotBeNull();
         response!.Id.Should().Be(GROUP_ID);
@@ -74,7 +75,7 @@ public sealed class ConsumerGroupE2ETcp : IClassFixture<IggyTcpConsumerGroupFixt
     {
         var response = await _fixture.sut.GetConsumerGroupByIdAsync(
             Identifier.Numeric(_fixture.StreamRequest.StreamId), Identifier.Numeric(_fixture.TopicRequest.TopicId),
-            GROUP_ID);
+            ConsumerGroupId);
 
         response!.MembersCount.Should().Be(1);
     }

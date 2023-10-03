@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using System.Buffers.Binary;
 using System.Collections.Immutable;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -367,7 +368,7 @@ public class HttpMessageStream : IIggyClient
         return Array.Empty<ConsumerGroupResponse>();
     }
     public async Task<ConsumerGroupResponse?> GetConsumerGroupByIdAsync(Identifier streamId, Identifier topicId,
-        int groupId, CancellationToken token = default)
+        Identifier groupId, CancellationToken token = default)
     {
         var response = await _httpClient.GetAsync($"/streams/{streamId}/topics/{topicId}/consumer-groups/{groupId}", token);
 
@@ -556,7 +557,13 @@ public class HttpMessageStream : IIggyClient
         var response = await _httpClient.PostAsync("users/login", data, token);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<AuthResponse>(JsonConverterFactory.SnakeCaseOptions, cancellationToken: token);
+            var authResponse = await response.Content.ReadFromJsonAsync<AuthResponse>(JsonConverterFactory.SnakeCaseOptions, cancellationToken: token);
+            if (!string.IsNullOrEmpty(authResponse!.Token))
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = 
+                    new AuthenticationHeaderValue("Bearer", authResponse.Token); 
+            }
+            return authResponse;
         }
         await HandleResponseAsync(response);
         return null;
@@ -572,5 +579,6 @@ public class HttpMessageStream : IIggyClient
         {
             await HandleResponseAsync(response);
         }
+        _httpClient.DefaultRequestHeaders.Authorization = null;
     }
 }

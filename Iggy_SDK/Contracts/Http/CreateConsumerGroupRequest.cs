@@ -9,4 +9,5 @@ public sealed class CreateConsumerGroupRequest
     [JsonIgnore]
     public required Identifier TopicId { get; init; }
     public required int ConsumerGroupId { get; init; }
+    public required string Name { get; init; }
 }

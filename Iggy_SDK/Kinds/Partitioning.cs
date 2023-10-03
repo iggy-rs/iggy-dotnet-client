@@ -6,7 +6,7 @@ namespace Iggy_SDK.Kinds;
 
 public readonly struct Partitioning
 {
-    public required PartitioningKind Kind { get; init; }
+    public required Enums.Partitioning Kind { get; init; }
     public required int Length { get; init; }
     public required byte[] Value { get; init; }
 
@@ -14,7 +14,7 @@ public readonly struct Partitioning
     {
         return new Partitioning
         {
-            Kind = PartitioningKind.Balanced,
+            Kind = Enums.Partitioning.Balanced,
             Length = 0,
             Value = Array.Empty<byte>()
         };
@@ -27,7 +27,7 @@ public readonly struct Partitioning
 
         return new Partitioning
         {
-            Kind = PartitioningKind.PartitionId,
+            Kind = Enums.Partitioning.PartitionId,
             Length = 4,
             Value = bytes,
         };
@@ -42,7 +42,7 @@ public readonly struct Partitioning
 
         return new Partitioning
         {
-            Kind = PartitioningKind.MessageKey,
+            Kind = Enums.Partitioning.MessageKey,
             Length = value.Length,
             Value = Encoding.UTF8.GetBytes(value)
         };
@@ -57,7 +57,7 @@ public readonly struct Partitioning
 
         return new Partitioning
         {
-            Kind = PartitioningKind.MessageKey,
+            Kind = Enums.Partitioning.MessageKey,
             Length = value.Length,
             Value = value
         };
@@ -69,7 +69,7 @@ public readonly struct Partitioning
         BinaryPrimitives.WriteInt32LittleEndian(bytes, value);
         return new Partitioning
         {
-            Kind = PartitioningKind.MessageKey,
+            Kind = Enums.Partitioning.MessageKey,
             Length = 4,
             Value = bytes.ToArray()
         };
@@ -81,7 +81,7 @@ public readonly struct Partitioning
         BinaryPrimitives.WriteUInt64LittleEndian(bytes, value);
         return new Partitioning
         {
-            Kind = PartitioningKind.MessageKey,
+            Kind = Enums.Partitioning.MessageKey,
             Length = 8,
             Value = bytes.ToArray()
         };
@@ -92,7 +92,7 @@ public readonly struct Partitioning
         var bytes = value.ToByteArray();
         return new Partitioning
         {
-            Kind = PartitioningKind.MessageKey,
+            Kind = Enums.Partitioning.MessageKey,
             Length = 16,
             Value = bytes
         };

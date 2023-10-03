@@ -1,7 +1,7 @@
 
 namespace Iggy_SDK.Enums;
 
-public enum PartitioningKind
+public enum Partitioning
 {
     Balanced,
     PartitionId,

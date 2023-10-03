@@ -435,10 +435,10 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
                     await writer.WriteAsync(messageResponse, token);
                 }
             }
-            catch
+            catch(InvalidResponseException e)
             {
-                _logger.LogError("Error encountered while polling messages - Stream ID: {streamId}, Topic ID: {topicId}, Partition ID: {partitionId}",
-                    request.StreamId, request.TopicId, request.PartitionId);
+                _logger.LogError("Error encountered while polling messages - Stream ID: {streamId}, Topic ID: {topicId}, Partition ID: {partitionId}, error message {message}",
+                    request.StreamId, request.TopicId, request.PartitionId, e.Message);
             }
         }
         writer.Complete();
@@ -505,7 +505,7 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
     private static int CalculatePayloadBufferSize(int messageBufferSize)
         => messageBufferSize + 4 + BufferSizes.InitialBytesLength;
     private static int CalculateMessageBufferSize(MessageFetchRequest request)
-        => 18 + 5 + 2 + request.StreamId.Length + 2 + request.TopicId.Length;
+        => 14 + 5 + 2 + request.StreamId.Length + 2 + request.TopicId.Length + 2 + request.Consumer.Id.Length;
     
     public async Task StoreOffsetAsync(StoreOffsetRequest request, CancellationToken token = default)
     {
@@ -584,7 +584,7 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
     }
 
     public async Task<ConsumerGroupResponse?> GetConsumerGroupByIdAsync(Identifier streamId, Identifier topicId,
-        int groupId, CancellationToken token = default)
+        Identifier groupId, CancellationToken token = default)
     {
         var message = TcpContracts.GetGroup(streamId, topicId, groupId);
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
