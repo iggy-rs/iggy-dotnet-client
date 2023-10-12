@@ -4,6 +4,7 @@ using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
 using Iggy_SDK.JsonConfiguration;
 using Iggy_SDK.Kinds;
+using Microsoft.Extensions.Logging;
 using Shared;
 using System.Security.Cryptography;
 using System.Text;
@@ -13,6 +14,12 @@ var jsonOptions = new JsonSerializerOptions();
 jsonOptions.PropertyNamingPolicy = new ToSnakeCaseNamingPolicy();
 jsonOptions.WriteIndented = true;
 var protocol = Protocol.Tcp;
+var loggerFactory = LoggerFactory.Create(builder =>
+{
+    builder
+        .AddFilter("Iggy_SDK.MessageStream.Implementations;", LogLevel.Trace)
+        .AddConsole();
+});
 var bus = MessageStreamFactory.CreateMessageStream(options =>
 {
     options.BaseAdress = "127.0.0.1:8090";
@@ -25,7 +32,7 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
         x.MaxMessagesPerBatch = 1000;
         x.MaxRequests = 4096;
     };
-});
+}, loggerFactory);
 
 try
 {
@@ -79,18 +86,11 @@ async Task ConsumeMessages()
     };
     Func<byte[], byte[]> decryptor = static payload =>
     {
-        byte[] key =
-        {
-            0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
-            0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c,
-            0xa8, 0x8d, 0x2d, 0x0a, 0x9f, 0x9d, 0xea, 0x43,
-            0x6c, 0x25, 0x17, 0x13, 0x20, 0x45, 0x78, 0xc8
-        };
-        byte[] iv =
-        {
-            0x5f, 0x8a, 0xe4, 0x78, 0x9c, 0x3d, 0x2b, 0x0f,
-            0x12, 0x6a, 0x7e, 0x45, 0x91, 0xba, 0xdf, 0x33
-        };
+        string aes_key = "AXe8YwuIn1zxt3FPWTZFlAa14EHdPAdN9FaZ9RQWihc=";
+        string aes_iv = "bsxnWolsAyO7kCfWuyrnqg==";
+        var key = Convert.FromBase64String(aes_key);
+        var iv = Convert.FromBase64String(aes_iv);
+        
         using Aes aes = Aes.Create();
         ICryptoTransform decryptor = aes.CreateDecryptor(key, iv);
         using MemoryStream memoryStream = new MemoryStream(payload);
@@ -99,6 +99,16 @@ async Task ConsumeMessages()
         return binaryReader.ReadBytes(payload.Length);
     };
     
+    var messages = await bus.FetchMessagesAsync<Envelope>(new MessageFetchRequest
+    {
+        StreamId = streamId,
+        TopicId = topicId,
+        Consumer = Consumer.New(1),
+        Count = 1,
+        PartitionId = 1,
+        PollingStrategy = PollingStrategy.Next(),
+        AutoCommit = true
+    }, deserializer, decryptor);
     await foreach (var msgResponse in bus.PollMessagesAsync<Envelope>(new PollMessagesRequest
                    {
                        Consumer = Consumer.New(consumerId),

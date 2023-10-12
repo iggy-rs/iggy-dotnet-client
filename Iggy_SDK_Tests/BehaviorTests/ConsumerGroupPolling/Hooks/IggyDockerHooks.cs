@@ -9,6 +9,7 @@ using Iggy_SDK.MessageStream;
 using Iggy_SDK_Tests.Utils.SpecFlowTypes;
 using Iggy_SDK_Tests.Utils.Streams;
 using Iggy_SDK_Tests.Utils.Topics;
+using Microsoft.Extensions.Logging.Abstractions;
 using TechTalk.SpecFlow;
 
 namespace Iggy_SDK_Tests.BehaviorTests.ConsumerGroupPolling.Hooks;
@@ -49,7 +50,7 @@ public sealed class IggyDockerHooks
                 x.MaxMessagesPerBatch = 1000;
                 x.Interval = TimeSpan.FromMilliseconds(50);
             };
-        });
+        }, NullLoggerFactory.Instance);
         await messageBus.LoginUser(new LoginUserRequest
         {
             Password = "iggy",
@@ -71,7 +72,7 @@ public sealed class IggyDockerHooks
                     x.Interval = TimeSpan.FromMilliseconds(50);
                     x.MaxMessagesPerBatch = 8912;
                 };
-            });
+            }, NullLoggerFactory.Instance);
             await client.LoginUser(new LoginUserRequest
             {
                 Password = "iggy",
@@ -109,7 +110,7 @@ public sealed class IggyDockerHooks
                 x.Interval = TimeSpan.FromMilliseconds(100);
                 x.MaxMessagesPerBatch = 8912;
             };
-        });
+        }, NullLoggerFactory.Instance);
         await messageBus.LoginUser(new LoginUserRequest
         {
             Password = "iggy",

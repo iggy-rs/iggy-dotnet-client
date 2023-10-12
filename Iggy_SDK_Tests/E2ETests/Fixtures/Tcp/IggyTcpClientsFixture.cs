@@ -1,6 +1,4 @@
 using DotNet.Testcontainers.Builders;
-using Iggy_SDK;
-using Iggy_SDK_Tests.Utils.Messages;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
@@ -39,8 +37,7 @@ public sealed class IggyTcpClientsFixture : IAsyncLifetime
                 x.MaxMessagesPerBatch = 1000;
                 x.Interval = TimeSpan.FromMilliseconds(100);
             };
-            options.LoggerFactory = NullLoggerFactory.Instance;
-        });
+        }, NullLoggerFactory.Instance);
         await sut.LoginUser(new LoginUserRequest
         {
             Password = "iggy",
@@ -57,8 +54,7 @@ public sealed class IggyTcpClientsFixture : IAsyncLifetime
                     x.MaxMessagesPerBatch = 1000;
                     x.Interval = TimeSpan.FromMilliseconds(100);
                 };
-                options.LoggerFactory = NullLoggerFactory.Instance;
-            });
+            }, NullLoggerFactory.Instance);
         }
     }
 

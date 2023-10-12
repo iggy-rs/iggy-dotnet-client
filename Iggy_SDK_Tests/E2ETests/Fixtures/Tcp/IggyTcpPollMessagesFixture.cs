@@ -4,13 +4,10 @@ using Iggy_SDK_Tests.Utils.DummyObj;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
-using Iggy_SDK.Messages;
 using Iggy_SDK.MessageStream;
 using Iggy_SDK_Tests.Utils.Messages;
 using Iggy_SDK_Tests.Utils.Streams;
 using Iggy_SDK_Tests.Utils.Topics;
-using Iggy_SDK.Configuration;
-using Iggy_SDK.Kinds;
 using Microsoft.Extensions.Logging.Abstractions;
 using IContainer = DotNet.Testcontainers.Containers.IContainer;
 using Partitioning = Iggy_SDK.Kinds.Partitioning;
@@ -55,8 +52,7 @@ public sealed class IggyTcpPollMessagesFixture : IAsyncLifetime
                 x.MaxMessagesPerBatch = 1000;
                 x.MaxRequests = 8912;
             };
-            options.LoggerFactory = NullLoggerFactory.Instance;
-        });
+        }, NullLoggerFactory.Instance);
         await sut.LoginUser(new LoginUserRequest
         {
             Password = "iggy",

@@ -35,8 +35,7 @@ public sealed class IggyTcpOffsetFixture : IAsyncLifetime
                 x.MaxMessagesPerBatch = 1000;
                 x.Interval = TimeSpan.FromMilliseconds(100);
             };
-            options.LoggerFactory = NullLoggerFactory.Instance;
-        });
+        }, NullLoggerFactory.Instance);
         
         await sut.LoginUser(new LoginUserRequest
         {

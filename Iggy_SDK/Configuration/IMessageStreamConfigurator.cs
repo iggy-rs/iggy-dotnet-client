@@ -1,6 +1,5 @@
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
-using Microsoft.Extensions.Logging;
 
 namespace Iggy_SDK.Configuration;
 
@@ -10,7 +9,6 @@ public interface IMessageStreamConfigurator
     public Protocol Protocol { get; set; }
     public Action<IntervalBatchingSettings> IntervalBatchingConfig { get; set; }
     public IEnumerable<HttpRequestHeaderContract>? Headers { get; set; }
-    public ILoggerFactory? LoggerFactory { get; set; } 
     public int ReceiveBufferSize { get; set; }
     public int SendBufferSize { get; set; }
 }

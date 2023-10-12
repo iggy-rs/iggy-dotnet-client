@@ -4,6 +4,7 @@ using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
 using Iggy_SDK.MessageStream;
+using Microsoft.Extensions.Logging;
 
 const int messagesCount = 1000;
 const int messagesBatch = 1000;
@@ -12,6 +13,12 @@ const int producerCount = 3;
 const int startingStreamId = 100;
 const int topicId = 1;
 Dictionary<int, IIggyClient> clients = new();
+var loggerFactory = LoggerFactory.Create(builder =>
+{
+    builder
+        .AddFilter("Iggy_SDK.MessageStream.Implementations;", LogLevel.Trace)
+        .AddConsole();
+});
 
 for (int i = 0; i < producerCount; i++)
 {
@@ -35,7 +42,7 @@ for (int i = 0; i < producerCount; i++)
 		options.ReceiveBufferSize = 7280*1024;
 		options.SendBufferSize = 7280*1024;
 #endif
-    });
+    }, loggerFactory);
     clients[i] = bus;
 }
 

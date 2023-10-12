@@ -4,6 +4,7 @@ using Iggy_SDK_Tests.Utils.Streams;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
 using Iggy_SDK.MessageStream;
+using Microsoft.Extensions.Logging.Abstractions;
 using IContainer = DotNet.Testcontainers.Containers.IContainer;
 
 namespace Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
@@ -33,7 +34,7 @@ public sealed class IggyTcpStreamFixture : IAsyncLifetime
                 x.MaxMessagesPerBatch = 1000;
                 x.Interval = TimeSpan.FromMilliseconds(100);
             };
-        });
+        }, NullLoggerFactory.Instance);
        
         await sut.LoginUser(new LoginUserRequest
         {

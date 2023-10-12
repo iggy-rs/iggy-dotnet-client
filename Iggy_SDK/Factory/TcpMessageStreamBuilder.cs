@@ -16,22 +16,13 @@ internal class TcpMessageStreamBuilder
     private readonly ILoggerFactory _loggerFactory;
     private TcpMessageInvoker? _messageInvoker;
 
-    internal TcpMessageStreamBuilder(Socket socket, IMessageStreamConfigurator options)
+    internal TcpMessageStreamBuilder(Socket socket, IMessageStreamConfigurator options, ILoggerFactory loggerFactory)
     {
         var sendMessagesOptions = new IntervalBatchingSettings();
         options.IntervalBatchingConfig.Invoke(sendMessagesOptions);
         _options = sendMessagesOptions;
-        
-        _loggerFactory = options.LoggerFactory ?? LoggerFactory.Create(builder =>
-        {
-            builder
-                .AddFilter("Microsoft", LogLevel.Warning)
-                .AddFilter("System", LogLevel.Warning)
-                .AddFilter("Iggy_SDK.MessageStream.Implementations;", LogLevel.Trace)
-                .AddConsole();
-        });
-        
         _socket = socket;
+        _loggerFactory = loggerFactory;
     }
     //TODO - this channel will probably need to be refactored, to accept a lambda instead of MessageSendRequest
     internal TcpMessageStreamBuilder WithSendMessagesDispatcher()
