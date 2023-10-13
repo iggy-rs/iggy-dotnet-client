@@ -13,16 +13,16 @@ using System.Text.Json;
 var jsonOptions = new JsonSerializerOptions();
 jsonOptions.PropertyNamingPolicy = new ToSnakeCaseNamingPolicy();
 jsonOptions.WriteIndented = true;
-var protocol = Protocol.Tcp;
+var protocol = Protocol.Http;
 var loggerFactory = LoggerFactory.Create(builder =>
 {
     builder
-        .AddFilter("Iggy_SDK.MessageStream.Implementations;", LogLevel.Trace)
+        .AddFilter("Iggy_SDK.IggyClient.Implementations;", LogLevel.Trace)
         .AddConsole();
 });
 var bus = MessageStreamFactory.CreateMessageStream(options =>
 {
-    options.BaseAdress = "127.0.0.1:8090";
+    options.BaseAdress = "http://127.0.0.1:3000";
     options.Protocol = protocol;
 
     options.IntervalBatchingConfig = x =>

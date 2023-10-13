@@ -1,6 +1,6 @@
-namespace Iggy_SDK.MessageStream;
+namespace Iggy_SDK.IggyClient;
 
 public interface IIggyClient : IIggyPublisher, IIggyStream, IIggyTopic, IIggyConsumer, IIggyOffset, IIggyConsumerGroup,
-    IIggyUtils, IIggyPartition, IIggyUsers
+    IIggyUtils, IIggyPartition, IIggyUsers, IIggyPersonalAccessToken
 {
 }

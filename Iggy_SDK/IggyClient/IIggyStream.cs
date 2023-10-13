@@ -1,6 +1,5 @@
 using Iggy_SDK.Contracts.Http;
-
-namespace Iggy_SDK.MessageStream;
+namespace Iggy_SDK.IggyClient;
 
 public interface IIggyStream
 {

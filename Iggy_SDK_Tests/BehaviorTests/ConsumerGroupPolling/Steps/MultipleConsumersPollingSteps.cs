@@ -1,9 +1,9 @@
 using FluentAssertions;
 using Iggy_SDK;
 using Iggy_SDK.Contracts.Http;
-using Iggy_SDK.MessageStream;
 using Iggy_SDK_Tests.Utils.Messages;
 using Iggy_SDK_Tests.Utils.SpecFlowTypes;
+using Iggy_SDK.IggyClient;
 using TechTalk.SpecFlow;
 
 namespace Iggy_SDK_Tests.BehaviorTests.ConsumerGroupPolling.Steps;

@@ -1,7 +1,7 @@
 using Iggy_SDK.Configuration;
 using Iggy_SDK.Contracts.Http;
+using Iggy_SDK.IggyClient.Implementations;
 using Iggy_SDK.MessagesDispatcher;
-using Iggy_SDK.MessageStream.Implementations;
 using Microsoft.Extensions.Logging;
 using System.Net.Sockets;
 using System.Threading.Channels;

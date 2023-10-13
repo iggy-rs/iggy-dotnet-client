@@ -1,3 +1,4 @@
+using Iggy_SDK.Contracts.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
@@ -82,6 +83,14 @@ public static class JsonConverterFactory
             Converters =
             {
                 new MessagesConverter()
+            }
+        };
+    public static JsonSerializerOptions PersonalAccessTokenOptions
+        => new()
+        {
+            Converters =
+            {
+                new PersonalAccessTokenResponseConverter()
             }
         };
     public static JsonSerializerOptions MessageResponseGenericOptions<TMessage>(Func<byte[], TMessage> serializer, Func<byte[], byte[]>? decryptor)

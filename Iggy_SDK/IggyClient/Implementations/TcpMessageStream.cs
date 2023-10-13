@@ -14,8 +14,7 @@ using System.Buffers.Binary;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;
-
-namespace Iggy_SDK.MessageStream.Implementations;
+namespace Iggy_SDK.IggyClient.Implementations;
 
 public sealed class TcpMessageStream : IIggyClient, IDisposable
 {
@@ -994,9 +993,6 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         
         await _socket.SendAsync(payload, token);
 
-        //this returns status code: 8 for unknown reason therefore Im disabling this code
-        //till the reason is found
-        /*
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
         await _socket.ReceiveAsync(buffer, token);
 
@@ -1006,6 +1002,21 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         {
             throw new InvalidResponseException($"Invalid response status code: {response.Status}");
         }
-        */
+    }
+    public Task<IReadOnlyList<PersonalAccessTokenResponse>> GetPersonalAccessTokensAsync(CancellationToken token = default)
+    {
+        throw new NotImplementedException();
+    }
+    public Task<RawPersonalAccessToken?> CreatePersonalAccessTokenAsync(CreatePersonalAccessTokenRequest request, CancellationToken token = default)
+    {
+        throw new NotImplementedException();
+    }
+    public Task DeletePersonalAccessTokenAsync(DeletePersonalAccessTokenRequest request, CancellationToken token = default)
+    {
+        throw new NotImplementedException();
+    }
+    public Task<AuthResponse?> LoginWithPersonalAccessToken(LoginWithPersonalAccessToken request, CancellationToken token = default)
+    {
+        throw new NotImplementedException();
     }
 }
