@@ -1,7 +1,6 @@
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Headers;
-using Iggy_SDK.Kinds;
-namespace Iggy_SDK.MessageStream;
+namespace Iggy_SDK.IggyClient;
 
 public interface IIggyPublisher
 {

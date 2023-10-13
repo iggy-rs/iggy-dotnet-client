@@ -1,8 +1,8 @@
 using Iggy_SDK.Configuration;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Exceptions;
-using Iggy_SDK.MessageStream;
-using Iggy_SDK.MessageStream.Implementations;
+using Iggy_SDK.IggyClient;
+using Iggy_SDK.IggyClient.Implementations;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel;
 using System.Net.Sockets;

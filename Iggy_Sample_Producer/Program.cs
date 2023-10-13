@@ -4,9 +4,8 @@ using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
 using Iggy_SDK.Headers;
-using Iggy_SDK.Kinds;
+using Iggy_SDK.IggyClient;
 using Iggy_SDK.Messages;
-using Iggy_SDK.MessageStream;
 using Microsoft.Extensions.Logging;
 using Shared;
 using System.Buffers.Binary;
@@ -17,7 +16,7 @@ var protocol = Protocol.Tcp;
 var loggerFactory = LoggerFactory.Create(builder =>
 {
     builder
-        .AddFilter("Iggy_SDK.MessageStream.Implementations;", LogLevel.Trace)
+        .AddFilter("Iggy_SDK.IggyClient.Implementations;", LogLevel.Trace)
         .AddConsole();
 });
 var bus = MessageStreamFactory.CreateMessageStream(options =>

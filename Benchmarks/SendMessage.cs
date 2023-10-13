@@ -1,8 +1,8 @@
 using Iggy_SDK;
 using Iggy_SDK.Contracts.Http;
+using Iggy_SDK.IggyClient;
 using Iggy_SDK.Kinds;
 using Iggy_SDK.Messages;
-using Iggy_SDK.MessageStream;
 using System.Diagnostics;
 using System.Text;
 

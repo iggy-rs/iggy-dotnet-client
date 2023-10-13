@@ -1,17 +1,14 @@
 ﻿using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Exceptions;
-using Iggy_SDK.Extensions;
 using Iggy_SDK.Headers;
 using Iggy_SDK.JsonConfiguration;
 using Iggy_SDK.Kinds;
 using Iggy_SDK.Messages;
 using Iggy_SDK.MessagesDispatcher;
 using Iggy_SDK.StringHandlers;
-using Iggy_SDK.Utils;
 using Microsoft.Extensions.Logging;
 using System.Buffers.Binary;
-using System.Collections.Immutable;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -19,8 +16,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;
-
-namespace Iggy_SDK.MessageStream.Implementations;
+namespace Iggy_SDK.IggyClient.Implementations;
 
 
 public class HttpMessageStream : IIggyClient
@@ -580,5 +576,53 @@ public class HttpMessageStream : IIggyClient
             await HandleResponseAsync(response);
         }
         _httpClient.DefaultRequestHeaders.Authorization = null;
+    }
+    public async Task<IReadOnlyList<PersonalAccessTokenResponse>> GetPersonalAccessTokensAsync(CancellationToken token = default)
+    {
+        var response = await _httpClient.GetAsync("/personal-access-tokens", token);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<IReadOnlyList<PersonalAccessTokenResponse>>(JsonConverterFactory.PersonalAccessTokenOptions, token)
+                ?? Array.Empty<PersonalAccessTokenResponse>();
+        }
+        await HandleResponseAsync(response);
+        return Array.Empty<PersonalAccessTokenResponse>();
+    }
+    public async Task<RawPersonalAccessToken?> CreatePersonalAccessTokenAsync(CreatePersonalAccessTokenRequest request, CancellationToken token = default)
+    {
+        var json = JsonSerializer.Serialize(request, JsonConverterFactory.SnakeCaseOptions);
+        var content = new StringContent(json, Encoding.UTF8, "application/json"); 
+        var response = await _httpClient.PostAsync("/personal-access-tokens", content, token);
+        if (!response.IsSuccessStatusCode)
+        {
+            await HandleResponseAsync(response);
+        }
+        return await response.Content.ReadFromJsonAsync<RawPersonalAccessToken>(JsonConverterFactory.SnakeCaseOptions, token);
+    }
+    public async Task DeletePersonalAccessTokenAsync(DeletePersonalAccessTokenRequest request, CancellationToken token = default)
+    {
+        var response = await _httpClient.DeleteAsync($"/personal-access-tokens/{request.Name}", token);
+        if (!response.IsSuccessStatusCode)
+        {
+            await HandleResponseAsync(response);
+        }
+    }
+    public async Task<AuthResponse?> LoginWithPersonalAccessToken(LoginWithPersonalAccessToken request, CancellationToken token = default)
+    {
+        var json = JsonSerializer.Serialize(request, JsonConverterFactory.SnakeCaseOptions); 
+        var content = new StringContent(json, Encoding.UTF8, "application/json"); 
+        var response = await _httpClient.PostAsync("/personal-access-tokens/login", content, token);
+        if (response.IsSuccessStatusCode)
+        {
+            var authResponse = await response.Content.ReadFromJsonAsync<AuthResponse>(JsonConverterFactory.SnakeCaseOptions, cancellationToken: token);
+            if (!string.IsNullOrEmpty(authResponse!.Token))
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = 
+                    new AuthenticationHeaderValue("Bearer", authResponse.Token); 
+            }
+            return authResponse;
+        }
+        await HandleResponseAsync(response);
+        return null;
     }
 }
