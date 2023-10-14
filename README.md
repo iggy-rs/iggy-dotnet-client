@@ -54,7 +54,7 @@ var response = await bus.LoginUser(new LoginUserRequest
     Password = "iggy",
 });
 ```
-Alternatively, once you've logged in as the root user, you can create another account with optional `Permissions` and use that one instead.
+Furthermore, after logging in, you have the option to create an account with customizable `Permissions`.
 ```c#
 await bus.CreateUser(new CreateUserRequest
 {
@@ -109,6 +109,24 @@ var response = await bus.LoginUser(new LoginUserRequest
 {
     Username = "pa55w0rD!@",
     Password = "test_user",
+});
+```
+Alternatively, once you've logged in, you can create a `Personal Access Token` that can be reused for further logins."
+```c#
+var response = await bus.LoginUser(new LoginUserRequest
+{
+    Username = "your_username",
+    Password = "your_password",
+});
+
+var patResponse = await bus.CreatePersonalAccessTokenAsync(new CreatePersonalAccessTokenRequest
+{
+    Name = "first-pat",
+    Expiry = 60, // seconds from creation time
+});
+await bus.LoginWithPersonalAccessToken(new LoginWithPersonalAccessToken
+{
+    Token = patResponse.Token
 });
 ```
 ### Creating first stream and topic
