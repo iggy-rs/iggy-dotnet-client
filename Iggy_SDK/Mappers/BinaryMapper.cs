@@ -11,7 +11,44 @@ namespace Iggy_SDK.Mappers;
 internal static class BinaryMapper
 {
     private const int PROPERTIES_SIZE = 45;
-
+    internal static RawPersonalAccessToken MapRawPersonalAccessToken(ReadOnlySpan<byte> payload)
+    {
+        var tokenLength = payload[0];
+        var token = Encoding.UTF8.GetString(payload[1..(1 + tokenLength)]);
+        return new RawPersonalAccessToken
+        {
+            Token = token
+        };
+    }
+    internal static IReadOnlyList<PersonalAccessTokenResponse> MapPersonalAccessTokens(ReadOnlySpan<byte> payload)
+    {
+        if (payload.Length == 0)
+        {
+            return Array.Empty<PersonalAccessTokenResponse>();
+        }
+        var result = new List<PersonalAccessTokenResponse>();
+        int length = payload.Length;
+        int position = 0;
+        while (position < length)
+        {
+            var (response, readBytes) = MapToPersonalAccessTokenResponse(payload, position);
+            result.Add(response);
+            position += readBytes;
+        }
+        return result.AsReadOnly();
+    }
+    private static (PersonalAccessTokenResponse response, int position) MapToPersonalAccessTokenResponse(ReadOnlySpan<byte> payload, int position)
+    {
+        var nameLength = (int)payload[position];
+        var name = Encoding.UTF8.GetString(payload[(position + 1)..(1 + position + nameLength)]);
+        var expiry = BinaryPrimitives.ReadUInt64LittleEndian(payload[(position + 1 + nameLength)..]);
+        var readBytes = 1 + nameLength + 8;
+        return (new PersonalAccessTokenResponse
+        {
+            Name = name,
+            Expiry = expiry == 0 ? null : DateTimeOffsetUtils.FromUnixTimeMicroSeconds(expiry) 
+        }, readBytes);
+    }
     internal static IReadOnlyList<UserResponse> MapUsers(ReadOnlySpan<byte> payload)
     {
         if (payload.Length == 0)
@@ -746,7 +783,7 @@ internal static class BinaryMapper
         }, 8 + partitionsCount * 4);
     }
 
-private static (ConsumerGroupResponse consumerGroup, int readBytes) MapToConsumerGroup(ReadOnlySpan<byte> payload,
+    private static (ConsumerGroupResponse consumerGroup, int readBytes) MapToConsumerGroup(ReadOnlySpan<byte> payload,
         int position)
     {
         int id = BinaryPrimitives.ReadInt32LittleEndian(payload[position..(position + 4)]);

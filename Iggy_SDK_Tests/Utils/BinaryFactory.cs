@@ -5,6 +5,14 @@ namespace Iggy_SDK_Tests.Utils;
 
 internal sealed class BinaryFactory
 {
+    internal static byte[] CreatePersonalAccessTokensPayload(string name, uint expiry)
+    {
+        Span<byte> result = stackalloc byte[9 + name.Length];
+        result[0] = (byte)name.Length;
+        Encoding.UTF8.GetBytes(name, result[1..(1 + name.Length)]);
+        BinaryPrimitives.WriteUInt32LittleEndian(result[(1 + name.Length)..], expiry);
+        return result.ToArray();
+    }
     internal static byte[] CreateOffsetPayload(int partitionId, ulong currentOffset, ulong offset)
     {
         var payload = new byte[20];

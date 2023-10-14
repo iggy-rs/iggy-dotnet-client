@@ -1003,20 +1003,97 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
             throw new InvalidResponseException($"Invalid response status code: {response.Status}");
         }
     }
-    public Task<IReadOnlyList<PersonalAccessTokenResponse>> GetPersonalAccessTokensAsync(CancellationToken token = default)
+    public async Task<IReadOnlyList<PersonalAccessTokenResponse>> GetPersonalAccessTokensAsync(CancellationToken token = default)
     {
-        throw new NotImplementedException();
+        var message = Array.Empty<byte>();
+        var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
+        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.GET_PERSONAL_ACCESS_TOKENS_CODE);
+        
+        await _socket.SendAsync(payload, token);
+
+        var buffer = new byte[BufferSizes.ExpectedResponseSize];
+        await _socket.ReceiveAsync(buffer, token);
+
+        var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
+
+        if (response.Status != 0)
+        {
+            throw new InvalidResponseException($"Invalid response status code: {response.Status}");
+        }
+        var responseBuffer = new byte[response.Length];
+        await _socket.ReceiveAsync(responseBuffer, token);
+        return BinaryMapper.MapPersonalAccessTokens(responseBuffer);
     }
-    public Task<RawPersonalAccessToken?> CreatePersonalAccessTokenAsync(CreatePersonalAccessTokenRequest request, CancellationToken token = default)
+    public async Task<RawPersonalAccessToken?> CreatePersonalAccessTokenAsync(CreatePersonalAccessTokenRequest request, CancellationToken token = default)
     {
-        throw new NotImplementedException();
+        var message = TcpContracts.CreatePersonalAccessToken(request);
+        var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
+        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.CREATE_PERSONAL_ACCESS_TOKEN_CODE);
+        
+        await _socket.SendAsync(payload, token);
+
+        var buffer = new byte[BufferSizes.ExpectedResponseSize];
+        await _socket.ReceiveAsync(buffer, token);
+
+        var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
+
+        if (response.Status != 0)
+        {
+            throw new InvalidResponseException($"Invalid response status code: {response.Status}");
+        }
+        if (response.Length <= 1)
+        {
+            return null;
+        }
+        var responseBuffer = new byte[response.Length];
+        await _socket.ReceiveAsync(responseBuffer, token);
+        return BinaryMapper.MapRawPersonalAccessToken(responseBuffer);
     }
-    public Task DeletePersonalAccessTokenAsync(DeletePersonalAccessTokenRequest request, CancellationToken token = default)
+    public async Task DeletePersonalAccessTokenAsync(DeletePersonalAccessTokenRequest request, CancellationToken token = default)
     {
-        throw new NotImplementedException();
+        var message = TcpContracts.DeletePersonalRequestToken(request);
+        var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
+        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.DELETE_PERSONAL_ACCESS_TOKEN_CODE);
+        
+        await _socket.SendAsync(payload, token);
+
+        var buffer = new byte[BufferSizes.ExpectedResponseSize];
+        await _socket.ReceiveAsync(buffer, token);
+
+        var status = TcpMessageStreamHelpers.GetResponseStatus(buffer);
+
+        if (status != 0)
+        {
+            throw new InvalidResponseException($"Invalid response status code: {status}");
+        }
     }
-    public Task<AuthResponse?> LoginWithPersonalAccessToken(LoginWithPersonalAccessToken request, CancellationToken token = default)
+    public async Task<AuthResponse?> LoginWithPersonalAccessToken(LoginWithPersonalAccessToken request, CancellationToken token = default)
     {
-        throw new NotImplementedException();
+        var message = TcpContracts.LoginWithPersonalAccessToken(request);
+        var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
+        TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.LOGIN_WITH_PERSONAL_ACCESS_TOKEN_CODE);
+        
+        await _socket.SendAsync(payload, token);
+
+        var buffer = new byte[8];
+        await _socket.ReceiveAsync(buffer, token);
+
+        var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
+
+        if (response.Status != 0)
+        {
+            throw new InvalidResponseException($"Invalid response status code: {response.Status}");
+        }
+        if (response.Length <= 1)
+        {
+            return null;
+        }
+        var responseBuffer = new byte[response.Length];
+        await _socket.ReceiveAsync(responseBuffer, token);
+        var userId = BinaryPrimitives.ReadInt32LittleEndian(responseBuffer.AsSpan()[..4]);
+        return new AuthResponse
+        {
+            UserId = userId
+        };
     }
 }
