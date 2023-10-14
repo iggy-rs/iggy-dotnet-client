@@ -5,6 +5,7 @@ using Iggy_SDK_Tests.Utils.Groups;
 using Iggy_SDK_Tests.Utils.Messages;
 using Iggy_SDK_Tests.Utils.Stats;
 using Iggy_SDK_Tests.Utils.Topics;
+using Iggy_SDK.Extensions;
 using System.Buffers.Binary;
 using System.Text;
 using StreamFactory = Iggy_SDK_Tests.Utils.Streams.StreamFactory;
@@ -13,6 +14,23 @@ namespace Iggy_SDK_Tests.MapperTests;
 
 public sealed class BinaryMapper
 {
+    [Fact]
+    public void MapPersonalAccessTokens_ReturnsValidPersonalAccessTokenResponse()
+    {
+        // Arrange
+        string name = "test";
+        uint expiry = 69420;
+        var assertExpiry = DateTimeOffsetUtils.FromUnixTimeMicroSeconds(expiry);
+        var payload = BinaryFactory.CreatePersonalAccessTokensPayload(name, expiry);
+        
+        // Act
+        var response = Iggy_SDK.Mappers.BinaryMapper.MapPersonalAccessTokens(payload);
+        
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(name, response[0].Name);
+        Assert.Equal(assertExpiry, response[0].Expiry);
+    }
     [Fact]
     public void MapOffsets_ReturnsValidOffsetResponse()
     {

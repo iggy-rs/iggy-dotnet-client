@@ -1,5 +1,4 @@
 using FluentAssertions;
-using FluentAssertions.Extensions;
 using Iggy_SDK;
 using Iggy_SDK_Tests.Utils;
 using Iggy_SDK.Contracts.Http;
@@ -12,7 +11,6 @@ using Iggy_SDK_Tests.Utils.Partitions;
 using Iggy_SDK_Tests.Utils.Streams;
 using Iggy_SDK_Tests.Utils.Topics;
 using Iggy_SDK_Tests.Utils.Users;
-using Org.BouncyCastle.Asn1.IsisMtt.Ocsp;
 using System.Buffers.Binary;
 using System.Text;
 
@@ -20,410 +18,461 @@ namespace Iggy_SDK_Tests.ContractTests;
 
 public sealed class TcpContract
 {
-    public TcpContract()
+    
+    [Fact]
+    public void TcpContracts_DeletePersonalRequestToken_HasValidBytes()
     {
+        // Arrange
+        var request = new DeletePersonalAccessTokenRequest
+        {
+            Name = "TestUser"
+        };
 
+        // Act
+        byte[] result = TcpContracts.DeletePersonalRequestToken(request);
+
+        // Assert
+        Assert.Equal(5 + request.Name.Length, result.Length);
+        Assert.Equal((byte)request.Name.Length, result[0]);
+        Assert.Equal(Encoding.UTF8.GetBytes(request.Name), result[1..(1 + request.Name.Length)]);
     }
     [Fact]
-        public void TcpContracts_LoginUser_HasCorrectBytes()
+    public void TcpContracts_CreatePersonalAccessToken_HasValidBytes_ValidExpiry()
+    {
+        // Arrange
+        var request = new CreatePersonalAccessTokenRequest
         {
-            // Arrange
-            var request = new LoginUserRequest
-            {
-                Username = "testuser",
-                Password = "testpassword"
-            };
+            Name = "TestUser",
+            Expiry = 3600 // Valid Expiry Value
+        };
 
-            // Act
-            var result = TcpContracts.LoginUser(request);
+        // Act
+        byte[] result = TcpContracts.CreatePersonalAccessToken(request);
 
-            // Assert
-            var expectedLength = request.Username.Length + request.Password.Length + 2;
-            Assert.Equal(expectedLength, result.Length);
+        // Assert
+        Assert.Equal(5 + request.Name.Length, result.Length); // The expected length
+        Assert.Equal(Encoding.UTF8.GetBytes(request.Name), result[1..(1 + request.Name.Length)]); // The expected length of the name
+        Assert.Equal((uint)3600, BinaryPrimitives.ReadUInt32LittleEndian(result[(1 + request.Name.Length)..]));
+    }
 
-            var position = 0;
+    [Fact]
+    public void TcpContracts_CreatePersonalAccessToken_HasValidBytes_NullExpiry()
+    {
+        // Arrange
+        var request = new CreatePersonalAccessTokenRequest
+        {
+            Name = "TestUser",
+            Expiry = null // Null Expiry
+        };
+
+        // Act
+        byte[] result = TcpContracts.CreatePersonalAccessToken(request);
+
+        // Assert
+        Assert.Equal(5 + request.Name.Length, result.Length); // The expected length
+        Assert.Equal(Encoding.UTF8.GetBytes(request.Name), result[1..(1 + request.Name.Length)]); // The expected length of the name
+        Assert.Equal((uint)0, BinaryPrimitives.ReadUInt32LittleEndian(result[(1 + request.Name.Length)..]));
+    }
+    [Fact]
+    public void TcpContracts_LoginUser_HasCorrectBytes()
+    {
+        // Arrange
+        var request = new LoginUserRequest
+        {
+            Username = "testuser",
+            Password = "testpassword"
+        };
+
+        // Act
+        var result = TcpContracts.LoginUser(request);
+
+        // Assert
+        var expectedLength = request.Username.Length + request.Password.Length + 2;
+        Assert.Equal(expectedLength, result.Length);
+
+        var position = 0;
+        var usernameLength = result[position];
+        position += 1;
+        var usernameBytes = result[position..(position + usernameLength)];
+        position += usernameLength;
+        var passwordLength = result[position];
+        position += 1;
+        var passwordBytes = result[position..(position + passwordLength)];
+
+        var decodedUsername = Encoding.UTF8.GetString(usernameBytes);
+        var decodedPassword = Encoding.UTF8.GetString(passwordBytes);
+
+        Assert.Equal(request.Username, decodedUsername);
+        Assert.Equal(request.Password, decodedPassword);
+    }
+    [Fact]
+    public void TcpContracts_UpdateUser_HasCorrectBytes()
+    {
+        // Arrange
+        var request = new UpdateUserRequest
+        {
+            UserId = Identifier.Numeric(1),
+            Username = "newusername",
+            UserStatus = UserStatus.Active
+        };
+
+        // Act
+        var result = TcpContracts.UpdateUser(request);
+
+        // Assert
+        var expectedLength = request.UserId.Length + 2 +
+                             (request.Username?.Length ?? 0) + 2 + 1 + 1;
+        Assert.Equal(expectedLength, result.Length);
+
+        var position = 2;
+        var userIdBytes = result[position..(position + request.UserId.Length)];
+        position += request.UserId.Length;
+        var usernameFlag = result[position];
+        position += 1;
+        if (usernameFlag == 1)
+        {
             var usernameLength = result[position];
             position += 1;
             var usernameBytes = result[position..(position + usernameLength)];
             position += usernameLength;
-            var passwordLength = result[position];
-            position += 1;
-            var passwordBytes = result[position..(position + passwordLength)];
-
             var decodedUsername = Encoding.UTF8.GetString(usernameBytes);
-            var decodedPassword = Encoding.UTF8.GetString(passwordBytes);
-
             Assert.Equal(request.Username, decodedUsername);
-            Assert.Equal(request.Password, decodedPassword);
         }
-        [Fact]
-        public void TcpContracts_UpdateUser_HasCorrectBytes()
+        else
         {
-            // Arrange
-            var request = new UpdateUserRequest
+            Assert.Null(request.Username);
+        }
+
+        var statusFlag = result[position];
+        position += 1;
+        if (statusFlag == 1)
+        {
+            var userStatus = statusFlag switch
             {
-                UserId = Identifier.Numeric(1),
-                Username = "newusername",
-                UserStatus = UserStatus.Active
+                1 => UserStatus.Active,
+                2 => UserStatus.Inactive
             };
+            Assert.Equal(request.UserStatus, userStatus);
+        }
+        else
+        {
+            Assert.Null(request.UserStatus);
+        }
+        Assert.Equal(request.UserId.Value, userIdBytes);
+    }
+    [Fact]
+    public void TcpContracts_CreateUser_NoPermission_HasCorrectBytes()
+    {
+        // Arrange
+        var request = new CreateUserRequest
+        {
+            Username = "testuser",
+            Password = "testpassword",
+            Status = UserStatus.Active,
+            Permissions = null,
+        };
+        // Act
+        var result = TcpContracts.CreateUser(request);
 
-            // Act
-            var result = TcpContracts.UpdateUser(request);
+        // Assert
+        int position = 0;
 
-            // Assert
-            var expectedLength = request.UserId.Length + 2 +
-                                 (request.Username?.Length ?? 0) + 2 + 1 + 1;
-            Assert.Equal(expectedLength, result.Length);
+        Assert.Equal((byte)request.Username.Length, result[position]);
+        position += 1;
 
-            var position = 2;
-            var userIdBytes = result[position..(position + request.UserId.Length)];
-            position += request.UserId.Length;
-            var usernameFlag = result[position];
-            position += 1;
-            if (usernameFlag == 1)
+        var usernameBytes = result[position..(position + request.Username.Length)];
+        position += request.Username.Length;
+        var decodedUsername = Encoding.UTF8.GetString(usernameBytes);
+        Assert.Equal(request.Username, decodedUsername);
+
+        Assert.Equal((byte)request.Password.Length, result[position]);
+        position += 1;
+
+        var passwordBytes = result[position..(position + request.Password.Length)];
+        position += request.Password.Length;
+        var decodedPassword = Encoding.UTF8.GetString(passwordBytes);
+        Assert.Equal(request.Password, decodedPassword);
+
+        var expectedStatusByte = request.Status switch
+        {
+            UserStatus.Active => (byte)1,
+            UserStatus.Inactive => (byte)2,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+        Assert.Equal(expectedStatusByte, result[position]);
+        position += 1;
+
+        var permissionsFlag = result[position];
+        position += 1;
+        if (permissionsFlag == 1)
+        {
+            var permissionsSize = BinaryPrimitives.ReadInt32LittleEndian(result[position..(position + 4)]);
+            position += 4;
+
+            var permissionsBytes = result[position..(position + permissionsSize)];
+        }
+        else
+        {
+            Assert.Null(request.Permissions);
+        }
+
+    }
+    [Fact]
+    public void TcpContracts_ChangePassword_HasCorrectBytes()
+    {
+        // Arrange
+        var request = new ChangePasswordRequest
+        {
+            UserId = Identifier.Numeric(1),
+            CurrentPassword = "oldpassword",
+            NewPassword = "newpassword"
+        };
+
+        // Act
+        var result = TcpContracts.ChangePassword(request);
+
+        // Assert
+        int position = 2;
+
+        var userIdBytes = result[position..(position + request.UserId.Length)];
+        position += request.UserId.Length;
+        Assert.Equal(request.UserId.Value, userIdBytes);
+
+        Assert.Equal((byte)request.CurrentPassword.Length, result[position]);
+        position += 1;
+
+        var currentPasswordBytes = result[position..(position + request.CurrentPassword.Length)];
+        position += request.CurrentPassword.Length;
+        var decodedCurrentPassword = Encoding.UTF8.GetString(currentPasswordBytes);
+        Assert.Equal(request.CurrentPassword, decodedCurrentPassword);
+
+        Assert.Equal((byte)request.NewPassword.Length, result[position]);
+        position += 1;
+
+        var newPasswordBytes = result[position..(position + request.NewPassword.Length)];
+        position += request.NewPassword.Length;
+        var decodedNewPassword = Encoding.UTF8.GetString(newPasswordBytes);
+        Assert.Equal(request.NewPassword, decodedNewPassword);
+    }
+
+    [Fact]
+    public void TcpContracts_UpdatePermissions_HasCorrectBytes()
+    {
+        // Arrange
+        var request = new UpdateUserPermissionsRequest
+        {
+            UserId = Identifier.Numeric(1),
+            Permissions = PermissionsFactory.CreatePermissions()
+        };
+
+        // Act
+        var result = TcpContracts.UpdatePermissions(request);
+
+        // Assert
+        int position = 2;
+
+        var userIdBytes = result[position..(position + request.UserId.Length)];
+        position += request.UserId.Length;
+        Assert.Equal(request.UserId.Value, userIdBytes);
+
+        var permissionsFlag = result[position];
+        position += 1;
+        if (permissionsFlag == 1)
+        {
+            var permissionsSize = BinaryPrimitives.ReadInt32LittleEndian(result[position..(position + 4)]);
+            position += 4;
+
+            var permissionsBytes = result[position..(position + permissionsSize)];
+
+            var mappedPermissions = PermissionsFactory.PermissionsFromBytes(permissionsBytes);
+
+            request.Permissions.Global.Should().BeEquivalentTo(mappedPermissions.Global);
+
+            if (request.Permissions.Streams != null)
             {
-                var usernameLength = result[position];
-                position += 1;
-                var usernameBytes = result[position..(position + usernameLength)];
-                position += usernameLength;
-                var decodedUsername = Encoding.UTF8.GetString(usernameBytes);
-                Assert.Equal(request.Username, decodedUsername);
-            }
-            else
-            {
-                Assert.Null(request.Username);
-            }
+                Assert.NotNull(mappedPermissions.Streams);
 
-            var statusFlag = result[position];
-            position += 1;
-            if (statusFlag == 1)
-            {
-                var userStatus = statusFlag switch
+                foreach (var (streamId, stream) in request.Permissions.Streams)
                 {
-                    1 => UserStatus.Active,
-                    2 => UserStatus.Inactive
-                };
-                Assert.Equal(request.UserStatus, userStatus);
+                    Assert.True(mappedPermissions.Streams.ContainsKey(streamId));
+                    var mappedStream = mappedPermissions.Streams[streamId];
+
+                    Assert.Equal(stream.ManageStream, mappedStream.ManageStream);
+                    Assert.Equal(stream.ReadStream, mappedStream.ReadStream);
+                    Assert.Equal(stream.ManageTopics, mappedStream.ManageTopics);
+                    Assert.Equal(stream.ReadTopics, mappedStream.ReadTopics);
+                    Assert.Equal(stream.PollMessages, mappedStream.PollMessages);
+                    Assert.Equal(stream.SendMessages, mappedStream.SendMessages);
+
+                    if (stream.Topics != null)
+                    {
+                        Assert.NotNull(mappedStream.Topics);
+
+                        foreach (var (topicId, topic) in stream.Topics)
+                        {
+                            Assert.True(mappedStream.Topics.ContainsKey(topicId));
+                            var mappedTopic = mappedStream.Topics[topicId];
+
+                            Assert.Equal(topic.ManageTopic, mappedTopic.ManageTopic);
+                            Assert.Equal(topic.ReadTopic, mappedTopic.ReadTopic);
+                            Assert.Equal(topic.PollMessages, mappedTopic.PollMessages);
+                            Assert.Equal(topic.SendMessages, mappedTopic.SendMessages);
+                        }
+                    }
+                    else
+                    {
+                        Assert.Null(mappedStream.Topics);
+                    }
+                }
             }
             else
             {
-                Assert.Null(request.UserStatus);
+                Assert.Null(mappedPermissions.Streams);
             }
-            Assert.Equal(request.UserId.Value , userIdBytes);
         }
-        [Fact]
-        public void TcpContracts_CreateUser_NoPermission_HasCorrectBytes()
+        else
         {
-            // Arrange
-            var request = new CreateUserRequest
+            Assert.Null(request.Permissions);
+        }
+    }
+
+    [Fact]
+    public void TcpContracts_CreateUser_WithPermission_HasCorrectBytes()
+    {
+        // Arrange
+        var request = new CreateUserRequest
+        {
+            Username = "testuser",
+            Password = "testpassword",
+            Status = UserStatus.Active,
+            Permissions = PermissionsFactory.CreatePermissions(),
+        };
+        // Act
+        var result = TcpContracts.CreateUser(request);
+
+        // Assert
+        int position = 0;
+
+        Assert.Equal((byte)request.Username.Length, result[position]);
+        position += 1;
+
+        var usernameBytes = result[position..(position + request.Username.Length)];
+        position += request.Username.Length;
+        var decodedUsername = Encoding.UTF8.GetString(usernameBytes);
+        Assert.Equal(request.Username, decodedUsername);
+
+        Assert.Equal((byte)request.Password.Length, result[position]);
+        position += 1;
+
+        var passwordBytes = result[position..(position + request.Password.Length)];
+        position += request.Password.Length;
+        var decodedPassword = Encoding.UTF8.GetString(passwordBytes);
+        Assert.Equal(request.Password, decodedPassword);
+
+        var expectedStatusByte = request.Status switch
+        {
+            UserStatus.Active => (byte)1,
+            UserStatus.Inactive => (byte)2,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+        Assert.Equal(expectedStatusByte, result[position]);
+        position += 1;
+
+        var permissionsFlag = result[position];
+        position += 1;
+        if (permissionsFlag == 1)
+        {
+            var permissionsSize = BinaryPrimitives.ReadInt32LittleEndian(result[position..(position + 4)]);
+            position += 4;
+
+            var permissionsBytes = result[position..(position + permissionsSize)];
+            var mappedPermissions = PermissionsFactory.PermissionsFromBytes(permissionsBytes);
+            request.Permissions.Global.Should().BeEquivalentTo(mappedPermissions.Global);
+
+            if (request.Permissions.Streams != null)
             {
-                Username = "testuser",
-                Password = "testpassword",
-                Status = UserStatus.Active,
-                Permissions = null,
-            };
-            // Act
-            var result = TcpContracts.CreateUser(request);
-            
-            // Assert
-            int position = 0;
+                Assert.NotNull(mappedPermissions.Streams);
 
-            Assert.Equal((byte)request.Username.Length, result[position]);
-            position += 1;
+                foreach (var (streamId, stream) in request.Permissions.Streams)
+                {
+                    Assert.True(mappedPermissions.Streams.ContainsKey(streamId));
+                    var mappedStream = mappedPermissions.Streams[streamId];
 
-            var usernameBytes = result[position..(position + request.Username.Length)];
-            position += request.Username.Length;
-            var decodedUsername = Encoding.UTF8.GetString(usernameBytes);
-            Assert.Equal(request.Username, decodedUsername);
+                    Assert.Equal(stream.ManageStream, mappedStream.ManageStream);
+                    Assert.Equal(stream.ReadStream, mappedStream.ReadStream);
+                    Assert.Equal(stream.ManageTopics, mappedStream.ManageTopics);
+                    Assert.Equal(stream.ReadTopics, mappedStream.ReadTopics);
+                    Assert.Equal(stream.PollMessages, mappedStream.PollMessages);
+                    Assert.Equal(stream.SendMessages, mappedStream.SendMessages);
 
-            Assert.Equal((byte)request.Password.Length, result[position]);
-            position += 1;
+                    if (stream.Topics != null)
+                    {
+                        Assert.NotNull(mappedStream.Topics);
 
-            var passwordBytes = result[position..(position + request.Password.Length)];
-            position += request.Password.Length;
-            var decodedPassword = Encoding.UTF8.GetString(passwordBytes);
-            Assert.Equal(request.Password, decodedPassword);
+                        foreach (var (topicId, topic) in stream.Topics)
+                        {
+                            Assert.True(mappedStream.Topics.ContainsKey(topicId));
+                            var mappedTopic = mappedStream.Topics[topicId];
 
-            var expectedStatusByte = request.Status switch
-            {
-                UserStatus.Active => (byte)1,
-                UserStatus.Inactive => (byte)2,
-                _ => throw new ArgumentOutOfRangeException()
-            };
-            Assert.Equal(expectedStatusByte, result[position]);
-            position += 1;
-
-            var permissionsFlag = result[position];
-            position += 1;
-            if (permissionsFlag == 1)
-            {
-                var permissionsSize = BinaryPrimitives.ReadInt32LittleEndian(result[position..(position + 4)]);
-                position += 4;
-
-                var permissionsBytes = result[position..(position + permissionsSize)];
+                            Assert.Equal(topic.ManageTopic, mappedTopic.ManageTopic);
+                            Assert.Equal(topic.ReadTopic, mappedTopic.ReadTopic);
+                            Assert.Equal(topic.PollMessages, mappedTopic.PollMessages);
+                            Assert.Equal(topic.SendMessages, mappedTopic.SendMessages);
+                        }
+                    }
+                    else
+                    {
+                        Assert.Null(mappedStream.Topics);
+                    }
+                }
             }
             else
             {
                 Assert.Null(request.Permissions);
             }
-            
         }
-        [Fact]
-        public void TcpContracts_ChangePassword_HasCorrectBytes()
+    }
+
+    [Fact]
+    public void TcpContracts_ChangePasswordRequest_HasCorrectBytes()
+    {
+        // Arrange
+        var request = new ChangePasswordRequest
         {
-            // Arrange
-            var request = new ChangePasswordRequest
-            {
-                UserId = Identifier.Numeric(1),
-                CurrentPassword = "oldpassword",
-                NewPassword = "newpassword"
-            };
+            UserId = Identifier.Numeric(1),
+            CurrentPassword = "oldpassword",
+            NewPassword = "newpassword"
+        };
 
-            // Act
-            var result = TcpContracts.ChangePassword(request);
+        // Act
+        var result = TcpContracts.ChangePassword(request);
 
-            // Assert
-            int position = 2;
+        // Assert
+        var expectedLength = request.UserId.Length + 2 +
+                             request.CurrentPassword.Length + request.NewPassword.Length + 2;
+        Assert.Equal(expectedLength, result.Length);
 
-            var userIdBytes = result[position..(position + request.UserId.Length)];
-            position += request.UserId.Length;
-            Assert.Equal(request.UserId.Value, userIdBytes);
+        // Validate bytes can be translated back to properties
+        var position = 2;
+        var userIdBytes = result[position..(position + request.UserId.Length)];
+        position += request.UserId.Length;
+        var currentPasswordLength = result[position];
+        position += 1;
+        var currentPasswordBytes = result[position..(position + currentPasswordLength)];
+        position += currentPasswordLength;
+        var newPasswordLength = result[position];
+        position += 1;
+        var newPasswordBytes = result[position..(position + newPasswordLength)];
 
-            Assert.Equal((byte)request.CurrentPassword.Length, result[position]);
-            position += 1;
+        var decodedUserId = BinaryPrimitives.ReadInt32LittleEndian(userIdBytes);
+        var decodedCurrentPassword = Encoding.UTF8.GetString(currentPasswordBytes);
+        var decodedNewPassword = Encoding.UTF8.GetString(newPasswordBytes);
 
-            var currentPasswordBytes = result[position..(position + request.CurrentPassword.Length)];
-            position += request.CurrentPassword.Length;
-            var decodedCurrentPassword = Encoding.UTF8.GetString(currentPasswordBytes);
-            Assert.Equal(request.CurrentPassword, decodedCurrentPassword);
+        Assert.Equal(request.UserId.Value, userIdBytes);
+        Assert.Equal(request.CurrentPassword, decodedCurrentPassword);
+        Assert.Equal(request.NewPassword, decodedNewPassword);
+    }
 
-            Assert.Equal((byte)request.NewPassword.Length, result[position]);
-            position += 1;
-
-            var newPasswordBytes = result[position..(position + request.NewPassword.Length)];
-            position += request.NewPassword.Length;
-            var decodedNewPassword = Encoding.UTF8.GetString(newPasswordBytes);
-            Assert.Equal(request.NewPassword, decodedNewPassword);
-        }
-        
-        [Fact]
-        public void TcpContracts_UpdatePermissions_HasCorrectBytes()
-        {
-            // Arrange
-            var request = new UpdateUserPermissionsRequest
-            {
-                UserId = Identifier.Numeric(1),
-                Permissions = PermissionsFactory.CreatePermissions()
-            };
-
-            // Act
-            var result = TcpContracts.UpdatePermissions(request);
-
-            // Assert
-            int position = 2;
-
-            var userIdBytes = result[position..(position + request.UserId.Length)];
-            position += request.UserId.Length;
-            Assert.Equal(request.UserId.Value, userIdBytes);
-
-            var permissionsFlag = result[position];
-            position += 1;
-            if (permissionsFlag == 1)
-            {
-                var permissionsSize = BinaryPrimitives.ReadInt32LittleEndian(result[position..(position + 4)]);
-                position += 4;
-
-                var permissionsBytes = result[position..(position + permissionsSize)];
-
-                var mappedPermissions = PermissionsFactory.PermissionsFromBytes(permissionsBytes);
-
-                request.Permissions.Global.Should().BeEquivalentTo(mappedPermissions.Global);
-
-                if (request.Permissions.Streams != null)
-                {
-                    Assert.NotNull(mappedPermissions.Streams);
-
-                    foreach (var (streamId, stream) in request.Permissions.Streams)
-                    {
-                        Assert.True(mappedPermissions.Streams.ContainsKey(streamId));
-                        var mappedStream = mappedPermissions.Streams[streamId];
-
-                        Assert.Equal(stream.ManageStream, mappedStream.ManageStream);
-                        Assert.Equal(stream.ReadStream, mappedStream.ReadStream);
-                        Assert.Equal(stream.ManageTopics, mappedStream.ManageTopics);
-                        Assert.Equal(stream.ReadTopics, mappedStream.ReadTopics);
-                        Assert.Equal(stream.PollMessages, mappedStream.PollMessages);
-                        Assert.Equal(stream.SendMessages, mappedStream.SendMessages);
-
-                        if (stream.Topics != null)
-                        {
-                            Assert.NotNull(mappedStream.Topics);
-
-                            foreach (var (topicId, topic) in stream.Topics)
-                            {
-                                Assert.True(mappedStream.Topics.ContainsKey(topicId));
-                                var mappedTopic = mappedStream.Topics[topicId];
-
-                                Assert.Equal(topic.ManageTopic, mappedTopic.ManageTopic);
-                                Assert.Equal(topic.ReadTopic, mappedTopic.ReadTopic);
-                                Assert.Equal(topic.PollMessages, mappedTopic.PollMessages);
-                                Assert.Equal(topic.SendMessages, mappedTopic.SendMessages);
-                            }
-                        }
-                        else
-                        {
-                            Assert.Null(mappedStream.Topics);
-                        }
-                    }
-                }
-                else
-                {
-                    Assert.Null(mappedPermissions.Streams);
-                }
-            }
-            else
-            {
-                Assert.Null(request.Permissions);
-            }
-        }
-        
-        [Fact]
-        public void TcpContracts_CreateUser_WithPermission_HasCorrectBytes()
-        {
-            // Arrange
-            var request = new CreateUserRequest
-            {
-                Username = "testuser",
-                Password = "testpassword",
-                Status = UserStatus.Active,
-                Permissions = PermissionsFactory.CreatePermissions(),
-            };
-            // Act
-            var result = TcpContracts.CreateUser(request);
-            
-            // Assert
-            int position = 0;
-
-            Assert.Equal((byte)request.Username.Length, result[position]);
-            position += 1;
-
-            var usernameBytes = result[position..(position + request.Username.Length)];
-            position += request.Username.Length;
-            var decodedUsername = Encoding.UTF8.GetString(usernameBytes);
-            Assert.Equal(request.Username, decodedUsername);
-
-            Assert.Equal((byte)request.Password.Length, result[position]);
-            position += 1;
-
-            var passwordBytes = result[position..(position + request.Password.Length)];
-            position += request.Password.Length;
-            var decodedPassword = Encoding.UTF8.GetString(passwordBytes);
-            Assert.Equal(request.Password, decodedPassword);
-
-            var expectedStatusByte = request.Status switch
-            {
-                UserStatus.Active => (byte)1,
-                UserStatus.Inactive => (byte)2,
-                _ => throw new ArgumentOutOfRangeException()
-            };
-            Assert.Equal(expectedStatusByte, result[position]);
-            position += 1;
-
-            var permissionsFlag = result[position];
-            position += 1;
-            if (permissionsFlag == 1)
-            {
-                var permissionsSize = BinaryPrimitives.ReadInt32LittleEndian(result[position..(position + 4)]);
-                position += 4;
-
-                var permissionsBytes = result[position..(position + permissionsSize)];
-                var mappedPermissions = PermissionsFactory.PermissionsFromBytes(permissionsBytes);
-                request.Permissions.Global.Should().BeEquivalentTo(mappedPermissions.Global);
-
-                if (request.Permissions.Streams != null)
-                {
-                    Assert.NotNull(mappedPermissions.Streams);
-
-                    foreach (var (streamId, stream) in request.Permissions.Streams)
-                    {
-                        Assert.True(mappedPermissions.Streams.ContainsKey(streamId));
-                        var mappedStream = mappedPermissions.Streams[streamId];
-
-                        Assert.Equal(stream.ManageStream, mappedStream.ManageStream);
-                        Assert.Equal(stream.ReadStream, mappedStream.ReadStream);
-                        Assert.Equal(stream.ManageTopics, mappedStream.ManageTopics);
-                        Assert.Equal(stream.ReadTopics, mappedStream.ReadTopics);
-                        Assert.Equal(stream.PollMessages, mappedStream.PollMessages);
-                        Assert.Equal(stream.SendMessages, mappedStream.SendMessages);
-
-                        if (stream.Topics != null)
-                        {
-                            Assert.NotNull(mappedStream.Topics);
-
-                            foreach (var (topicId, topic) in stream.Topics)
-                            {
-                                Assert.True(mappedStream.Topics.ContainsKey(topicId));
-                                var mappedTopic = mappedStream.Topics[topicId];
-
-                                Assert.Equal(topic.ManageTopic, mappedTopic.ManageTopic);
-                                Assert.Equal(topic.ReadTopic, mappedTopic.ReadTopic);
-                                Assert.Equal(topic.PollMessages, mappedTopic.PollMessages);
-                                Assert.Equal(topic.SendMessages, mappedTopic.SendMessages);
-                            }
-                        }
-                        else
-                        {
-                            Assert.Null(mappedStream.Topics);
-                        }
-                    }
-                }
-                else
-                {
-                    Assert.Null(request.Permissions);
-                }
-            }
-        }
-        
-        [Fact]
-        public void TcpContracts_ChangePasswordRequest_HasCorrectBytes()
-        {
-            // Arrange
-            var request = new ChangePasswordRequest
-            {
-                UserId = Identifier.Numeric(1),
-                CurrentPassword = "oldpassword",
-                NewPassword = "newpassword"
-            };
-
-            // Act
-            var result = TcpContracts.ChangePassword(request);
-
-            // Assert
-            var expectedLength = request.UserId.Length + 2 +
-                                request.CurrentPassword.Length + request.NewPassword.Length + 2;
-            Assert.Equal(expectedLength, result.Length);
-
-            // Validate bytes can be translated back to properties
-            var position = 2;
-            var userIdBytes = result[position..(position + request.UserId.Length)];
-            position += request.UserId.Length;
-            var currentPasswordLength = result[position];
-            position += 1;
-            var currentPasswordBytes = result[position..(position + currentPasswordLength)];
-            position += currentPasswordLength;
-            var newPasswordLength = result[position];
-            position += 1;
-            var newPasswordBytes = result[position..(position + newPasswordLength)];
-
-            var decodedUserId = BinaryPrimitives.ReadInt32LittleEndian(userIdBytes);
-            var decodedCurrentPassword = Encoding.UTF8.GetString(currentPasswordBytes);
-            var decodedNewPassword = Encoding.UTF8.GetString(newPasswordBytes);
-
-            Assert.Equal(request.UserId.Value, userIdBytes);
-            Assert.Equal(request.CurrentPassword, decodedCurrentPassword);
-            Assert.Equal(request.NewPassword, decodedNewPassword);
-        }
-        
     [Fact]
     public void TcpContracts_MessageFetchRequest_HasCorrectBytes()
     {
@@ -480,7 +529,7 @@ public sealed class TcpContract
         var topicId = Identifier.Numeric(1);
         var request = MessageFactory.CreateMessageSendRequest();
         var messageBufferSize = request.Messages.Sum(message => 16 + 4 + 4 + message.Payload.Length)
-            + request.Partitioning.Length + 14;
+                                + request.Partitioning.Length + 14;
         var result = new byte[messageBufferSize];
 
 
@@ -552,7 +601,7 @@ public sealed class TcpContract
             Name = Utility.RandomString(69),
             StreamId = streamId,
             TopicId = topicId,
-            ConsumerGroupId = Random.Shared.Next(1,69)
+            ConsumerGroupId = Random.Shared.Next(1, 69)
         };
         // Act
         var result = TcpContracts.CreateGroup(request).AsSpan();
@@ -589,7 +638,7 @@ public sealed class TcpContract
         Assert.Equal(expectedBytesLength, result.Length);
         Assert.Equal(streamId.Value, BytesToIdentifierNumeric(result, 0).Value);
         Assert.Equal(topicId.Value, BytesToIdentifierNumeric(result, 6).Value);
-        Assert.Equal(groupId.Value,  BytesToIdentifierNumeric(result, 12).Value);
+        Assert.Equal(groupId.Value, BytesToIdentifierNumeric(result, 12).Value);
     }
 
     [Fact]

@@ -2,7 +2,6 @@ using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Extensions;
 using Iggy_SDK.Headers;
-using Iggy_SDK.Kinds;
 using Iggy_SDK.Messages;
 using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
@@ -15,6 +14,28 @@ namespace Iggy_SDK.Contracts.Tcp;
 //TODO - write unit tests for all the user related contracts
 internal static class TcpContracts
 {
+    internal static byte[] LoginWithPersonalAccessToken(LoginWithPersonalAccessToken request)
+    {
+        Span<byte> bytes = stackalloc byte[5 + request.Token.Length];
+        bytes[0] = (byte)request.Token.Length;
+        Encoding.UTF8.GetBytes(request.Token, bytes[1..(1 + request.Token.Length)]);
+        return bytes.ToArray();
+    }
+    internal static byte[] DeletePersonalRequestToken(DeletePersonalAccessTokenRequest request)
+    {
+        Span<byte> bytes = stackalloc byte[5 + request.Name.Length];
+        bytes[0] = (byte)request.Name.Length;
+        Encoding.UTF8.GetBytes(request.Name, bytes[1..(1 + request.Name.Length)]);
+        return bytes.ToArray();
+    }
+    internal static byte[] CreatePersonalAccessToken(CreatePersonalAccessTokenRequest request)
+    {
+        Span<byte> bytes = stackalloc byte[5 + request.Name.Length];
+        bytes[0] = (byte)request.Name.Length;
+        Encoding.UTF8.GetBytes(request.Name, bytes[1..(1 + request.Name.Length)]);
+        BinaryPrimitives.WriteUInt32LittleEndian(bytes[(1 + request.Name.Length)..], request.Expiry ?? 0);
+        return bytes.ToArray();
+    }
     internal static byte[] GetClient(uint clientId)
     {
         var bytes = new byte[4];
