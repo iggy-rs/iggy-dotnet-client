@@ -56,6 +56,7 @@ var response = await bus.LoginUser(new LoginUserRequest
 ```
 Furthermore, after logging in, you have the option to create an account with customizable `Permissions`.
 ```c#
+//---Snip---
 await bus.CreateUser(new CreateUserRequest
 {
     Username = "test_user",
@@ -111,7 +112,7 @@ var response = await bus.LoginUser(new LoginUserRequest
     Password = "test_user",
 });
 ```
-Alternatively, once you've logged in, you can create a `Personal Access Token` that can be reused for further logins."
+Alternatively, once you've logged in, you can create a `Personal Access Token` that can be reused for further logins.
 ```c#
 var response = await bus.LoginUser(new LoginUserRequest
 {
