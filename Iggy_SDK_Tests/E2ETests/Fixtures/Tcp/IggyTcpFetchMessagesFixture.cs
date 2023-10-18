@@ -1,4 +1,5 @@
 using DotNet.Testcontainers.Builders;
+using DotNet.Testcontainers.Configurations;
 using Iggy_SDK;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
@@ -14,9 +15,10 @@ namespace Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
 
 public sealed class IggyTcpFetchMessagesFixture : IAsyncLifetime
 {
-    private readonly IContainer _container = new ContainerBuilder().WithImage("iggyrs/iggy:latest")
+    public readonly IContainer _container = new ContainerBuilder().WithImage("iggyrs/iggy:latest")
         //.WithPortBinding(3000, true)
         .WithPortBinding(8090, true)
+        .WithOutputConsumer(Consume.RedirectStdoutAndStderrToConsole())
         .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8090))
         //.WithPortBinding(8080, true)
         .Build();

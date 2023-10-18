@@ -16,6 +16,7 @@ public sealed class IggyTcpSendMessagesFixture : IAsyncLifetime
     private readonly IContainer _container = new ContainerBuilder().WithImage("iggyrs/iggy:latest")
         //.WithPortBinding(3000, true)
         .WithPortBinding(8090, true)
+        .WithOutputConsumer(Consume.RedirectStdoutAndStderrToConsole())
         .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8090))
         //.WithPortBinding(8080, true)
         .Build();

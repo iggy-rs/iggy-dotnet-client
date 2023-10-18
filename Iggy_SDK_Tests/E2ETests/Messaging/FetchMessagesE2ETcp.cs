@@ -1,3 +1,4 @@
+using DotNet.Testcontainers.Builders;
 using FluentAssertions;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
@@ -6,6 +7,7 @@ using Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
 using Iggy_SDK_Tests.Utils;
 using Iggy_SDK_Tests.Utils.DummyObj;
 using Iggy_SDK_Tests.Utils.Messages;
+using Xunit.Abstractions;
 
 namespace Iggy_SDK_Tests.E2ETests.Messaging;
 

@@ -16,9 +16,10 @@ namespace Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
 
 public sealed class IggyTcpPollMessagesFixture : IAsyncLifetime
 {
-    private readonly IContainer _container = new ContainerBuilder().WithImage("iggyrs/iggy:latest")
+    public readonly IContainer _container = new ContainerBuilder().WithImage("iggyrs/iggy:latest")
         //.WithPortBinding(3000, true)
         .WithPortBinding(8090, true)
+        .WithOutputConsumer(Consume.RedirectStdoutAndStderrToConsole())
         .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8090))
         //.WithPortBinding(8080, true)
         .Build();
@@ -29,7 +30,7 @@ public sealed class IggyTcpPollMessagesFixture : IAsyncLifetime
     private static readonly StreamRequest StreamRequest = StreamFactory.CreateStreamRequest();
     private static readonly TopicRequest TopicRequest = TopicFactory.CreateTopicRequest();
     private static readonly TopicRequest HeadersTopicRequest = TopicFactory.CreateTopicRequest();
-    public const int MessageCount = 1000;
+    public const int MessageCount = 1000000;
 
     public readonly int StreamId = StreamRequest.StreamId;
     public readonly int TopicId = TopicRequest.TopicId;
