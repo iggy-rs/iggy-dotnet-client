@@ -44,7 +44,7 @@ public sealed class IggyDockerHooks
             options.Protocol = Protocol.Tcp;
             options.SendBufferSize = 10000;
             options.ReceiveBufferSize = 10000;
-            options.IntervalBatchingConfig = x =>
+            options.MessageBatchingSettings = x =>
             {
                 x.Enabled = false;
                 x.MaxMessagesPerBatch = 1000;
@@ -65,7 +65,7 @@ public sealed class IggyDockerHooks
                 options.Protocol = Protocol.Tcp;
                 options.SendBufferSize = 10000;
                 options.ReceiveBufferSize = 10000;
-                options.IntervalBatchingConfig = x =>
+                options.MessageBatchingSettings = x =>
                 {
                     x.Enabled = false;
                     x.MaxMessagesPerBatch = 1000;
@@ -103,7 +103,7 @@ public sealed class IggyDockerHooks
             options.Protocol = Protocol.Tcp;
             options.SendBufferSize = 10000;
             options.ReceiveBufferSize = 10000;
-            options.IntervalBatchingConfig = x =>
+            options.MessageBatchingSettings = x =>
             {
                 x.Enabled = false;
                 x.MaxMessagesPerBatch = 1000;

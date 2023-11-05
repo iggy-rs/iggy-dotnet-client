@@ -191,20 +191,6 @@ public sealed class HeaderValueTests
     }
 
     [Fact]
-    public void ToString_InvalidKind_ThrowsInvalidOperationException()
-    {
-        // Arrange
-        var headerValue = new HeaderValue
-        {
-            Kind = HeaderKind.Raw,
-            Value = Encoding.UTF8.GetBytes("TestValue")
-        };
-
-        // Act and Assert
-        Assert.Throws<InvalidOperationException>(() => headerValue.ToString());
-    }
-
-    [Fact]
     public void ToBool_ValidKind_ReturnsValue()
     {
         // Arrange

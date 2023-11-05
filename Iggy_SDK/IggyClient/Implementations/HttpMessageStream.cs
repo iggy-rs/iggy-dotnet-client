@@ -1,4 +1,5 @@
-﻿using Iggy_SDK.Contracts.Http;
+﻿using Iggy_SDK.Configuration;
+using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Exceptions;
 using Iggy_SDK.Headers;
@@ -27,13 +28,15 @@ public class HttpMessageStream : IIggyClient
     //but first I need to move the JsonConverters to attributes in contracts.
     private readonly HttpClient _httpClient;
     private readonly Channel<MessageSendRequest>? _channel;
+    private readonly MessagePollingSettings _messagePollingSettings;
     private readonly ILogger<HttpMessageStream> _logger;
     private readonly IMessageInvoker? _messageInvoker;
 
-    internal HttpMessageStream(HttpClient httpClient, Channel<MessageSendRequest>? channel, ILoggerFactory loggerFactory, IMessageInvoker? messageInvoker = null)
+    internal HttpMessageStream(HttpClient httpClient, Channel<MessageSendRequest>? channel, MessagePollingSettings messagePollingSettings, ILoggerFactory loggerFactory, IMessageInvoker? messageInvoker = null)
     {
         _httpClient = httpClient;
         _channel = channel;
+        _messagePollingSettings = messagePollingSettings;
         _messageInvoker = messageInvoker;
         _logger = loggerFactory.CreateLogger<HttpMessageStream>();
     }
@@ -248,7 +251,7 @@ public class HttpMessageStream : IIggyClient
         [EnumeratorCancellation] CancellationToken token = default)
     {
         var channel = Channel.CreateUnbounded<MessageResponse<TMessage>>();
-        var autoCommit = request.StoreOffsetStrategy switch
+        var autoCommit = _messagePollingSettings.StoreOffsetStrategy switch
         {
             StoreOffset.Never => false,
             StoreOffset.WhenMessagesAreReceived => true,
@@ -266,13 +269,13 @@ public class HttpMessageStream : IIggyClient
         };
         
 
-        _ = StartPollingMessagesAsync(fetchRequest, deserializer, request.Interval, channel.Writer, decryptor, token);
+        _ = StartPollingMessagesAsync(fetchRequest, deserializer, _messagePollingSettings.Interval, channel.Writer, decryptor, token);
         await foreach(var messageResponse in channel.Reader.ReadAllAsync(token))
         {
             yield return messageResponse;
             
             var currentOffset = messageResponse.Offset;
-            if (request.StoreOffsetStrategy is StoreOffset.AfterProcessingEachMessage)
+            if (_messagePollingSettings.StoreOffsetStrategy is StoreOffset.AfterProcessingEachMessage)
             {
                 var storeOffsetRequest = new StoreOffsetRequest
                 {

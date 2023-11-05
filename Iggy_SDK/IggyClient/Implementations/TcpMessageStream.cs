@@ -1,3 +1,4 @@
+using Iggy_SDK.Configuration;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Contracts.Tcp;
 using Iggy_SDK.Enums;
@@ -20,13 +21,15 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
 {
     private readonly Socket _socket;
     private readonly Channel<MessageSendRequest>? _channel;
+    private readonly MessagePollingSettings _messagePollingSettings;
     private readonly ILogger<TcpMessageStream> _logger;
     private readonly IMessageInvoker? _messageInvoker;
 
-    internal TcpMessageStream(Socket socket, Channel<MessageSendRequest>? channel,ILoggerFactory loggerFactory, IMessageInvoker? messageInvoker = null)
+    internal TcpMessageStream(Socket socket, Channel<MessageSendRequest>? channel, MessagePollingSettings messagePollingSettings, ILoggerFactory loggerFactory, IMessageInvoker? messageInvoker = null)
     {
         _socket = socket;
         _channel = channel;
+        _messagePollingSettings = messagePollingSettings;
         _messageInvoker = messageInvoker;
         _logger = loggerFactory.CreateLogger<TcpMessageStream>();
     }
@@ -360,7 +363,7 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         [EnumeratorCancellation] CancellationToken token = default)
     {
         var channel = Channel.CreateUnbounded<MessageResponse<TMessage>>();
-        var autoCommit = request.StoreOffsetStrategy switch
+        var autoCommit = _messagePollingSettings.StoreOffsetStrategy switch
         {
             StoreOffset.Never => false,
             StoreOffset.WhenMessagesAreReceived => true,
@@ -378,13 +381,13 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         };
         
 
-        _ = StartPollingMessagesAsync(fetchRequest, deserializer, request.Interval, channel.Writer, decryptor, token);
+        _ = StartPollingMessagesAsync(fetchRequest, deserializer, _messagePollingSettings.Interval, channel.Writer, decryptor, token);
         await foreach(var messageResponse in channel.Reader.ReadAllAsync(token))
         {
             yield return messageResponse;
             
             var currentOffset = messageResponse.Offset;
-            if (request.StoreOffsetStrategy is StoreOffset.AfterProcessingEachMessage)
+            if (_messagePollingSettings.StoreOffsetStrategy is StoreOffset.AfterProcessingEachMessage)
             {
                 var storeOffsetRequest = new StoreOffsetRequest
                 {

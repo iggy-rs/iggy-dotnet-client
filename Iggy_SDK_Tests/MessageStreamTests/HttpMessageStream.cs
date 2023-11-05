@@ -9,6 +9,7 @@ using Iggy_SDK_Tests.Utils.Offset;
 using Iggy_SDK_Tests.Utils.Partitions;
 using Iggy_SDK_Tests.Utils.Streams;
 using Iggy_SDK_Tests.Utils.Topics;
+using Iggy_SDK.Configuration;
 using Iggy_SDK.IggyClient;
 using Microsoft.Extensions.Logging;
 using RichardSzalay.MockHttp;
@@ -71,7 +72,8 @@ public sealed class HttpMessageStream
         var client = _httpHandler.ToHttpClient();
         client.BaseAddress = new Uri(URL);
         var loggerFactory = new LoggerFactory();
-        _sut = new Iggy_SDK.IggyClient.Implementations.HttpMessageStream(client, _channel, loggerFactory);
+        var messagePollingSettings = new MessagePollingSettings();
+        _sut = new Iggy_SDK.IggyClient.Implementations.HttpMessageStream(client, _channel, messagePollingSettings, loggerFactory);
     }
 
     [Fact]

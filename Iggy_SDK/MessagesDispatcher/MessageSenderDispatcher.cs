@@ -20,7 +20,7 @@ internal sealed class MessageSenderDispatcher
     private readonly int _maxMessagesPerBatch;
     private readonly int _maxRequests;
 
-    internal MessageSenderDispatcher(IntervalBatchingSettings sendMessagesOptions, Channel<MessageSendRequest> channel,
+    internal MessageSenderDispatcher(MessageBatchingSettings sendMessagesOptions, Channel<MessageSendRequest> channel,
         IMessageInvoker messageInvoker, ILoggerFactory loggerFactory)
     {
         _timer = new (sendMessagesOptions.Interval);

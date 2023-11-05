@@ -10,7 +10,8 @@ namespace Iggy_SDK.Factory;
 internal class HttpMessageStreamBuilder
 {
     private readonly HttpClient _client;
-    private readonly IntervalBatchingSettings _options;
+    private readonly MessageBatchingSettings _messageBatchingSettings;
+    private readonly MessagePollingSettings _messagePollingSettings;
     private Channel<MessageSendRequest>? _channel;
     private MessageSenderDispatcher? _messageSenderDispatcher;
     private readonly ILoggerFactory _loggerFactory;
@@ -18,21 +19,24 @@ internal class HttpMessageStreamBuilder
 
     internal HttpMessageStreamBuilder(HttpClient client, IMessageStreamConfigurator options, ILoggerFactory loggerFactory)
     {
-        var sendMessagesOptions = new IntervalBatchingSettings();
-        options.IntervalBatchingConfig.Invoke(sendMessagesOptions);
-        _options = sendMessagesOptions;
+        var sendMessagesOptions = new MessageBatchingSettings();
+        var messagePollingOptions = new MessagePollingSettings();
+        options.MessageBatchingSettings.Invoke(sendMessagesOptions);
+        options.MessagePollingSettings.Invoke(messagePollingOptions);
+        _messageBatchingSettings = sendMessagesOptions;
+        _messagePollingSettings = messagePollingOptions;
         _client = client;
         _loggerFactory = loggerFactory;
     }
     //TODO - this channel will probably need to be refactored, to accept a lambda instead of MessageSendRequest
     internal HttpMessageStreamBuilder WithSendMessagesDispatcher()
     {
-        if (_options.Enabled)
+        if (_messageBatchingSettings.Enabled)
         {
-            _channel = Channel.CreateBounded<MessageSendRequest>(_options.MaxRequests);
+            _channel = Channel.CreateBounded<MessageSendRequest>(_messageBatchingSettings.MaxRequests);
             _messageInvoker =  new HttpMessageInvoker(_client);
             _messageSenderDispatcher =
-                new MessageSenderDispatcher(_options, _channel, _messageInvoker, _loggerFactory);
+                new MessageSenderDispatcher(_messageBatchingSettings, _channel, _messageInvoker, _loggerFactory);
         }
         else
         {
@@ -43,10 +47,10 @@ internal class HttpMessageStreamBuilder
     internal HttpMessageStream Build()
     {
         _messageSenderDispatcher?.Start();
-        return _options.Enabled switch
+        return _messageBatchingSettings.Enabled switch
         {
-            true => new HttpMessageStream(_client, _channel, _loggerFactory),
-            false => new HttpMessageStream(_client, _channel, _loggerFactory, _messageInvoker)
+            true => new HttpMessageStream(_client, _channel, _messagePollingSettings, _loggerFactory),
+            false => new HttpMessageStream(_client, _channel, _messagePollingSettings, _loggerFactory, _messageInvoker)
         };
     }
     

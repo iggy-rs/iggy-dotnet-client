@@ -23,7 +23,7 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
 {
     options.BaseAdress = "127.0.0.1:8090";
     options.Protocol = protocol;
-    options.IntervalBatchingConfig = x =>
+    options.MessageBatchingSettings = x =>
     {
         x.Enabled = false;
         x.Interval = TimeSpan.FromMilliseconds(101);

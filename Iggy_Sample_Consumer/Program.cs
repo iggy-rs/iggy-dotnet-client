@@ -25,7 +25,7 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
     options.BaseAdress = "127.0.0.1:8090";
     options.Protocol = protocol;
 
-    options.IntervalBatchingConfig = x =>
+    options.MessageBatchingSettings = x =>
     {
         x.Enabled = false;
         x.Interval = TimeSpan.FromMilliseconds(100);
@@ -33,30 +33,13 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
         x.MaxRequests = 4096;
     };
 }, loggerFactory);
-try
+
+var response = await bus.LoginUser(new LoginUserRequest
 {
-    var response = await bus.LoginUser(new LoginUserRequest
-    {
-        Password = "iggy",
-        Username = "iggy",
-    });
-}
-catch
-{
-    await bus.CreateUser(new CreateUserRequest
-    {
-        Password = "iggy",
-        Status = UserStatus.Active,
-        Username = "iggy",
-    });
-    
-    var response = await bus.LoginUser(new LoginUserRequest
-    {
-        Password = "iggy",
-        Username = "iggy",
-    });
-    Console.WriteLine(response!.Token);
-}
+    Password = "iggy",
+    Username = "iggy",
+});
+
 Console.WriteLine("Using protocol : {0}", protocol.ToString());
 int streamIdVal = 1;
 int topicIdVal = 1;
@@ -116,8 +99,6 @@ async Task ConsumeMessages()
                        StreamId = streamId,
                        PartitionId = partitionId,
                        PollingStrategy = PollingStrategy.Next(),
-                       Interval = TimeSpan.FromMilliseconds(intervalInMs),
-                       StoreOffsetStrategy = StoreOffset.AfterProcessingEachMessage,
                    }, deserializer, decryptor))
     {
         HandleMessage(msgResponse);
@@ -163,8 +144,8 @@ void HandleMessage(MessageResponse<Envelope> messageResponse)
         Console.WriteLine();
         foreach (var (headerKey, headerValue) in messageResponse.Headers)
         {
-            Console.WriteLine("Found Header: {0} with value: {1}, ", headerKey, headerValue);
-        }
+            Console.WriteLine("Found Header: {0} with value: {1}, ", headerKey.ToString(), headerValue.ToString());
+                }
         Console.WriteLine();
     }
     //await Task.Delay(1000);

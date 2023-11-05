@@ -47,7 +47,7 @@ public sealed class IggyTcpFetchMessagesFixture : IAsyncLifetime
         {
             options.BaseAdress = $"127.0.0.1:{_container.GetMappedPublicPort(8090)}";
             options.Protocol = Protocol.Tcp;
-            options.IntervalBatchingConfig = x =>
+            options.MessageBatchingSettings = x =>
             {
                 x.Interval = TimeSpan.FromMilliseconds(100);
                 x.MaxMessagesPerBatch = 1000;

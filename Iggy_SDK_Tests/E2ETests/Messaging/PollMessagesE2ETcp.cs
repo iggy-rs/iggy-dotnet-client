@@ -28,12 +28,10 @@ public sealed class PollMessagesE2ETcp : IClassFixture<IggyTcpPollMessagesFixtur
                            {
                                Consumer = Consumer.New(1),
                                Count = 10,
-                               Interval = TimeSpan.FromMilliseconds(100),
                                PartitionId = _fixture.PartitionId,
                                PollingStrategy = PollingStrategy.Next(),
                                StreamId = Identifier.Numeric(_fixture.StreamId),
                                TopicId = Identifier.Numeric(_fixture.TopicId),
-                               StoreOffsetStrategy = StoreOffset.WhenMessagesAreReceived
                            }, MessageFactory.DeserializeDummyMessage))
             {
                 msgResponse.Headers.Should().BeNull();
@@ -54,12 +52,10 @@ public sealed class PollMessagesE2ETcp : IClassFixture<IggyTcpPollMessagesFixtur
                                {
                                Consumer = Consumer.New(1),
                                Count = 10,
-                               Interval = TimeSpan.FromMilliseconds(100),
                                PartitionId = _fixture.PartitionId,
                                PollingStrategy = PollingStrategy.Next(),
                                StreamId = Identifier.Numeric(_fixture.StreamId),
                                TopicId = Identifier.Numeric(_fixture.HeadersTopicId),
-                               StoreOffsetStrategy = StoreOffset.WhenMessagesAreReceived
                            }, MessageFactory.DeserializeDummyMessage))
             {
                 msgResponse.Headers.Should().NotBeNull();

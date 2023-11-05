@@ -59,14 +59,6 @@ public static class MessageStreamFactory
     {
         var client = new HttpClient();
         client.BaseAddress = new Uri(options.BaseAdress);
-        
-        if (options.Headers is not null)
-        {
-            foreach (var header in options.Headers)
-            {
-                client.DefaultRequestHeaders.Add(header.Name, header.Values);
-            }
-        }
         return client;
     }
 }

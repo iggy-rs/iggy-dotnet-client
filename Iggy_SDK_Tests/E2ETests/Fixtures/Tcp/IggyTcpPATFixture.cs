@@ -32,7 +32,7 @@ public sealed class IggyTcpPATFixture : IAsyncLifetime
         {
             options.BaseAdress = $"127.0.0.1:{_container.GetMappedPublicPort(8090)}";
             options.Protocol = Protocol.Tcp;
-            options.IntervalBatchingConfig = x =>
+            options.MessageBatchingSettings = x =>
             {
                 x.MaxMessagesPerBatch = 1000;
                 x.Interval = TimeSpan.FromMilliseconds(100);

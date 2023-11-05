@@ -143,11 +143,21 @@ public readonly struct HeaderValue
     }
     public new string ToString()
     {
-        if (Kind is not HeaderKind.String)
+        return Kind switch
         {
-            throw new InvalidOperationException("Can't convert header");
-        }
-        return Encoding.UTF8.GetString(Value); 
+            HeaderKind.Raw => Value.ToString(),
+            HeaderKind.String => Encoding.UTF8.GetString(Value),
+            HeaderKind.Bool => Value[0].ToString(CultureInfo.InvariantCulture),
+            HeaderKind.Int32 => BinaryPrimitives.ReadInt32LittleEndian(Value).ToString(),
+            HeaderKind.Int64 => BinaryPrimitives.ReadInt64LittleEndian(Value).ToString(),
+            HeaderKind.Int128 => Value.ToInt128().ToString(),
+            HeaderKind.Uint32 => BinaryPrimitives.ReadUInt32LittleEndian(Value).ToString(),
+            HeaderKind.Uint64 => BinaryPrimitives.ReadUInt64LittleEndian(Value).ToString(),
+            HeaderKind.Uint128 => Value.ToUInt128().ToString(), 
+            HeaderKind.Float => BinaryPrimitives.ReadSingleLittleEndian(Value).ToString(),
+            HeaderKind.Double => BinaryPrimitives.ReadDoubleLittleEndian(Value).ToString(),
+            _ => throw new InvalidOperationException("Can't convert header")
+        };
     }
     public bool ToBool()
     {

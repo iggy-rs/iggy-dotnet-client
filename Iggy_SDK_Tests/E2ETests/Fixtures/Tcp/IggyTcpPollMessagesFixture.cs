@@ -46,7 +46,7 @@ public sealed class IggyTcpPollMessagesFixture : IAsyncLifetime
         {
             options.BaseAdress = $"127.0.0.1:{_container.GetMappedPublicPort(8090)}";
             options.Protocol = Protocol.Tcp;
-            options.IntervalBatchingConfig = x =>
+            options.MessageBatchingSettings = x =>
             {
                 x.Enabled = true;
                 x.Interval = TimeSpan.FromMilliseconds(100);
