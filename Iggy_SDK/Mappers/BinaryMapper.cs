@@ -46,7 +46,7 @@ internal static class BinaryMapper
         return (new PersonalAccessTokenResponse
         {
             Name = name,
-            Expiry = expiry == 0 ? null : DateTimeOffsetUtils.FromUnixTimeMicroSeconds(expiry) 
+            Expiry = expiry == 0 ? null : DateTimeOffsetUtils.FromUnixTimeMicroSeconds(expiry).LocalDateTime
         }, readBytes);
     }
     internal static IReadOnlyList<UserResponse> MapUsers(ReadOnlySpan<byte> payload)
@@ -580,7 +580,7 @@ internal static class BinaryMapper
                 Name = name,
                 SizeBytes = sizeBytes,
                 MessagesCount = messagesCount,
-                CreatedAt = DateTimeOffsetUtils.FromUnixTimeMicroSeconds(createdAt)
+                CreatedAt = DateTimeOffsetUtils.FromUnixTimeMicroSeconds(createdAt).LocalDateTime
             }, readBytes);
     }
     internal static IReadOnlyList<TopicResponse> MapTopics(ReadOnlySpan<byte> payload)
@@ -645,7 +645,7 @@ internal static class BinaryMapper
                 Name = name,
                 MessagesCount = messagesCount,
                 SizeBytes = sizeBytes,
-                CreatedAt = DateTimeOffsetUtils.FromUnixTimeMicroSeconds(createdAt),
+                CreatedAt = DateTimeOffsetUtils.FromUnixTimeMicroSeconds(createdAt).LocalDateTime,
                 MessageExpiry = messageExpiry
             }, readBytes);
     }
@@ -668,7 +668,7 @@ internal static class BinaryMapper
                 SegmentsCount = segmentsCount,
                 CurrentOffset = currentOffset,
                 SizeBytes = sizeBytes,
-                CreatedAt = DateTimeOffsetUtils.FromUnixTimeMicroSeconds(createdAt),
+                CreatedAt = DateTimeOffsetUtils.FromUnixTimeMicroSeconds(createdAt).LocalDateTime,
                 MessagesCount = messagesCount
             }, readBytes);
     }

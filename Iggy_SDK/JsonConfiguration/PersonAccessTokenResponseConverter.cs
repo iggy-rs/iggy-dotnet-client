@@ -17,7 +17,7 @@ public sealed class PersonalAccessTokenResponseConverter : JsonConverter<Persona
         {
             JsonValueKind.Null => null,
             JsonValueKind.Undefined => null,
-            JsonValueKind.Number => DateTimeOffsetUtils.FromUnixTimeMicroSeconds(expiryElement.GetUInt64()),
+            JsonValueKind.Number => DateTimeOffsetUtils.FromUnixTimeMicroSeconds(expiryElement.GetUInt64()).LocalDateTime,
             _ => throw new ArgumentOutOfRangeException()
         };
         return new PersonalAccessTokenResponse

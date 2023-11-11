@@ -20,7 +20,7 @@ public sealed class BinaryMapper
         // Arrange
         string name = "test";
         uint expiry = 69420;
-        var assertExpiry = DateTimeOffsetUtils.FromUnixTimeMicroSeconds(expiry);
+        var assertExpiry = DateTimeOffsetUtils.FromUnixTimeMicroSeconds(expiry).LocalDateTime;
         var payload = BinaryFactory.CreatePersonalAccessTokensPayload(name, expiry);
         
         // Act

@@ -32,6 +32,11 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
         x.MaxMessagesPerBatch = 1000;
         x.MaxRequests = 4096;
     };
+    options.MessagePollingSettings = x =>
+    {
+        x.Interval = TimeSpan.FromMilliseconds(100);
+        x.StoreOffsetStrategy = StoreOffset.AfterProcessingEachMessage;
+    };
 }, loggerFactory);
 
 var response = await bus.LoginUser(new LoginUserRequest

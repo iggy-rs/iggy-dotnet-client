@@ -52,6 +52,14 @@ public static class JsonConverterFactory
                 new StreamResponseConverter()
             }
         };
+    public static JsonSerializerOptions AuthResponseOptions
+        => new() 
+        {
+            Converters =
+            {
+                new AuthResponseConverter()
+            }
+        };
     public static JsonSerializerOptions TopicResponseOptions
         => new()
         {

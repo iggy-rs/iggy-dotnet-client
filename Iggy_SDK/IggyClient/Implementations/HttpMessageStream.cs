@@ -22,6 +22,7 @@ namespace Iggy_SDK.IggyClient.Implementations;
 
 public class HttpMessageStream : IIggyClient
 {
+    //TODO - create mechanism for refreshing jwt token
     //TODO - replace the HttpClient with IHttpClientFactory, when implementing support for ASP.NET Core DI
     //TODO - the error handling pattern is pretty ugly, look into moving it into an extension method
     //TODO - I can create a good extension method for reading the response and handling the errors
@@ -556,11 +557,16 @@ public class HttpMessageStream : IIggyClient
         var response = await _httpClient.PostAsync("users/login", data, token);
         if (response.IsSuccessStatusCode)
         {
-            var authResponse = await response.Content.ReadFromJsonAsync<AuthResponse>(JsonConverterFactory.SnakeCaseOptions, cancellationToken: token);
-            if (!string.IsNullOrEmpty(authResponse!.Token))
+            var authResponse = await response.Content.ReadFromJsonAsync<AuthResponse>(JsonConverterFactory.AuthResponseOptions, cancellationToken: token);
+            var jwtToken = authResponse!.Tokens?.AccessToken?.Token;
+            if (!string.IsNullOrEmpty(authResponse!.Tokens!.AccessToken!.Token))
             {
                 _httpClient.DefaultRequestHeaders.Authorization = 
-                    new AuthenticationHeaderValue("Bearer", authResponse.Token); 
+                    new AuthenticationHeaderValue("Bearer", jwtToken); 
+            }
+            else
+            {
+                throw new Exception("The JWT token is missing.");
             }
             return authResponse;
         }
@@ -617,11 +623,16 @@ public class HttpMessageStream : IIggyClient
         var response = await _httpClient.PostAsync("/personal-access-tokens/login", content, token);
         if (response.IsSuccessStatusCode)
         {
-            var authResponse = await response.Content.ReadFromJsonAsync<AuthResponse>(JsonConverterFactory.SnakeCaseOptions, cancellationToken: token);
-            if (!string.IsNullOrEmpty(authResponse!.Token))
+            var authResponse = await response.Content.ReadFromJsonAsync<AuthResponse>(JsonConverterFactory.AuthResponseOptions, cancellationToken: token);
+            var jwtToken = authResponse!.Tokens?.AccessToken?.Token;
+            if (!string.IsNullOrEmpty(authResponse!.Tokens!.AccessToken!.Token))
             {
                 _httpClient.DefaultRequestHeaders.Authorization = 
-                    new AuthenticationHeaderValue("Bearer", authResponse.Token); 
+                    new AuthenticationHeaderValue("Bearer", jwtToken); 
+            }
+            else
+            {
+                throw new Exception("The JWT token is missing.");
             }
             return authResponse;
         }

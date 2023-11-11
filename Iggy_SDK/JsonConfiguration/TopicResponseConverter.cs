@@ -47,7 +47,7 @@ internal sealed class TopicResponseConverter : JsonConverter<TopicResponse>
             Name = name!,
             SizeBytes = sizeBytes,
             MessageExpiry = messageExpiry,
-            CreatedAt = DateTimeOffsetUtils.FromUnixTimeMicroSeconds(createdAt),
+            CreatedAt = DateTimeOffsetUtils.FromUnixTimeMicroSeconds(createdAt).LocalDateTime,
             MessagesCount = messagesCount,
             PartitionsCount = partitionsCount,
             Partitions = partitions
@@ -73,7 +73,7 @@ internal sealed class TopicResponseConverter : JsonConverter<TopicResponse>
             partitions.Add(new PartitionContract
             {
                 Id = id,
-                CreatedAt = DateTimeOffsetUtils.FromUnixTimeMicroSeconds(createdAt),
+                CreatedAt = DateTimeOffsetUtils.FromUnixTimeMicroSeconds(createdAt).LocalDateTime,
                 CurrentOffset = currentOffset,
                 MessagesCount = messagesCount,
                 SegmentsCount = segmentsCount,

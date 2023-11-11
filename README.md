@@ -29,7 +29,7 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
 ```
 Iggy necessitates the use of `ILoggerFactory` to generate logs from locations that are inaccessible to the user.
 
-In addition to the basic configuration settings, Iggy provides support for batching send messages at intervals, which effectively decreases the frequency of network calls, this option is enabled by default.
+In addition to the basic configuration settings, Iggy provides support for batching send/poll messages at intervals, which effectively decreases the frequency of network calls, this option is enabled by default.
 ```c#
 //---Snip---
 var bus = MessageStreamFactory.CreateMessageStream(options =>
@@ -42,6 +42,11 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
         x.Interval = TimeSpan.FromMilliseconds(100);
         x.MaxMessagesPerBatch = 1000;
         x.MaxRequests = 4096;
+    };
+    options.MessagePollingSettings = x =>
+    {
+        x.Interval = TimeSpan.FromMilliseconds(100);
+        x.StoreOffsetStrategy = StoreOffset.AfterProcessingEachMessage;
     };
 }, loggerFactory);
 ```
@@ -311,8 +316,6 @@ await foreach (var messageResponse in bus.PollMessagesAsync<Envelope>(new PollMe
     StreamId = streamId,
     PartitionId = 1,
     PollingStrategy = PollingStrategy.Next(),
-    Interval = TimeSpan.FromMilliseconds(100),
-    StoreOffsetStrategy = StoreOffset.AfterProcessingEachMessage,
 }, deserializer, decryptor))
 {
     //handle the message response

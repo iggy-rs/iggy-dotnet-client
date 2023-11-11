@@ -32,7 +32,7 @@ public sealed class StreamResponseConverter : JsonConverter<StreamResponse>
             Id = id,
             Name = name!,
             SizeBytes = sizeBytes,
-            CreatedAt = DateTimeOffsetUtils.FromUnixTimeMicroSeconds(createdAt),
+            CreatedAt = DateTimeOffsetUtils.FromUnixTimeMicroSeconds(createdAt).LocalDateTime,
             MessagesCount = messagesCount,
             TopicsCount = topicsCount,
             Topics = topics
