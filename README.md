@@ -113,8 +113,8 @@ await bus.CreateUser(new CreateUserRequest
 
 var response = await bus.LoginUser(new LoginUserRequest
 {
-    Username = "pa55w0rD!@",
-    Password = "test_user",
+    Username = "test_user",
+    Password = "pa55w0rD!@",
 });
 ```
 Alternatively, once you've logged in, you can create a `Personal Access Token` that can be reused for further logins.
