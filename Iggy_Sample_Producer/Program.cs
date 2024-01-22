@@ -126,7 +126,8 @@ catch
     {
         Name = "producer-topic",
         PartitionsCount = 3,
-        TopicId = topicIdVal
+        TopicId = topicIdVal,
+        ReplicationFactor = 3
     });
 }
 

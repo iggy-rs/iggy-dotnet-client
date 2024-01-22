@@ -23,6 +23,8 @@ internal sealed class TopicResponseConverter : JsonConverter<TopicResponse>
         var name = root.GetProperty(nameof(TopicResponse.Name).ToSnakeCase()).GetString();
         var createdAt = root.GetProperty(nameof(TopicResponse.CreatedAt).ToSnakeCase()).GetUInt64();
         var sizeBytes = root.GetProperty(nameof(TopicResponse.SizeBytes).ToSnakeCase()).GetUInt64();
+        var replicationFactor = root.GetProperty(nameof(TopicResponse.ReplicationFactor).ToSnakeCase()).GetUInt16();
+        var maxTopicSize = root.GetProperty(nameof(TopicResponse.MaxTopicSize).ToSnakeCase()).GetUInt64();
         var messageExpiryProperty = root.GetProperty(nameof(TopicResponse.MessageExpiry).ToSnakeCase());
 
         var messageExpiry = messageExpiryProperty.ValueKind switch
@@ -50,6 +52,8 @@ internal sealed class TopicResponseConverter : JsonConverter<TopicResponse>
             CreatedAt = DateTimeOffsetUtils.FromUnixTimeMicroSeconds(createdAt).LocalDateTime,
             MessagesCount = messagesCount,
             PartitionsCount = partitionsCount,
+            ReplicationFactor = (byte)replicationFactor,
+            MaxTopicSize = maxTopicSize,
             Partitions = partitions
         };
     }

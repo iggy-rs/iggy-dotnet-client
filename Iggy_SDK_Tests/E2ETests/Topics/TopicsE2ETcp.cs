@@ -19,7 +19,7 @@ public sealed class TopicsE2ETcp : IClassFixture<IggyTcpTopicFixture>
     public async Task CreateTopic_HappyPath_Should_CreateTopic_Successfully()
     {
         await _fixture.sut.Invoking(async x =>
-             await x.CreateTopicAsync(Identifier.Numeric(_fixture.StreamRequest.StreamId), _fixture.TopicRequest))
+             await x.CreateTopicAsync(Identifier.Numeric((int)_fixture.StreamRequest.StreamId!), _fixture.TopicRequest))
             .Should()
             .NotThrowAsync();
     }
@@ -28,7 +28,7 @@ public sealed class TopicsE2ETcp : IClassFixture<IggyTcpTopicFixture>
     public async Task CreateTopic_Duplicate_Should_Throw_InvalidResponse()
     {
         await _fixture.sut.Invoking(async x =>
-                await x.CreateTopicAsync(Identifier.Numeric(_fixture.StreamRequest.StreamId), _fixture.TopicRequest))
+                await x.CreateTopicAsync(Identifier.Numeric((int)_fixture.StreamRequest.StreamId!), _fixture.TopicRequest))
             .Should()
             .ThrowExactlyAsync<InvalidResponseException>();
     }
@@ -36,7 +36,8 @@ public sealed class TopicsE2ETcp : IClassFixture<IggyTcpTopicFixture>
     [Fact, TestPriority(3)]
     public async Task GetTopic_Should_ReturnValidResponse()
     {
-        var response = await _fixture.sut.GetTopicByIdAsync(Identifier.Numeric(_fixture.StreamRequest.StreamId), Identifier.Numeric(_fixture.TopicRequest.TopicId));
+        var response = await _fixture.sut.GetTopicByIdAsync(Identifier.Numeric((int)_fixture.StreamRequest.StreamId!),
+            Identifier.Numeric((int)_fixture.TopicRequest.TopicId!));
         response.Should().NotBeNull();
         response!.Id.Should().Be(_fixture.TopicRequest.TopicId);
         response.Name.Should().Be(_fixture.TopicRequest.Name);
@@ -44,6 +45,7 @@ public sealed class TopicsE2ETcp : IClassFixture<IggyTcpTopicFixture>
         response.MessageExpiry.Should().Be(_fixture.TopicRequest.MessageExpiry);
         response.SizeBytes.Should().Be(0);
         response.MessagesCount.Should().Be(0);
+        response.MaxTopicSize.Should().Be(_fixture.TopicRequest.MaxTopicSize);
         response.MessageExpiry.Should().Be(_fixture.TopicRequest.MessageExpiry);
         response.CreatedAt.Year.Should().Be(DateTimeOffset.UtcNow.Year);
         response.CreatedAt.Month.Should().Be(DateTimeOffset.UtcNow.Month);
@@ -54,13 +56,13 @@ public sealed class TopicsE2ETcp : IClassFixture<IggyTcpTopicFixture>
     public async Task UpdateTopic_Should_UpdateStream_Successfully()
     {
         await _fixture.sut.Invoking(async x =>
-                await x.UpdateTopicAsync(Identifier.Numeric(_fixture.StreamRequest.StreamId),
-                    Identifier.Numeric(_fixture.TopicRequest.TopicId), _fixture.UpdateTopicRequest))
+                await x.UpdateTopicAsync(Identifier.Numeric((int)_fixture.StreamRequest.StreamId!),
+                    Identifier.Numeric((int)_fixture.TopicRequest.TopicId!), _fixture.UpdateTopicRequest))
             .Should()
             .NotThrowAsync();
 
-        var result = await _fixture.sut.GetTopicByIdAsync(Identifier.Numeric(_fixture.StreamRequest.StreamId),
-            Identifier.Numeric(_fixture.TopicRequest.TopicId));
+        var result = await _fixture.sut.GetTopicByIdAsync(Identifier.Numeric((int)_fixture.StreamRequest.StreamId!),
+            Identifier.Numeric((int)_fixture.TopicRequest.TopicId!));
         result.Should().NotBeNull();
         result.Name.Should().Be(_fixture.UpdateTopicRequest.Name);
         result.MessageExpiry.Should().Be(_fixture.UpdateTopicRequest.MessageExpiry);
@@ -70,8 +72,8 @@ public sealed class TopicsE2ETcp : IClassFixture<IggyTcpTopicFixture>
     public async Task DeleteTopic_Should_DeleteTopic_Successfully()
     {
         await _fixture.sut.Invoking(async x =>
-                await x.DeleteTopicAsync(Identifier.Numeric(_fixture.StreamRequest.StreamId),
-                    Identifier.Numeric(_fixture.TopicRequest.TopicId)))
+                await x.DeleteTopicAsync(Identifier.Numeric((int)_fixture.StreamRequest.StreamId!),
+                    Identifier.Numeric((int)_fixture.TopicRequest.TopicId!)))
             .Should()
             .NotThrowAsync();
     }
@@ -80,8 +82,8 @@ public sealed class TopicsE2ETcp : IClassFixture<IggyTcpTopicFixture>
     public async Task DeleteTopic_Should_Throw_InvalidResponse()
     {
         await _fixture.sut.Invoking(async x =>
-                await x.DeleteTopicAsync(Identifier.Numeric(_fixture.StreamRequest.StreamId),
-                    Identifier.Numeric(_fixture.TopicRequest.TopicId)))
+                await x.DeleteTopicAsync(Identifier.Numeric((int)_fixture.StreamRequest.StreamId!),
+                    Identifier.Numeric((int)_fixture.TopicRequest.TopicId!)))
             .Should()
             .ThrowExactlyAsync<InvalidResponseException>();
     }
@@ -90,8 +92,8 @@ public sealed class TopicsE2ETcp : IClassFixture<IggyTcpTopicFixture>
     public async Task GetTopic_Should_Throw_InvalidResponse()
     {
         await _fixture.sut.Invoking(async x =>
-                await x.GetTopicByIdAsync(Identifier.Numeric(_fixture.StreamRequest.StreamId),
-                    Identifier.Numeric(_fixture.TopicRequest.TopicId)))
+                await x.GetTopicByIdAsync(Identifier.Numeric((int)_fixture.StreamRequest.StreamId!),
+                    Identifier.Numeric((int)_fixture.TopicRequest.TopicId!)))
             .Should()
             .ThrowExactlyAsync<InvalidResponseException>();
     }

@@ -43,7 +43,7 @@ public sealed class IggyTcpConsumerGroupFixture : IAsyncLifetime
             Username = "iggy"
         });
         await sut.CreateStreamAsync(StreamRequest);
-        await sut.CreateTopicAsync(Identifier.Numeric(StreamRequest.StreamId), TopicRequest);
+        await sut.CreateTopicAsync(Identifier.Numeric((int)StreamRequest.StreamId!), TopicRequest);
     }
 
     public async Task DisposeAsync()

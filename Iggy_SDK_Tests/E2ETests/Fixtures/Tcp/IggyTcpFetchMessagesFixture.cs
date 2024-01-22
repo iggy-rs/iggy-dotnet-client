@@ -32,12 +32,12 @@ public sealed class IggyTcpFetchMessagesFixture : IAsyncLifetime
     private static readonly TopicRequest TopicRequest = TopicFactory.CreateTopicRequest();
     private static readonly TopicRequest HeadersTopicRequest = TopicFactory.CreateTopicRequest();
 
-    public readonly int StreamId = StreamRequest.StreamId;
-    public readonly int TopicId = TopicRequest.TopicId;
-    public readonly int HeadersTopicId = HeadersTopicRequest.TopicId;
+    public readonly int StreamId = (int)StreamRequest.StreamId!;
+    public readonly int TopicId = (int)TopicRequest.TopicId!;
+    public readonly int HeadersTopicId = (int)HeadersTopicRequest.TopicId!;
 
-    public readonly int InvalidStreamId = NonExistingStreamRequest.StreamId;
-    public readonly int InvalidTopicId = NonExistingTopicRequest.TopicId;
+    public readonly int InvalidStreamId = (int)NonExistingStreamRequest.StreamId!;
+    public readonly int InvalidTopicId = (int)NonExistingTopicRequest.TopicId!;
     public readonly int PartitionId = 1;
 
     public async Task InitializeAsync()
@@ -61,16 +61,16 @@ public sealed class IggyTcpFetchMessagesFixture : IAsyncLifetime
             Username = "iggy"
         });
         await sut.CreateStreamAsync(StreamRequest);
-        await sut.CreateTopicAsync(Identifier.Numeric(StreamRequest.StreamId), TopicRequest);
-        await sut.CreateTopicAsync(Identifier.Numeric(StreamRequest.StreamId), HeadersTopicRequest);
+        await sut.CreateTopicAsync(Identifier.Numeric((int)StreamRequest.StreamId!), TopicRequest);
+        await sut.CreateTopicAsync(Identifier.Numeric((int)StreamRequest.StreamId), HeadersTopicRequest);
 
 
         var request = MessageFactory.CreateMessageSendRequest(
-            StreamRequest.StreamId, TopicRequest.TopicId, PartitionId,
+            (int)StreamRequest.StreamId, (int)TopicRequest.TopicId!, PartitionId,
             MessageFactory.GenerateMessages(20));
 
         var requestWithHeaders = MessageFactory.CreateMessageSendRequest(
-            StreamRequest.StreamId, HeadersTopicRequest.TopicId, PartitionId,
+            (int)StreamRequest.StreamId, (int)HeadersTopicRequest.TopicId!, PartitionId,
             MessageFactory.GenerateMessages(20, MessageFactory.GenerateMessageHeaders(6)));
         await sut.SendMessagesAsync(request);
         await sut.SendMessagesAsync(requestWithHeaders);

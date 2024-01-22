@@ -1,5 +1,3 @@
-using Iggy_SDK.JsonConfiguration;
-using System.Text.Json.Serialization;
 
 namespace Iggy_SDK.Contracts.Http;
 
@@ -11,7 +9,9 @@ public sealed class TopicResponse
     public required string Name { get; init; }
     public required ulong SizeBytes { get; init; }
     public int MessageExpiry { get; init; }
+    public required ulong MaxTopicSize { get; init; }
     public required ulong MessagesCount { get; init; }
     public required int PartitionsCount { get; init; }
+    public required byte ReplicationFactor { get; init; }
     public IEnumerable<PartitionContract>? Partitions { get; init; }
 }

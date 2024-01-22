@@ -85,9 +85,9 @@ public sealed class IggyDockerHooks
         _dependencyContainer.RegisterInstanceAs<List<IIggyClient>>(clients);
         var listOfIds = new ConsumerPollStreamTopicId
         {
-            StreamId = _streamRequest.StreamId,
-            ConsumerTopicId = _topicConsumersRequest.TopicId,
-            ConsumerGroupTopicId = _topicConsumerGroupRequest.TopicId
+            StreamId = (int)_streamRequest.StreamId!,
+            ConsumerTopicId = (int)_topicConsumersRequest.TopicId!,
+            ConsumerGroupTopicId = (int)_topicConsumerGroupRequest.TopicId!
         };
         _dependencyContainer.RegisterInstanceAs(listOfIds);
 
@@ -118,8 +118,8 @@ public sealed class IggyDockerHooks
         });
 
         await messageBus.CreateStreamAsync(_streamRequest);
-        await messageBus.CreateTopicAsync(Identifier.Numeric(_streamRequest.StreamId), _topicConsumersRequest);
-        await messageBus.CreateTopicAsync(Identifier.Numeric(_streamRequest.StreamId), _topicConsumerGroupRequest);
+        await messageBus.CreateTopicAsync(Identifier.Numeric((int)_streamRequest.StreamId!), _topicConsumersRequest);
+        await messageBus.CreateTopicAsync(Identifier.Numeric((int)_streamRequest.StreamId), _topicConsumerGroupRequest);
 
     }
 

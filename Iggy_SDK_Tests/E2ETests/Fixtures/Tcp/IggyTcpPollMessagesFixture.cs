@@ -32,9 +32,9 @@ public sealed class IggyTcpPollMessagesFixture : IAsyncLifetime
     private static readonly TopicRequest HeadersTopicRequest = TopicFactory.CreateTopicRequest();
     public const int MessageCount = 1000000;
 
-    public readonly int StreamId = StreamRequest.StreamId;
-    public readonly int TopicId = TopicRequest.TopicId;
-    public readonly int HeadersTopicId = HeadersTopicRequest.TopicId;
+    public readonly int StreamId = (int)StreamRequest.StreamId!;
+    public readonly int TopicId = (int)TopicRequest.TopicId!;
+    public readonly int HeadersTopicId = (int)HeadersTopicRequest.TopicId!;
 
     public readonly int PartitionId = 1;
     public readonly int HeadersCount = 6;
@@ -61,8 +61,8 @@ public sealed class IggyTcpPollMessagesFixture : IAsyncLifetime
         });
         
         await sut.CreateStreamAsync(StreamRequest);
-        await sut.CreateTopicAsync(Identifier.Numeric(StreamRequest.StreamId), TopicRequest);
-        await sut.CreateTopicAsync(Identifier.Numeric(StreamRequest.StreamId), HeadersTopicRequest);
+        await sut.CreateTopicAsync(Identifier.Numeric((int)StreamRequest.StreamId!), TopicRequest);
+        await sut.CreateTopicAsync(Identifier.Numeric((int)StreamRequest.StreamId), HeadersTopicRequest);
 
         
         await sut.SendMessagesAsync(new MessageSendRequest<DummyMessage>

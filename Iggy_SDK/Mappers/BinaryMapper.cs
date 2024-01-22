@@ -617,11 +617,13 @@ internal static class BinaryMapper
             Id = topic.Id,
             Name = topic.Name,
             PartitionsCount = topic.PartitionsCount,
-            Partitions = partitions,
             CreatedAt = topic.CreatedAt,
             MessageExpiry = topic.MessageExpiry,
             MessagesCount = topic.MessagesCount,
-            SizeBytes = topic.SizeBytes
+            SizeBytes = topic.SizeBytes,
+            ReplicationFactor = topic.ReplicationFactor,
+            MaxTopicSize = topic.MaxTopicSize,
+            Partitions = partitions
         };
     }
 
@@ -631,11 +633,13 @@ internal static class BinaryMapper
         ulong createdAt = BinaryPrimitives.ReadUInt64LittleEndian(payload[(position + 4)..(position + 12)]);
         int partitionsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 12)..(position + 16)]);
         int messageExpiry = BinaryPrimitives.ReadInt32LittleEndian(payload[(position + 16)..(position + 20)]);
-        ulong sizeBytes = BinaryPrimitives.ReadUInt64LittleEndian(payload[(position + 20)..(position + 28)]);
-        ulong messagesCount = BinaryPrimitives.ReadUInt64LittleEndian(payload[(position + 28)..(position + 36)]);
-        int nameLength = (int)payload[position + 36];
-        string name = Encoding.UTF8.GetString(payload[(position + 37)..(position + 37 + nameLength)]);
-        int readBytes = 4 + 4 + 4 + 8 + 8 + 1 + 8 + nameLength;
+        ulong maxTopicSize = BinaryPrimitives.ReadUInt64LittleEndian(payload[(position + 20)..(position + 28)]);
+        byte replicationFactor = payload[position + 28];
+        ulong sizeBytes = BinaryPrimitives.ReadUInt64LittleEndian(payload[(position + 29)..(position + 37)]);
+        ulong messagesCount = BinaryPrimitives.ReadUInt64LittleEndian(payload[(position + 37)..(position + 45)]);
+        int nameLength = (int)payload[position + 45];
+        string name = Encoding.UTF8.GetString(payload[(position + 46)..(position + 46 + nameLength)]);
+        int readBytes = 4 + 8 + 4 + 4 + 8 + 8 + 8 + 1 + 1 + name.Length;
 
         return (
             new TopicResponse
@@ -646,7 +650,9 @@ internal static class BinaryMapper
                 MessagesCount = messagesCount,
                 SizeBytes = sizeBytes,
                 CreatedAt = DateTimeOffsetUtils.FromUnixTimeMicroSeconds(createdAt).LocalDateTime,
-                MessageExpiry = messageExpiry
+                MessageExpiry = messageExpiry,
+                ReplicationFactor = replicationFactor,
+                MaxTopicSize = maxTopicSize
             }, readBytes);
     }
 

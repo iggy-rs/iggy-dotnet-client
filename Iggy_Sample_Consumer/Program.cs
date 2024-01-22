@@ -186,7 +186,8 @@ async Task ValidateSystem(Identifier streamId, Identifier topicId, int partition
         {
             Name = "Test Consumer Topic",
             PartitionsCount = 3,
-            TopicId = topicIdVal
+            TopicId = topicIdVal,
+            ReplicationFactor = 3
         });
         var topicRes = await bus.GetTopicByIdAsync(streamId, topicId);
         if (topicRes!.PartitionsCount < partitionId)

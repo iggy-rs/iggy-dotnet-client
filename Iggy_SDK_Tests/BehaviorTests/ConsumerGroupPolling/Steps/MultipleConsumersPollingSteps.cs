@@ -35,7 +35,7 @@ public sealed class MultipleConsumersPollingSteps
     {
         var messages = MessageFactory.GenerateMessages(10);
         var messageConsumersSendRequest =
-            MessageFactory.CreateMessageSendRequest(_streamAndTopicFixture.StreamId, _streamAndTopicFixture.ConsumerTopicId,
+            MessageFactory.CreateMessageSendRequest(_streamAndTopicFixture.StreamId!, _streamAndTopicFixture.ConsumerTopicId!,
                 _partitionId, messages);
 
         await _messageStream.SendMessagesAsync(messageConsumersSendRequest);
@@ -48,7 +48,7 @@ public sealed class MultipleConsumersPollingSteps
         var consumerPolledMessages = new List<PolledMessages>();
         foreach (var consumerId in _consumersIds)
         {
-            var request = MessageFactory.CreateMessageFetchRequestConsumer(10, _streamAndTopicFixture.StreamId, _streamAndTopicFixture.ConsumerTopicId, _partitionId, consumerId);
+            var request = MessageFactory.CreateMessageFetchRequestConsumer(10, _streamAndTopicFixture.StreamId!,_streamAndTopicFixture.ConsumerTopicId!, _partitionId, consumerId);
             var result = await _messageStream.FetchMessagesAsync(request);
             consumerPolledMessages.Add(result);
         }
@@ -70,7 +70,7 @@ public sealed class MultipleConsumersPollingSteps
     {
         var messages = MessageFactory.GenerateMessages(10);
         var messageConsumerGroupSendRequestPt1 =
-            MessageFactory.CreateMessageSendRequest(_streamAndTopicFixture.StreamId, _streamAndTopicFixture.ConsumerGroupTopicId,
+            MessageFactory.CreateMessageSendRequest(_streamAndTopicFixture.StreamId!, _streamAndTopicFixture.ConsumerGroupTopicId!,
                 _partitionId, messages);
         var messageConsumerGroupSendRequestPt2 =
             MessageFactory.CreateMessageSendRequest(_streamAndTopicFixture.StreamId, _streamAndTopicFixture.ConsumerGroupTopicId,

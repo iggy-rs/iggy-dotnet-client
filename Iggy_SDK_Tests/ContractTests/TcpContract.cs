@@ -735,8 +735,8 @@ public sealed class TcpContract
         var result = TcpContracts.CreateTopic(streamId, request).AsSpan();
 
         // Assert
-        int expectedBytesLength = 2 + streamId.Length + 8 + request.Name.Length + 4 + 1;
-
+        int expectedBytesLength = 2 + streamId.Length + 22 + request.Name.Length; 
+        
         Assert.Equal(expectedBytesLength, result.Length);
         Assert.Equal(streamId.Value, BytesToIdentifierNumeric(result, 0).Value);
         Assert.Equal(streamId.Length, BytesToIdentifierNumeric(result, 0).Length);
@@ -744,8 +744,10 @@ public sealed class TcpContract
         Assert.Equal(request.TopicId, BitConverter.ToInt32(result[6..10]));
         Assert.Equal(request.PartitionsCount, BitConverter.ToInt32(result[10..14]));
         Assert.Equal(request.MessageExpiry, BitConverter.ToInt32(result[14..18]));
-        Assert.Equal(request.Name.Length, (int)result[18]);
-        Assert.Equal(request.Name, Encoding.UTF8.GetString(result[19..]));
+        Assert.Equal(request.MaxTopicSize, BitConverter.ToUInt64(result[18..26]));
+        Assert.Equal(request.ReplicationFactor, (int)result[26]);
+        Assert.Equal(request.Name.Length, (int)result[27]);
+        Assert.Equal(request.Name, Encoding.UTF8.GetString(result[28..]));
     }
 
 

@@ -25,15 +25,15 @@ public class HttpMessageStream : IIggyClient
     //TODO - create mechanism for refreshing jwt token
     //TODO - replace the HttpClient with IHttpClientFactory, when implementing support for ASP.NET Core DI
     //TODO - the error handling pattern is pretty ugly, look into moving it into an extension method
-    //TODO - I can create a good extension method for reading the response and handling the errors
-    //but first I need to move the JsonConverters to attributes in contracts.
     private readonly HttpClient _httpClient;
     private readonly Channel<MessageSendRequest>? _channel;
     private readonly MessagePollingSettings _messagePollingSettings;
     private readonly ILogger<HttpMessageStream> _logger;
     private readonly IMessageInvoker? _messageInvoker;
 
-    internal HttpMessageStream(HttpClient httpClient, Channel<MessageSendRequest>? channel, MessagePollingSettings messagePollingSettings, ILoggerFactory loggerFactory, IMessageInvoker? messageInvoker = null)
+    internal HttpMessageStream(HttpClient httpClient, Channel<MessageSendRequest>? channel,
+        MessagePollingSettings messagePollingSettings, ILoggerFactory loggerFactory,
+        IMessageInvoker? messageInvoker = null)
     {
         _httpClient = httpClient;
         _channel = channel;

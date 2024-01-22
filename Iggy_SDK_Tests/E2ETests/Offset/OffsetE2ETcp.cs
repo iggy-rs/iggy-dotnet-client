@@ -21,10 +21,10 @@ public sealed class OffsetE2ETcp : IClassFixture<IggyTcpOffsetFixture>
     {
         _fixture = fixture;
         _storeOffsetIndividualConsumer = OffsetFactory.CreateOffsetContract(
-            _fixture.StreamRequest.StreamId, _fixture.TopicRequest.TopicId, GET_INDIVIDUAL_CONSUMER_ID, GET_OFFSET,
+            (int)_fixture.StreamRequest.StreamId!, (int)_fixture.TopicRequest.TopicId!, GET_INDIVIDUAL_CONSUMER_ID, GET_OFFSET,
             GET_PARTITION_ID);
-        _offsetIndividualConsumer = OffsetFactory.CreateOffsetRequest(_fixture.StreamRequest.StreamId,
-            _fixture.TopicRequest.TopicId, GET_PARTITION_ID, GET_INDIVIDUAL_CONSUMER_ID);
+        _offsetIndividualConsumer = OffsetFactory.CreateOffsetRequest((int)_fixture.StreamRequest.StreamId,
+            (int)_fixture.TopicRequest.TopicId, GET_PARTITION_ID, GET_INDIVIDUAL_CONSUMER_ID);
     }
 
     [Fact, TestPriority(1)]

@@ -28,11 +28,11 @@ public sealed class IggyTcpSendMessagesFixture : IAsyncLifetime
     private static readonly TopicRequest NonExistingTopicRequest = TopicFactory.CreateTopicRequest();
     private static readonly TopicRequest TopicRequest = TopicFactory.CreateTopicRequest();
 
-    public readonly int StreamId = StreamRequest.StreamId;
-    public readonly int TopicId = TopicRequest.TopicId;
+    public readonly int StreamId = (int)StreamRequest.StreamId!;
+    public readonly int TopicId = (int)TopicRequest.TopicId!;
 
-    public readonly int InvalidStreamId = NonExistingStreamRequest.StreamId;
-    public readonly int InvalidTopicId = NonExistingTopicRequest.TopicId;
+    public readonly int InvalidStreamId = (int)NonExistingStreamRequest.StreamId!;
+    public readonly int InvalidTopicId = (int)NonExistingTopicRequest.TopicId!;
 
     public readonly int PartitionId = 1;
     public async Task InitializeAsync()
@@ -58,7 +58,7 @@ public sealed class IggyTcpSendMessagesFixture : IAsyncLifetime
         });
 
         await sut.CreateStreamAsync(StreamRequest);
-        await sut.CreateTopicAsync(Identifier.Numeric(StreamRequest.StreamId), TopicRequest);
+        await sut.CreateTopicAsync(Identifier.Numeric((int)StreamRequest.StreamId!), TopicRequest);
     }
 
     public async Task DisposeAsync()

@@ -23,14 +23,14 @@ public sealed class ConsumerGroupE2ETcp : IClassFixture<IggyTcpConsumerGroupFixt
     public ConsumerGroupE2ETcp(IggyTcpConsumerGroupFixture fixture)
     {
         _fixture = fixture;
-        _createConsumerGroupRequest = ConsumerGroupFactory.CreateRequest(_fixture.StreamRequest.StreamId,
-            _fixture.TopicRequest.TopicId, GROUP_ID);
-        _joinConsumerGroupRequest = ConsumerGroupFactory.CreateJoinGroupRequest(_fixture.StreamRequest.StreamId,
-            _fixture.TopicRequest.TopicId, GROUP_ID);
-        _leaveConsumerGroupRequest = ConsumerGroupFactory.CreateLeaveGroupRequest(_fixture.StreamRequest.StreamId,
-            _fixture.TopicRequest.TopicId, GROUP_ID);
-        _deleteConsumerGroupRequest = ConsumerGroupFactory.CreateDeleteGroupRequest(_fixture.StreamRequest.StreamId,
-            _fixture.TopicRequest.TopicId, GROUP_ID);
+        _createConsumerGroupRequest = ConsumerGroupFactory.CreateRequest((int)_fixture.StreamRequest.StreamId! ,
+            (int)_fixture.TopicRequest.TopicId!, GROUP_ID);
+        _joinConsumerGroupRequest = ConsumerGroupFactory.CreateJoinGroupRequest((int)_fixture.StreamRequest.StreamId,
+            (int)_fixture.TopicRequest.TopicId, GROUP_ID);
+        _leaveConsumerGroupRequest = ConsumerGroupFactory.CreateLeaveGroupRequest((int)_fixture.StreamRequest.StreamId,
+            (int)_fixture.TopicRequest.TopicId, GROUP_ID);
+        _deleteConsumerGroupRequest = ConsumerGroupFactory.CreateDeleteGroupRequest((int)_fixture.StreamRequest.StreamId,
+            (int)_fixture.TopicRequest.TopicId, GROUP_ID);
     }
 
     [Fact, TestPriority(1)]
@@ -53,7 +53,7 @@ public sealed class ConsumerGroupE2ETcp : IClassFixture<IggyTcpConsumerGroupFixt
     public async Task GetConsumerGroupById_Should_Return_ValidResponse()
     {
         var response = await _fixture.sut.GetConsumerGroupByIdAsync(
-            Identifier.Numeric(_fixture.StreamRequest.StreamId), Identifier.Numeric(_fixture.TopicRequest.TopicId),
+            Identifier.Numeric((int)_fixture.StreamRequest.StreamId!), Identifier.Numeric((int)_fixture.TopicRequest.TopicId!),
             ConsumerGroupId);
 
         response.Should().NotBeNull();
@@ -74,7 +74,7 @@ public sealed class ConsumerGroupE2ETcp : IClassFixture<IggyTcpConsumerGroupFixt
     public async Task GetConsumerGroupById_Should_Return_ValidMembersCount()
     {
         var response = await _fixture.sut.GetConsumerGroupByIdAsync(
-            Identifier.Numeric(_fixture.StreamRequest.StreamId), Identifier.Numeric(_fixture.TopicRequest.TopicId),
+            Identifier.Numeric((int)_fixture.StreamRequest.StreamId!), Identifier.Numeric((int)_fixture.TopicRequest.TopicId!),
             ConsumerGroupId);
 
         response!.MembersCount.Should().Be(1);

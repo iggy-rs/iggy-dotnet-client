@@ -59,7 +59,8 @@ try
         {
             Name = $"Test bench topic_{i}",
             PartitionsCount = 1,
-            TopicId = topicId
+            TopicId = topicId,
+            ReplicationFactor = 3
         });
     }
 }

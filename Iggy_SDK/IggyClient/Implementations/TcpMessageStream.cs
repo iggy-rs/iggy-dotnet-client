@@ -25,7 +25,9 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
     private readonly ILogger<TcpMessageStream> _logger;
     private readonly IMessageInvoker? _messageInvoker;
 
-    internal TcpMessageStream(Socket socket, Channel<MessageSendRequest>? channel, MessagePollingSettings messagePollingSettings, ILoggerFactory loggerFactory, IMessageInvoker? messageInvoker = null)
+    internal TcpMessageStream(Socket socket, Channel<MessageSendRequest>? channel,
+        MessagePollingSettings messagePollingSettings, ILoggerFactory loggerFactory,
+        IMessageInvoker? messageInvoker = null)
     {
         _socket = socket;
         _channel = channel;
