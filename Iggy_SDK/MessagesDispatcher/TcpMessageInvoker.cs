@@ -4,6 +4,7 @@ using Iggy_SDK.Exceptions;
 using Iggy_SDK.Utils;
 using System.Buffers;
 using System.Net.Sockets;
+using System.Text;
 
 namespace Iggy_SDK.MessagesDispatcher;
 
@@ -37,10 +38,12 @@ internal class TcpMessageInvoker : IMessageInvoker
             await _socket.SendAsync(payloadBuffer.Memory[..payloadBufferSize], token);
             await _socket.ReceiveAsync(responseBuffer.Memory, token);
 
-            var status = TcpMessageStreamHelpers.GetResponseStatus(responseBuffer.Memory.Span);
-            if (status != 0)
+            var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(responseBuffer.Memory.Span);
+            if (response.Status != 0)
             {
-                throw new InvalidResponseException($"Invalid response status code: {status}");
+                var errorBuffer = new byte[response.Length];
+                await _socket.ReceiveAsync(errorBuffer, token);
+                throw new InvalidResponseException(Encoding.UTF8.GetString(errorBuffer));
             }
         }
         finally

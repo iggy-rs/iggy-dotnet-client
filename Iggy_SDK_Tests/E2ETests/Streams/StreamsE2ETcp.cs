@@ -29,8 +29,7 @@ public sealed class StreamsE2ETcp : IClassFixture<IggyTcpStreamFixture>
     {
         await _fixture.sut.Invoking(async x => await x.CreateStreamAsync(_fixture.StreamRequest))
             .Should()
-            .ThrowExactlyAsync<InvalidResponseException>()
-            .WithMessage("Invalid response status code: 1012");
+            .ThrowExactlyAsync<InvalidResponseException>();
     }
 
     [Fact, TestPriority(3)]
@@ -67,8 +66,7 @@ public sealed class StreamsE2ETcp : IClassFixture<IggyTcpStreamFixture>
     {
         await _fixture.sut.Invoking(async x => await x.DeleteStreamAsync(Identifier.Numeric((int)_fixture.StreamRequest.StreamId!)))
             .Should()
-            .ThrowExactlyAsync<InvalidResponseException>()
-            .WithMessage("Invalid response status code: 1009");
+            .ThrowExactlyAsync<InvalidResponseException>();
     }
 
     [Fact, TestPriority(7)]
@@ -77,7 +75,6 @@ public sealed class StreamsE2ETcp : IClassFixture<IggyTcpStreamFixture>
         await _fixture.sut.Invoking(async x =>
                 await x.GetStreamByIdAsync(Identifier.Numeric((int)_fixture.StreamRequest.StreamId!)))
             .Should()
-            .ThrowExactlyAsync<InvalidResponseException>()
-            .WithMessage("Invalid response status code: 1009");
+            .ThrowExactlyAsync<InvalidResponseException>();
     }
 }
