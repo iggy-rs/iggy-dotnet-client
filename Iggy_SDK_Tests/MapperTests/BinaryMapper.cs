@@ -354,6 +354,7 @@ public sealed class BinaryMapper
         Assert.Equal(stats.SegmentsCount, response.SegmentsCount);
         Assert.Equal(stats.MessagesSizeBytes, response.MessagesSizeBytes);
         Assert.Equal(stats.CpuUsage, response.CpuUsage);
+        Assert.Equal(stats.TotalCpuUsage, response.TotalCpuUsage);
         Assert.Equal(stats.TotalMemory, response.TotalMemory);
         Assert.Equal(stats.AvailableMemory, response.AvailableMemory);
         Assert.Equal(stats.MemoryUsage, response.MemoryUsage);

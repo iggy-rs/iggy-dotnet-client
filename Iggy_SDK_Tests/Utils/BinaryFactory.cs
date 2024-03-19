@@ -122,41 +122,41 @@ internal sealed class BinaryFactory
     internal static byte[] CreateStatsPayload(Iggy_SDK.Contracts.Http.Stats stats)
     {
         byte[] bytes = new byte[1024];
-
         BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan(0, 4), stats.ProcessId);
         BinaryPrimitives.WriteSingleLittleEndian(bytes.AsSpan(4, 4), stats.CpuUsage);
-        BinaryPrimitives.WriteUInt64LittleEndian(bytes.AsSpan(8, 8), stats.MemoryUsage);
-        BinaryPrimitives.WriteUInt64LittleEndian(bytes.AsSpan(16, 8), stats.TotalMemory);
-        BinaryPrimitives.WriteUInt64LittleEndian(bytes.AsSpan(24, 8), stats.AvailableMemory);
-        BinaryPrimitives.WriteUInt64LittleEndian(bytes.AsSpan(32, 8), stats.RunTime);
-        BinaryPrimitives.WriteUInt64LittleEndian(bytes.AsSpan(40, 8), (ulong)stats.StartTime.ToUnixTimeSeconds());
-        BinaryPrimitives.WriteUInt64LittleEndian(bytes.AsSpan(48, 8), stats.ReadBytes);
-        BinaryPrimitives.WriteUInt64LittleEndian(bytes.AsSpan(56, 8), stats.WrittenBytes);
-        BinaryPrimitives.WriteUInt64LittleEndian(bytes.AsSpan(64, 8), stats.MessagesSizeBytes);
-        BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan(72, 4), stats.StreamsCount);
-        BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan(76, 4), stats.TopicsCount);
-        BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan(80, 4), stats.PartitionsCount);
-        BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan(84, 4), stats.SegmentsCount);
-        BinaryPrimitives.WriteUInt64LittleEndian(bytes.AsSpan(88, 8), stats.MessagesCount);
-        BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan(96, 4), stats.ClientsCount);
-        BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan(100, 4), stats.ConsumerGroupsCount);
+        BinaryPrimitives.WriteSingleLittleEndian(bytes.AsSpan(8, 8), stats.TotalCpuUsage);
+        BinaryPrimitives.WriteUInt64LittleEndian(bytes.AsSpan(12, 8), stats.MemoryUsage);
+        BinaryPrimitives.WriteUInt64LittleEndian(bytes.AsSpan(20, 8), stats.TotalMemory);
+        BinaryPrimitives.WriteUInt64LittleEndian(bytes.AsSpan(28, 8), stats.AvailableMemory);
+        BinaryPrimitives.WriteUInt64LittleEndian(bytes.AsSpan(36, 8), stats.RunTime);
+        BinaryPrimitives.WriteUInt64LittleEndian(bytes.AsSpan(44, 8), (ulong)stats.StartTime.ToUnixTimeSeconds());
+        BinaryPrimitives.WriteUInt64LittleEndian(bytes.AsSpan(52, 8), stats.ReadBytes);
+        BinaryPrimitives.WriteUInt64LittleEndian(bytes.AsSpan(60, 8), stats.WrittenBytes);
+        BinaryPrimitives.WriteUInt64LittleEndian(bytes.AsSpan(68, 8), stats.MessagesSizeBytes);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan(76, 4), stats.StreamsCount);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan(80, 4), stats.TopicsCount);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan(84, 4), stats.PartitionsCount);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan(88, 4), stats.SegmentsCount);
+        BinaryPrimitives.WriteUInt64LittleEndian(bytes.AsSpan(92, 8), stats.MessagesCount);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan(100, 4), stats.ClientsCount);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan(104, 4), stats.ConsumerGroupsCount);
 
         // Convert string properties to bytes and set them in the byte array
         byte[] hostnameBytes = Encoding.UTF8.GetBytes(stats.Hostname);
-        BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan(104, 4), hostnameBytes.Length);
-        hostnameBytes.CopyTo(bytes, 108);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan(108, 4), hostnameBytes.Length);
+        hostnameBytes.CopyTo(bytes, 112);
 
         byte[] osNameBytes = Encoding.UTF8.GetBytes(stats.OsName);
-        BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan(108 + hostnameBytes.Length, 4), osNameBytes.Length);
-        osNameBytes.CopyTo(bytes, 112 + hostnameBytes.Length);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan(112 + hostnameBytes.Length, 4), osNameBytes.Length);
+        osNameBytes.CopyTo(bytes, 116 + hostnameBytes.Length);
 
         byte[] osVersionBytes = Encoding.UTF8.GetBytes(stats.OsVersion);
-        BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan(112 + hostnameBytes.Length + osNameBytes.Length, 4), osVersionBytes.Length);
-        osVersionBytes.CopyTo(bytes, 116 + hostnameBytes.Length + osNameBytes.Length);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan(116 + hostnameBytes.Length + osNameBytes.Length, 4), osVersionBytes.Length);
+        osVersionBytes.CopyTo(bytes, 120 + hostnameBytes.Length + osNameBytes.Length);
 
         byte[] kernelVersionBytes = Encoding.UTF8.GetBytes(stats.KernelVersion);
-        BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan(116 + hostnameBytes.Length + osNameBytes.Length + osVersionBytes.Length, 4), kernelVersionBytes.Length);
-        kernelVersionBytes.CopyTo(bytes, 120 + hostnameBytes.Length + osNameBytes.Length + osVersionBytes.Length);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan(120 + hostnameBytes.Length + osNameBytes.Length + osVersionBytes.Length, 4), kernelVersionBytes.Length);
+        kernelVersionBytes.CopyTo(bytes, 124 + hostnameBytes.Length + osNameBytes.Length + osVersionBytes.Length);
 
         return bytes;
     }
