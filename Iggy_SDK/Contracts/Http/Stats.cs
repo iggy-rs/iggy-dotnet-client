@@ -4,6 +4,7 @@ public sealed class Stats
 {
     public required int ProcessId { get; init; }
     public required float CpuUsage { get; init; }
+    public required float TotalCpuUsage { get; init; }
     public required ulong MemoryUsage { get; init; }
     public required ulong TotalMemory { get; init; }
     public required ulong AvailableMemory { get; init; }

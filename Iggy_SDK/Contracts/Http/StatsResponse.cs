@@ -5,6 +5,7 @@ public sealed class StatsResponse
 {
     public required int ProcessId { get; init; }
     public required float CpuUsage { get; init; }
+    public required float TotalCpuUsage { get; init; }
     public required ulong MemoryUsage { get; init; }
     public required ulong TotalMemory { get; init; }
     public required ulong AvailableMemory { get; init; }
@@ -31,6 +32,7 @@ public sealed class StatsResponse
         {
             ProcessId = ProcessId,
             CpuUsage = CpuUsage,
+            TotalCpuUsage = TotalCpuUsage,
             MemoryUsage = MemoryUsage,
             TotalMemory = TotalMemory,
             AvailableMemory = AvailableMemory,

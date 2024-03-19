@@ -697,22 +697,23 @@ internal static class BinaryMapper
     {
         int processId = BinaryPrimitives.ReadInt32LittleEndian(payload[0..4]);
         float cpuUsage = BitConverter.ToSingle(payload[4..8]);
-        ulong memoryUsage = BinaryPrimitives.ReadUInt64LittleEndian(payload[8..16]);
-        ulong totalMemory = BinaryPrimitives.ReadUInt64LittleEndian(payload[16..24]);
-        ulong availableMemory = BinaryPrimitives.ReadUInt64LittleEndian(payload[24..32]);
-        ulong runTime = BinaryPrimitives.ReadUInt64LittleEndian(payload[32..40]);
-        ulong startTime = BinaryPrimitives.ReadUInt64LittleEndian(payload[40..48]);
-        ulong readBytes = BinaryPrimitives.ReadUInt64LittleEndian(payload[48..56]);
-        ulong writtenBytes = BinaryPrimitives.ReadUInt64LittleEndian(payload[56..64]);
-        ulong totalSizeBytes = BinaryPrimitives.ReadUInt64LittleEndian(payload[64..72]);
-        int streamsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[72..76]);
-        int topicsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[76..80]);
-        int partitionsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[80..84]);
-        int segmentsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[84..88]);
-        ulong messagesCount = BinaryPrimitives.ReadUInt64LittleEndian(payload[88..96]);
-        int clientsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[96..100]);
-        int consumerGroupsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[100..104]);
-        int position = 104;
+        float totalCpuUsage = BitConverter.ToSingle(payload[8..12]);
+        ulong memoryUsage = BinaryPrimitives.ReadUInt64LittleEndian(payload[12..20]);
+        ulong totalMemory = BinaryPrimitives.ReadUInt64LittleEndian(payload[20..28]);
+        ulong availableMemory = BinaryPrimitives.ReadUInt64LittleEndian(payload[28..36]);
+        ulong runTime = BinaryPrimitives.ReadUInt64LittleEndian(payload[36..44]);
+        ulong startTime = BinaryPrimitives.ReadUInt64LittleEndian(payload[44..52]);
+        ulong readBytes = BinaryPrimitives.ReadUInt64LittleEndian(payload[52..60]);
+        ulong writtenBytes = BinaryPrimitives.ReadUInt64LittleEndian(payload[60..68]);
+        ulong totalSizeBytes = BinaryPrimitives.ReadUInt64LittleEndian(payload[68..76]);
+        int streamsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[76..80]);
+        int topicsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[80..84]);
+        int partitionsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[84..88]);
+        int segmentsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[88..92]);
+        ulong messagesCount = BinaryPrimitives.ReadUInt64LittleEndian(payload[92..100]);
+        int clientsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[100..104]);
+        int consumerGroupsCount = BinaryPrimitives.ReadInt32LittleEndian(payload[104..108]);
+        int position = 108;
 
         int hostnameLength = BinaryPrimitives.ReadInt32LittleEndian(payload[position..(position + 4)]);
         string hostname = Encoding.UTF8.GetString(payload[(position + 4)..(position + 4 + hostnameLength)]);
@@ -732,6 +733,7 @@ internal static class BinaryMapper
             Hostname = hostname,
             ClientsCount = clientsCount,
             CpuUsage = cpuUsage,
+            TotalCpuUsage = totalCpuUsage,
             MemoryUsage = memoryUsage,
             TotalMemory = totalMemory,
             AvailableMemory = availableMemory,

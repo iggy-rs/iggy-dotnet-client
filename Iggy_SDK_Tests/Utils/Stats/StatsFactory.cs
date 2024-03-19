@@ -10,6 +10,7 @@ public static class StatsFactory
             ProcessId = 123,
             CpuUsage = 12.34f,
             MemoryUsage = 567890,
+            TotalCpuUsage = 56.78f,
             TotalMemory = 1234567890,
             AvailableMemory = 987654321,
             RunTime = 1234567890,
