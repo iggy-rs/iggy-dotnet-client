@@ -115,7 +115,7 @@ internal sealed class MessageSenderDispatcher
         return true;
     }
 
-    private MessageSendRequest?[] BatchMessages(Span<MessageSendRequest> requests)
+    private MessageSendRequest[] BatchMessages(Span<MessageSendRequest> requests)
     {
         int messagesCount = 0;
         for (int i = 0; i < requests.Length; i++)
@@ -126,7 +126,7 @@ internal sealed class MessageSenderDispatcher
 
         var messagesBuffer = ArrayPool<Message>.Shared.Rent(_maxMessagesPerBatch);
         var messages = messagesBuffer.AsSpan()[.._maxMessagesPerBatch];
-        var messagesBatchesBuffer = ArrayPool<MessageSendRequest?>.Shared.Rent(batchesCount);
+        var messagesBatchesBuffer = ArrayPool<MessageSendRequest>.Shared.Rent(batchesCount);
 
         int idx = 0;
         int batchCounter = 0;

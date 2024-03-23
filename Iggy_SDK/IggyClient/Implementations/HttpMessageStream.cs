@@ -256,7 +256,8 @@ public class HttpMessageStream : IIggyClient
         {
             StoreOffset.Never => false,
             StoreOffset.WhenMessagesAreReceived => true,
-            StoreOffset.AfterProcessingEachMessage => false
+            StoreOffset.AfterProcessingEachMessage => false,
+            _ => throw new ArgumentOutOfRangeException()
         };
         var fetchRequest = new MessageFetchRequest
         {
