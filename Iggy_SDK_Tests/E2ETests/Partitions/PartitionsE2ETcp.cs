@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Iggy_SDK;
+using Iggy_SDK_Tests.E2ETests.Fixtures.Bootstraps;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Exceptions;
 using Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
@@ -18,45 +19,61 @@ public sealed class PartitionsE2ETcp : IClassFixture<IggyTcpPartitionFixture>
     {
         _fixture = fixture;
         _partitionsRequest =
-            PartitionFactory.CreatePartitionsRequest((int)_fixture.StreamRequest.StreamId!, (int)_fixture.TopicRequest.TopicId!);
-        _deletePartitionsRequest = PartitionFactory.CreateDeletePartitionsRequest((int)_fixture.StreamRequest.StreamId,
-            (int)_fixture.TopicRequest.TopicId, _partitionsRequest.PartitionsCount);
+            PartitionFactory.CreatePartitionsRequest((int)PartitionsFixtureBootstrap.StreamRequest.StreamId!, (int)PartitionsFixtureBootstrap.TopicRequest.TopicId!);
+        _deletePartitionsRequest = PartitionFactory.CreateDeletePartitionsRequest((int)PartitionsFixtureBootstrap.StreamRequest.StreamId,
+            (int)PartitionsFixtureBootstrap.TopicRequest.TopicId, _partitionsRequest.PartitionsCount);
     }
 
     [Fact, TestPriority(1)]
     public async Task CreatePartition_HappyPath_Should_CreatePartition_Successfully()
     {
-        await _fixture.sut.Invoking(x => x.CreatePartitionsAsync(_partitionsRequest))
-            .Should()
-            .NotThrowAsync();
+        var tasks = _fixture.SubjectsUnderTest.Select( sut => Task.Run(async () =>
+        {
+            await sut.Invoking(x => x.CreatePartitionsAsync(_partitionsRequest))
+                .Should()
+                .NotThrowAsync();
+        })).ToArray();
+        await Task.WhenAll(tasks);
     }
 
     [Fact, TestPriority(2)]
     public async Task DeletePartition_Should_DeletePartition_Successfully()
     {
-        await _fixture.sut.Invoking(x => x.DeletePartitionsAsync(_deletePartitionsRequest))
-            .Should()
-            .NotThrowAsync();
+        var tasks = _fixture.SubjectsUnderTest.Select( sut => Task.Run(async () =>
+        {
+            await sut.Invoking(x => x.DeletePartitionsAsync(_deletePartitionsRequest))
+                .Should()
+                .NotThrowAsync();
+        })).ToArray();
+        await Task.WhenAll(tasks);
     }
 
     [Fact, TestPriority(3)]
     public async Task DeletePartition_Should_Throw_WhenTopic_DoesNotExist()
     {
-        await _fixture.sut.CreatePartitionsAsync(_partitionsRequest);
-        await _fixture.sut.DeleteTopicAsync(Identifier.Numeric((int)_fixture.StreamRequest.StreamId!),
-            Identifier.Numeric((int)_fixture.TopicRequest.TopicId!));
-        await _fixture.sut.Invoking(x => x.DeletePartitionsAsync(_deletePartitionsRequest))
-            .Should()
-            .ThrowExactlyAsync<InvalidResponseException>();
+        var tasks = _fixture.SubjectsUnderTest.Select( sut => Task.Run(async () =>
+        {
+            await sut.CreatePartitionsAsync(_partitionsRequest);
+            await sut.DeleteTopicAsync(Identifier.Numeric((int)PartitionsFixtureBootstrap.StreamRequest.StreamId!),
+                Identifier.Numeric((int)PartitionsFixtureBootstrap.TopicRequest.TopicId!));
+            await sut.Invoking(x => x.DeletePartitionsAsync(_deletePartitionsRequest))
+                .Should()
+                .ThrowExactlyAsync<InvalidResponseException>();
+        })).ToArray();
+        await Task.WhenAll(tasks);
     }
 
     [Fact, TestPriority(4)]
     public async Task DeletePartition_Should_Throw_WhenStream_DoesNotExist()
     {
-        await _fixture.sut.CreateTopicAsync(Identifier.Numeric((int)_fixture.StreamRequest.StreamId!), _fixture.TopicRequest);
-        await _fixture.sut.DeleteStreamAsync(Identifier.Numeric((int)_fixture.StreamRequest.StreamId));
-        await _fixture.sut.Invoking(x => x.DeletePartitionsAsync(_deletePartitionsRequest))
-            .Should()
-            .ThrowExactlyAsync<InvalidResponseException>();
+        var tasks = _fixture.SubjectsUnderTest.Select( sut => Task.Run(async () =>
+        {
+            await sut.CreateTopicAsync(Identifier.Numeric((int)PartitionsFixtureBootstrap.StreamRequest.StreamId!), PartitionsFixtureBootstrap.TopicRequest);
+            await sut.DeleteStreamAsync(Identifier.Numeric((int)PartitionsFixtureBootstrap.StreamRequest.StreamId));
+            await sut.Invoking(x => x.DeletePartitionsAsync(_deletePartitionsRequest))
+                .Should()
+                .ThrowExactlyAsync<InvalidResponseException>();
+        })).ToArray();
+        await Task.WhenAll(tasks);
     }
 }
