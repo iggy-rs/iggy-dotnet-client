@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Iggy_SDK;
+using Iggy_SDK_Tests.E2ETests.Fixtures.Bootstraps;
 using Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
 using Iggy_SDK_Tests.Utils;
 using Iggy_SDK_Tests.Utils.Messages;
@@ -18,52 +19,34 @@ public sealed class PollMessagesE2ETcp : IClassFixture<IggyTcpPollMessagesFixtur
     }
 
     [Fact, TestPriority(1)]
-    public async Task PollMessagesTMessage_WithNoHeaders_Should_PollMessages_Successfully()
+    public async Task PollMessagesTMessage_Should_PollMessages_Successfully()
     {
-        _ = Task.Run( async () =>
+        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
         {
-
-            int i = 0;
-            await foreach (var msgResponse in _fixture.sut.PollMessagesAsync(new PollMessagesRequest
+            var i = 0;
+            await foreach (var msgResponse in sut.PollMessagesAsync(new PollMessagesRequest
                            {
                                Consumer = Consumer.New(1),
                                Count = 10,
-                               PartitionId = _fixture.PartitionId,
+                               PartitionId = PollMessagesFixtureBootstrap.PartitionId,
                                PollingStrategy = PollingStrategy.Next(),
-                               StreamId = Identifier.Numeric(_fixture.StreamId),
-                               TopicId = Identifier.Numeric(_fixture.TopicId),
-                           }, MessageFactory.DeserializeDummyMessage))
-            {
-                msgResponse.Headers.Should().BeNull();
-                msgResponse.State.Should().Be(MessageState.Available);
-                i++;
-            }
-            i.Should().Be(IggyTcpPollMessagesFixture.MessageCount);
-        });
-    }
-    
-    [Fact, TestPriority(2)]
-    public async Task PollMessagesTMessage_NoHeaders_Should_PollMessages_Successfully()
-    {
-        _ = Task.Run(async () =>
-        {
-            int i = 0;
-            await foreach (var msgResponse in _fixture.sut.PollMessagesAsync(new PollMessagesRequest
-                               {
-                               Consumer = Consumer.New(1),
-                               Count = 10,
-                               PartitionId = _fixture.PartitionId,
-                               PollingStrategy = PollingStrategy.Next(),
-                               StreamId = Identifier.Numeric(_fixture.StreamId),
-                               TopicId = Identifier.Numeric(_fixture.HeadersTopicId),
+                               StreamId = Identifier.Numeric(PollMessagesFixtureBootstrap.StreamId),
+                               TopicId = Identifier.Numeric(PollMessagesFixtureBootstrap.TopicId)
                            }, MessageFactory.DeserializeDummyMessage))
             {
                 msgResponse.Headers.Should().NotBeNull();
-                msgResponse.Headers.Should().HaveCount(_fixture.HeadersCount);
+                msgResponse.Headers.Should().HaveCount(PollMessagesFixtureBootstrap.HeadersCount);
                 msgResponse.State.Should().Be(MessageState.Available);
                 i++;
+                if (i == PollMessagesFixtureBootstrap.MessageCount)
+                {
+                    break;
+                }
             }
-            i.Should().Be(IggyTcpPollMessagesFixture.MessageCount);
-        });
+
+            i.Should().Be(PollMessagesFixtureBootstrap.MessageCount);
+        })).ToArray();
+        await Task.WhenAll(tasks);
     }
+    
 }

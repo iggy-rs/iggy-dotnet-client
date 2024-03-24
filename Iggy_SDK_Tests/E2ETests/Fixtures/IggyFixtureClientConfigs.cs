@@ -23,4 +23,12 @@ public static class IggyFixtureClientMessagingSettings
         options.MaxMessagesPerBatch = 1000;
         options.MaxRequests = 8912;
     };
+
+    public static Action<MessageBatchingSettings> BatchingSettingsPollMessagesFixture { get; set; } = options =>
+    {
+        options.Enabled = true;
+        options.Interval = TimeSpan.FromMilliseconds(99);
+        options.MaxMessagesPerBatch = 1000;
+        options.MaxRequests = 8912;
+    };
 }
