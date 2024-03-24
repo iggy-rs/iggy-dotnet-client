@@ -64,7 +64,7 @@ internal static class TopicFactory
             MessageExpiry = Random.Shared.Next(1, 69),
             ReplicationFactor = (byte)Random.Shared.Next(1,8),
             PartitionsCount = Random.Shared.Next(1, 10),
-            SizeBytes = (ulong)Random.Shared.Next(1, 10),
+            Size = (ulong)Random.Shared.Next(1, 10),
             MaxTopicSize = (ulong)Random.Shared.Next(69,420),
             CreatedAt = DateTimeOffset.UtcNow,
             Partitions = new List<PartitionContract>

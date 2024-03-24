@@ -249,13 +249,13 @@ public sealed class BinaryMapper
         var response1 = responses.ElementAt(0);
         Assert.Equal(id1, response1.Id);
         Assert.Equal(partitionsCount1, response1.PartitionsCount);
-        Assert.Equal(sizeBytesTopic1, response1.SizeBytes);
+        Assert.Equal(sizeBytesTopic1, response1.Size);
         Assert.Equal(messagesCountTopic1, response1.MessagesCount);
         Assert.Equal(name1, response1.Name);
 
         var response2 = responses.ElementAt(1);
         Assert.Equal(id2, response2.Id);
-        Assert.Equal(sizeBytesTopic2, response2.SizeBytes);
+        Assert.Equal(sizeBytesTopic2, response2.Size);
         Assert.Equal(messagesCountTopic2, response2.MessagesCount);
         Assert.Equal(partitionsCount2, response2.PartitionsCount);
         Assert.Equal(name2, response2.Name);
@@ -278,7 +278,7 @@ public sealed class BinaryMapper
         Assert.NotNull(response);
         Assert.Equal(messagesCount, response.MessagesCount);
         Assert.Equal(partitionsCount, response.PartitionsCount);
-        Assert.Equal(sizeBytes, response.SizeBytes);
+        Assert.Equal(sizeBytes, response.Size);
         Assert.Equal(topicId, response.Id);
         Assert.Equal(topicName, response.Name);
     }
