@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Iggy_SDK_Tests.E2ETests.Fixtures.Bootstraps;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Exceptions;
 using Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
@@ -26,47 +27,66 @@ public sealed class SendMessagesE2ETcp : IClassFixture<IggyTcpSendMessagesFixtur
             Random.Shared.Next(69, 420),
             MessageFactory.GenerateMessageHeaders(Random.Shared.Next(1, 20)));
 
-        _messageNoHeadersSendRequest = MessageFactory.CreateMessageSendRequest(_fixture.StreamId,
-            _fixture.TopicId, _fixture.PartitionId);
-        _invalidMessageNoHeadersSendRequest = MessageFactory.CreateMessageSendRequest(_fixture.InvalidStreamId,
-            _fixture.InvalidTopicId, _fixture.PartitionId);
+        _messageNoHeadersSendRequest = MessageFactory.CreateMessageSendRequest(SendMessagesFixtureBootstrap.StreamId,
+            SendMessagesFixtureBootstrap.TopicId, SendMessagesFixtureBootstrap.PartitionId);
+        _invalidMessageNoHeadersSendRequest = MessageFactory.CreateMessageSendRequest(SendMessagesFixtureBootstrap.InvalidStreamId,
+            SendMessagesFixtureBootstrap.InvalidTopicId, SendMessagesFixtureBootstrap.PartitionId);
 
-        _messageWithHeadersSendRequest = MessageFactory.CreateMessageSendRequest(_fixture.StreamId,
-            _fixture.TopicId, _fixture.PartitionId, messageWithHeaders);
-        _invalidMessageWithHeadersSendRequest = MessageFactory.CreateMessageSendRequest(_fixture.InvalidStreamId,
-            _fixture.InvalidTopicId, _fixture.PartitionId, messageWithHeaders);
-
+        _messageWithHeadersSendRequest = MessageFactory.CreateMessageSendRequest(SendMessagesFixtureBootstrap.StreamId,
+            SendMessagesFixtureBootstrap.TopicId, SendMessagesFixtureBootstrap.PartitionId, messageWithHeaders);
+        _invalidMessageWithHeadersSendRequest = MessageFactory.CreateMessageSendRequest(SendMessagesFixtureBootstrap.InvalidStreamId,
+            SendMessagesFixtureBootstrap.InvalidTopicId, SendMessagesFixtureBootstrap.PartitionId, messageWithHeaders);
     }
 
-    [Fact, TestPriority(1)]
+    [Fact]
+    [TestPriority(1)]
     public async Task SendMessages_NoHeaders_Should_SendMessages_Successfully()
     {
-        await _fixture.sut.Invoking(x => x.SendMessagesAsync(_messageNoHeadersSendRequest))
-            .Should()
-            .NotThrowAsync();
+        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        {
+            await sut.Invoking(x => x.SendMessagesAsync(_messageNoHeadersSendRequest))
+                .Should()
+                .NotThrowAsync();
+        })).ToArray();
+        await Task.WhenAll(tasks);
     }
 
-    [Fact, TestPriority(2)]
+    [Fact]
+    [TestPriority(2)]
     public async Task SendMessages_NoHeaders_Should_Throw_InvalidResponse()
     {
-        await _fixture.sut.Invoking(x => x.SendMessagesAsync(_invalidMessageNoHeadersSendRequest))
-            .Should()
-            .ThrowAsync<InvalidResponseException>();
+        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        {
+            await sut.Invoking(x => x.SendMessagesAsync(_invalidMessageNoHeadersSendRequest))
+                .Should()
+                .ThrowAsync<InvalidResponseException>();
+        })).ToArray();
+        await Task.WhenAll(tasks);
     }
 
-    [Fact, TestPriority(3)]
+    [Fact]
+    [TestPriority(3)]
     public async Task SendMessages_WithHeaders_Should_SendMessages_Successfully()
     {
-        await _fixture.sut.Invoking(x => x.SendMessagesAsync(_messageWithHeadersSendRequest))
-            .Should()
-            .NotThrowAsync();
+        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        {
+            await sut.Invoking(x => x.SendMessagesAsync(_messageWithHeadersSendRequest))
+                .Should()
+                .NotThrowAsync();
+        })).ToArray();
+        await Task.WhenAll(tasks);
     }
 
-    [Fact, TestPriority(4)]
+    [Fact]
+    [TestPriority(4)]
     public async Task SendMessages_WithHeaders_Should_Throw_InvalidResponse()
     {
-        await _fixture.sut.Invoking(x => x.SendMessagesAsync(_invalidMessageWithHeadersSendRequest))
-            .Should()
-            .ThrowAsync<InvalidResponseException>();
+        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        {
+            await sut.Invoking(x => x.SendMessagesAsync(_invalidMessageWithHeadersSendRequest))
+                .Should()
+                .ThrowAsync<InvalidResponseException>();
+        })).ToArray();
+        await Task.WhenAll(tasks);
     }
 }

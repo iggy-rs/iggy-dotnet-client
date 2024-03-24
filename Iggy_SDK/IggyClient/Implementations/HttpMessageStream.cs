@@ -162,16 +162,7 @@ public class HttpMessageStream : IIggyClient
         
         if (_messageInvoker is not null)
         {
-            try
-            {
-                await _messageInvoker.SendMessagesAsync(request, token);
-            }
-            catch
-            {
-                var partId = BinaryPrimitives.ReadInt32LittleEndian(request.Partitioning.Value);
-                _logger.LogError("Error encountered while sending messages - Stream ID:{streamId}, Topic ID:{topicId}, Partition ID: {partitionId}",
-                    request.StreamId, request.TopicId, partId);
-            }
+            await _messageInvoker.SendMessagesAsync(request, token);
             return;
         }
         await _channel!.Writer.WriteAsync(request, token);

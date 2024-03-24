@@ -16,6 +16,14 @@ public static class IggyFixtureClientMessagingSettings
         options.MaxMessagesPerBatch = 1000;
         options.MaxRequests = 4096;
     };
+    
+    public static Action<MessageBatchingSettings> BatchingSettingsSendFixture { get; set; } = options =>
+    {
+        options.Enabled = false;
+        options.Interval = TimeSpan.FromMilliseconds(100);
+        options.MaxMessagesPerBatch = 1000;
+        options.MaxRequests = 4096;
+    };
 
     public static Action<MessageBatchingSettings> BatchingSettingsFetchFixture { get; set; } = options =>
     {
