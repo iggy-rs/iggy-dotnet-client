@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Iggy_SDK_Tests.E2ETests.Fixtures.Bootstraps;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
 using Iggy_SDK_Tests.Utils;
@@ -21,25 +22,33 @@ public sealed class OffsetE2ETcp : IClassFixture<IggyTcpOffsetFixture>
     {
         _fixture = fixture;
         _storeOffsetIndividualConsumer = OffsetFactory.CreateOffsetContract(
-            (int)_fixture.StreamRequest.StreamId!, (int)_fixture.TopicRequest.TopicId!, GET_INDIVIDUAL_CONSUMER_ID, GET_OFFSET,
+            (int)OffsetFixtureBootstrap.StreamRequest.StreamId!, (int)OffsetFixtureBootstrap.TopicRequest.TopicId!, GET_INDIVIDUAL_CONSUMER_ID, GET_OFFSET,
             GET_PARTITION_ID);
-        _offsetIndividualConsumer = OffsetFactory.CreateOffsetRequest((int)_fixture.StreamRequest.StreamId,
-            (int)_fixture.TopicRequest.TopicId, GET_PARTITION_ID, GET_INDIVIDUAL_CONSUMER_ID);
+        _offsetIndividualConsumer = OffsetFactory.CreateOffsetRequest((int)OffsetFixtureBootstrap.StreamRequest.StreamId,
+            (int)OffsetFixtureBootstrap.TopicRequest.TopicId, GET_PARTITION_ID, GET_INDIVIDUAL_CONSUMER_ID);
     }
 
     [Fact, TestPriority(1)]
     public async Task StoreOffset_IndividualConsumer_Should_StoreOffset_Successfully()
     {
-        await _fixture.sut.Invoking(x => x.StoreOffsetAsync(_storeOffsetIndividualConsumer))
-            .Should()
-            .NotThrowAsync();
+        var tasks = _fixture.SubjectsUnderTest.Select( sut => Task.Run(async () =>
+        {
+            await sut.Invoking(x => x.StoreOffsetAsync(_storeOffsetIndividualConsumer))
+                .Should()
+                .NotThrowAsync();
+        })).ToArray();
+        await Task.WhenAll(tasks);
     }
 
     [Fact, TestPriority(2)]
     public async Task GetOffset_IndividualConsumer_Should_GetOffset_Successfully()
     {
-        var offset = await _fixture.sut.GetOffsetAsync(_offsetIndividualConsumer);
-        offset.Should().NotBeNull();
-        offset!.StoredOffset.Should().Be(_storeOffsetIndividualConsumer.Offset);
+        var tasks = _fixture.SubjectsUnderTest.Select( sut => Task.Run(async () =>
+        {
+            var offset = await sut.GetOffsetAsync(_offsetIndividualConsumer);
+            offset.Should().NotBeNull();
+            offset!.StoredOffset.Should().Be(_storeOffsetIndividualConsumer.Offset);
+        })).ToArray();
+        await Task.WhenAll(tasks);
     }
 }
