@@ -1,5 +1,6 @@
 using FluentAssertions;
 using FluentAssertions.Common;
+using Iggy_SDK_Tests.E2ETests.Fixtures.Bootstraps;
 using Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
 using Iggy_SDK_Tests.Utils;
 using Iggy_SDK.Contracts.Http;
@@ -18,49 +19,69 @@ public sealed class PATE2ETcp : IClassFixture<IggyTcpPATFixture>
     [Fact, TestPriority(1)]
     public async Task CreatePersonalAccessToken_HappyPath_Should_CreatePersonalAccessToken_Successfully()
     {
-        await _fixture.sut.Invoking(x => x.CreatePersonalAccessTokenAsync(_fixture.CreatePersonalAccessTokenRequest))
-            .Should()
-            .NotThrowAsync();
+        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        {
+            await sut.Invoking(x => x.CreatePersonalAccessTokenAsync(PATFixtureBootstrap.CreatePersonalAccessTokenRequest))
+                .Should()
+                .NotThrowAsync();
+        })).ToArray();
+        await Task.WhenAll(tasks);
     }
     [Fact, TestPriority(2)]
     public async Task CreatePersonalAccessToken_Duplicate_Should_Throw_InvalidResponse()
     {
-        await _fixture.sut.Invoking(x => x.CreatePersonalAccessTokenAsync(_fixture.CreatePersonalAccessTokenRequest))
-            .Should()
-            .ThrowExactlyAsync<InvalidResponseException>();
+        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        {
+            await sut.Invoking(x => x.CreatePersonalAccessTokenAsync(PATFixtureBootstrap.CreatePersonalAccessTokenRequest))
+                .Should()
+                .ThrowExactlyAsync<InvalidResponseException>();
+        })).ToArray();
+        await Task.WhenAll(tasks);
     }
     [Fact, TestPriority(3)]
     public async Task GetPersonalAccessTokens_Should_ReturnValidResponse()
     {
-        var response = await _fixture.sut.GetPersonalAccessTokensAsync();
-        response.Should().NotBeNull();
-        response.Count.Should().Be(1);
-        response[0].Name.Should().Be(_fixture.CreatePersonalAccessTokenRequest.Name);
-        var tokenExpiryDateTimeOffset = DateTime.UtcNow.AddSeconds((double)_fixture.CreatePersonalAccessTokenRequest.Expiry).ToDateTimeOffset();
-        response[0].Expiry.Value.Date.Should().Be(tokenExpiryDateTimeOffset.Date);
+        var tasks = _fixture.SubjectsUnderTest.Select( sut => Task.Run(async () =>
+        {
+            var response = await sut.GetPersonalAccessTokensAsync();
+            response.Should().NotBeNull();
+            response.Count.Should().Be(1);
+            response[0].Name.Should().Be(PATFixtureBootstrap.CreatePersonalAccessTokenRequest.Name);
+            var tokenExpiryDateTimeOffset = DateTime.UtcNow.AddSeconds((double)PATFixtureBootstrap.CreatePersonalAccessTokenRequest.Expiry!).ToDateTimeOffset();
+            response[0].Expiry!.Value.Date.Should().Be(tokenExpiryDateTimeOffset.Date);
+        })).ToArray();
+        await Task.WhenAll(tasks);
     }
     [Fact, TestPriority(4)]
     public async Task LoginWithPersonalAccessToken_Should_Be_Successfull()
     {
-        var response = await _fixture.sut.CreatePersonalAccessTokenAsync(new CreatePersonalAccessTokenRequest()
+        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
         {
-            Name = "test-login",
-            Expiry = 69420,
-        });
-        await _fixture.sut.LogoutUser();
-        await _fixture.sut.Invoking(x => x.LoginWithPersonalAccessToken(new LoginWithPersonalAccessToken
-        {
-            Token = response.Token
-        })).Should().NotThrowAsync();
+            var response = await sut.CreatePersonalAccessTokenAsync(new CreatePersonalAccessTokenRequest
+            {
+                Name = "test-login",
+                Expiry = 69420
+            });
+            await sut.LogoutUser();
+            await sut.Invoking(x => x.LoginWithPersonalAccessToken(new LoginWithPersonalAccessToken
+            {
+                Token = response!.Token
+            })).Should().NotThrowAsync();
+        })).ToArray();
+        await Task.WhenAll(tasks);
     }
     [Fact, TestPriority(5)]
     public async Task DeletePersonalAccessToken_Should_DeletePersonalAccessToken_Successfully()
     {
-        await _fixture.sut.Invoking(x => x.DeletePersonalAccessTokenAsync(new DeletePersonalAccessTokenRequest
+        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        {
+            await sut.Invoking(x => x.DeletePersonalAccessTokenAsync(new DeletePersonalAccessTokenRequest
             {
-                Name = _fixture.CreatePersonalAccessTokenRequest.Name
+                Name = PATFixtureBootstrap.CreatePersonalAccessTokenRequest.Name
             }))
             .Should()
             .NotThrowAsync();
+        })).ToArray();
+        await Task.WhenAll(tasks);
     }
 }
