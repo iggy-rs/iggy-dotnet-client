@@ -68,6 +68,14 @@ public static class JsonConverterFactory
                 new TopicResponseConverter()
             }
         };
+    public static JsonSerializerOptions CreateTopicOptions
+        => new()
+        {
+            Converters =
+            {
+                new CreateTopicConverter()
+            }
+        };
     
     public static JsonSerializerOptions MessageResponseOptions(Func<byte[], byte[]>? decryptor)
         => new()

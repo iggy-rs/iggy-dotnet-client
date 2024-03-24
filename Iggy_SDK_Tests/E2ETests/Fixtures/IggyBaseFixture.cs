@@ -26,7 +26,6 @@ public abstract class IggyBaseFixture : IAsyncLifetime
         .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(3000))
         .Build();
     
-
     public IIggyClient[] SubjectsUnderTest { get; } = new IIggyClient[2];
     protected IggyBaseFixture(IIggyBootstrap bootstraper, Action<MessagePollingSettings> pollingSettings,
         Action<MessageBatchingSettings> batchingSettings)
@@ -39,6 +38,10 @@ public abstract class IggyBaseFixture : IAsyncLifetime
     public async Task InitializeAsync()
     {
         await _tcpContainer.StartAsync();
+        await _httpContainer.StartAsync();
+        var tcpPort = _tcpContainer.GetMappedPublicPort(8090);
+        var httpPort = _httpContainer.GetMappedPublicPort(3000);
+        
         var firstSubject = MessageStreamFactory.CreateMessageStream(options =>
         {
             options.BaseAdress = $"127.0.0.1:{_tcpContainer.GetMappedPublicPort(8090)}";
@@ -52,11 +55,9 @@ public abstract class IggyBaseFixture : IAsyncLifetime
             Username = "iggy"
         });
         SubjectsUnderTest[0] = firstSubject;
-        
-        await _httpContainer.StartAsync();
         var secondSubject = (MessageStreamFactory.CreateMessageStream(options =>
         {
-            options.BaseAdress = $"127.0.0.1:{_httpContainer.GetMappedPublicPort(8090)}";
+            options.BaseAdress = $"http://127.0.0.1:{_httpContainer.GetMappedPublicPort(3000)}";
             options.Protocol = Protocol.Http;
             options.MessageBatchingSettings = _batchingSettings;
             options.MessagePollingSettings = _pollingSettings;
@@ -67,7 +68,8 @@ public abstract class IggyBaseFixture : IAsyncLifetime
             Username = "iggy"
         });
         SubjectsUnderTest[1] = secondSubject;
-        await _bootstraper.BootstrapResourcesAsync();
+        
+        await _bootstraper.BootstrapResourcesAsync(tcpPort, httpPort, firstSubject, secondSubject);
     }
 
     public async Task DisposeAsync()

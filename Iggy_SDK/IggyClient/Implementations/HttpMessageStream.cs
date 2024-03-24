@@ -96,7 +96,7 @@ public class HttpMessageStream : IIggyClient
     }
     public async Task CreateTopicAsync(Identifier streamId, TopicRequest topic, CancellationToken token = default)
     {
-        var json = JsonSerializer.Serialize(topic, JsonConverterFactory.SnakeCaseOptions);
+        var json = JsonSerializer.Serialize(topic, JsonConverterFactory.CreateTopicOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
 
         var response = await _httpClient.PostAsync($"/streams/{streamId}/topics", data, token);

@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Iggy_SDK;
+using Iggy_SDK_Tests.E2ETests.Fixtures.Bootstraps;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Exceptions;
 using Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
@@ -23,49 +24,60 @@ public sealed class ConsumerGroupE2ETcp : IClassFixture<IggyTcpConsumerGroupFixt
     public ConsumerGroupE2ETcp(IggyTcpConsumerGroupFixture fixture)
     {
         _fixture = fixture;
-        _createConsumerGroupRequest = ConsumerGroupFactory.CreateRequest((int)_fixture.StreamRequest.StreamId! ,
-            (int)_fixture.TopicRequest.TopicId!, GROUP_ID);
-        _joinConsumerGroupRequest = ConsumerGroupFactory.CreateJoinGroupRequest((int)_fixture.StreamRequest.StreamId,
-            (int)_fixture.TopicRequest.TopicId, GROUP_ID);
-        _leaveConsumerGroupRequest = ConsumerGroupFactory.CreateLeaveGroupRequest((int)_fixture.StreamRequest.StreamId,
-            (int)_fixture.TopicRequest.TopicId, GROUP_ID);
-        _deleteConsumerGroupRequest = ConsumerGroupFactory.CreateDeleteGroupRequest((int)_fixture.StreamRequest.StreamId,
-            (int)_fixture.TopicRequest.TopicId, GROUP_ID);
+        _createConsumerGroupRequest = ConsumerGroupFactory.CreateRequest((int)ConsumerGroupFixtureBootstrap.StreamRequest.StreamId! ,
+            (int)ConsumerGroupFixtureBootstrap.TopicRequest.TopicId!, GROUP_ID);
+        _joinConsumerGroupRequest = ConsumerGroupFactory.CreateJoinGroupRequest((int)ConsumerGroupFixtureBootstrap.StreamRequest.StreamId,
+            (int)ConsumerGroupFixtureBootstrap.TopicRequest.TopicId, GROUP_ID);
+        _leaveConsumerGroupRequest = ConsumerGroupFactory.CreateLeaveGroupRequest((int)ConsumerGroupFixtureBootstrap.StreamRequest.StreamId,
+            (int)ConsumerGroupFixtureBootstrap.TopicRequest.TopicId, GROUP_ID);
+        _deleteConsumerGroupRequest = ConsumerGroupFactory.CreateDeleteGroupRequest((int)ConsumerGroupFixtureBootstrap.StreamRequest.StreamId,
+            (int)ConsumerGroupFixtureBootstrap.TopicRequest.TopicId, GROUP_ID);
     }
 
     [Fact, TestPriority(1)]
     public async Task CreateConsumerGroup_HappyPath_Should_CreateConsumerGroup_Successfully()
     {
-        await _fixture.sut.Invoking(x => x.CreateConsumerGroupAsync(_createConsumerGroupRequest))
-            .Should()
-            .NotThrowAsync();
+        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        {
+            await sut.CreateConsumerGroupAsync(_createConsumerGroupRequest);
+        })).ToArray();
+        await Task.WhenAll(tasks);
     }
 
     [Fact, TestPriority(2)]
     public async Task CreateConsumerGroup_Should_Throw_InvalidResponse()
     {
-        await _fixture.sut.Invoking(x => x.CreateConsumerGroupAsync(_createConsumerGroupRequest))
-            .Should()
-            .ThrowExactlyAsync<InvalidResponseException>();
+        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        {
+            await sut.Invoking(x => x.CreateConsumerGroupAsync(_createConsumerGroupRequest))
+                .Should()
+                .ThrowExactlyAsync<InvalidResponseException>();
+        })).ToArray();
+        await Task.WhenAll(tasks);
     }
 
     [Fact, TestPriority(3)]
     public async Task GetConsumerGroupById_Should_Return_ValidResponse()
     {
-        var response = await _fixture.sut.GetConsumerGroupByIdAsync(
-            Identifier.Numeric((int)_fixture.StreamRequest.StreamId!), Identifier.Numeric((int)_fixture.TopicRequest.TopicId!),
-            ConsumerGroupId);
+        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        {
+            var response = await sut.GetConsumerGroupByIdAsync(
+                Identifier.Numeric((int)ConsumerGroupFixtureBootstrap.StreamRequest.StreamId!), Identifier.Numeric((int)ConsumerGroupFixtureBootstrap.TopicRequest.TopicId!),
+                ConsumerGroupId);
 
-        response.Should().NotBeNull();
-        response!.Id.Should().Be(GROUP_ID);
-        response.PartitionsCount.Should().Be(_fixture.TopicRequest.PartitionsCount);
-        response.MembersCount.Should().Be(0);
+            response.Should().NotBeNull();
+            response!.Id.Should().Be(GROUP_ID);
+            response.PartitionsCount.Should().Be(ConsumerGroupFixtureBootstrap.TopicRequest.PartitionsCount);
+            response.MembersCount.Should().Be(0);
+        })).ToArray();
+        await Task.WhenAll(tasks);
     }
 
     [Fact, TestPriority(4)]
     public async Task JoinConsumerGroup_Should_JoinConsumerGroup_Successfully()
     {
-        await _fixture.sut.Invoking(x => x.JoinConsumerGroupAsync(_joinConsumerGroupRequest))
+        var sut = _fixture.SubjectsUnderTest[0];
+        await sut.Invoking(x => x.JoinConsumerGroupAsync(_joinConsumerGroupRequest))
             .Should()
             .NotThrowAsync();
     }
@@ -73,17 +85,18 @@ public sealed class ConsumerGroupE2ETcp : IClassFixture<IggyTcpConsumerGroupFixt
     [Fact, TestPriority(5)]
     public async Task GetConsumerGroupById_Should_Return_ValidMembersCount()
     {
-        var response = await _fixture.sut.GetConsumerGroupByIdAsync(
-            Identifier.Numeric((int)_fixture.StreamRequest.StreamId!), Identifier.Numeric((int)_fixture.TopicRequest.TopicId!),
+        var sut = _fixture.SubjectsUnderTest[0];
+        var response = await sut.GetConsumerGroupByIdAsync(
+            Identifier.Numeric((int)ConsumerGroupFixtureBootstrap.StreamRequest.StreamId!), Identifier.Numeric((int)ConsumerGroupFixtureBootstrap.TopicRequest.TopicId!),
             ConsumerGroupId);
-
         response!.MembersCount.Should().Be(1);
     }
 
     [Fact, TestPriority(6)]
     public async Task LeaveConsumerGroup_Should_LeaveConsumerGroup_Successfully()
     {
-        await _fixture.sut.Invoking(x => x.LeaveConsumerGroupAsync(_leaveConsumerGroupRequest))
+        var sut = _fixture.SubjectsUnderTest[0];
+        await sut.Invoking(x => x.LeaveConsumerGroupAsync(_leaveConsumerGroupRequest))
             .Should()
             .NotThrowAsync();
     }
@@ -91,15 +104,20 @@ public sealed class ConsumerGroupE2ETcp : IClassFixture<IggyTcpConsumerGroupFixt
     [Fact, TestPriority(7)]
     public async Task DeleteConsumerGroup_Should_DeleteConsumerGroup_Successfully()
     {
-        await _fixture.sut.Invoking(x => x.DeleteConsumerGroupAsync(_deleteConsumerGroupRequest))
-            .Should()
-            .NotThrowAsync();
+        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        {
+            await sut.Invoking(x => x.DeleteConsumerGroupAsync(_deleteConsumerGroupRequest))
+                .Should()
+                .NotThrowAsync();
+        })).ToArray();
+        await Task.WhenAll(tasks);
     }
 
     [Fact, TestPriority(8)]
     public async Task JoinConsumerGroup_Should_Throw_InvalidResponse()
     {
-        await _fixture.sut.Invoking(x => x.JoinConsumerGroupAsync(_joinConsumerGroupRequest))
+        var sut = _fixture.SubjectsUnderTest[0];
+        await sut.Invoking(x => x.JoinConsumerGroupAsync(_joinConsumerGroupRequest))
             .Should()
             .ThrowExactlyAsync<InvalidResponseException>();
     }
@@ -107,8 +125,12 @@ public sealed class ConsumerGroupE2ETcp : IClassFixture<IggyTcpConsumerGroupFixt
     [Fact, TestPriority(9)]
     public async Task DeleteConsumerGroup_Should_Throw_InvalidResponse()
     {
-        await _fixture.sut.Invoking(x => x.DeleteConsumerGroupAsync(_deleteConsumerGroupRequest))
-            .Should()
-            .ThrowExactlyAsync<InvalidResponseException>();
+        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        {
+            await sut.Invoking(x => x.DeleteConsumerGroupAsync(_deleteConsumerGroupRequest))
+                .Should()
+                .ThrowExactlyAsync<InvalidResponseException>();
+        })).ToArray();
+        await Task.WhenAll(tasks);
     }
 }

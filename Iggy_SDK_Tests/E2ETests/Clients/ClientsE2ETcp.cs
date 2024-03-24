@@ -1,8 +1,12 @@
 using FluentAssertions;
+using Iggy_SDK_Tests.E2ETests.Fixtures.Bootstraps;
 using Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
 using Iggy_SDK_Tests.Utils;
+
 namespace Iggy_SDK_Tests.E2ETests.Clients;
 
+//TODO(numinex): The clients query doesn't work for http in this test case, but works in general, figure that shit out.
+[TestCaseOrderer("Iggy_SDK_Tests.Utils.PriorityOrderer", "Iggy_SDK_Tests")]
 public sealed class ClientsE2ETcp : IClassFixture<IggyTcpClientsFixture>
 {
     private readonly IggyTcpClientsFixture _fixture;
@@ -15,19 +19,19 @@ public sealed class ClientsE2ETcp : IClassFixture<IggyTcpClientsFixture>
     [Fact, TestPriority(1)]
     public async Task GetClients_Should_Return_CorrectClientsCount()
     {
-        var clients = await _fixture.sut.GetClientsAsync();
-        clients.Count.Should().Be(_fixture.TotalClientsCount);
-        clients.Should().AllSatisfy(x => x.Transport.Should().Be("TCP"));
+        var sut = _fixture.SubjectsUnderTest[0];
+        var clients = await sut.GetClientsAsync();
+        clients.Count.Should().Be(ClientsFixtureBootstrap.TotalClientsCount);
     }
+        
     [Fact, TestPriority(2)]
     public async Task GetClient_Should_Return_CorrectClient()
     {
-        var clients = await _fixture.sut.GetClientsAsync();
-        clients.Count.Should().Be(_fixture.TotalClientsCount);
-        clients.Should().AllSatisfy(x => x.Transport.Should().Be("TCP"));
-        var id = clients[0].Id;
-        var response = await _fixture.sut.GetClientByIdAsync(id);
-        response!.Id.Should().Be(id);
-        response.Transport.Should().Be("TCP");
+        var sut = _fixture.SubjectsUnderTest[0];
+        var clients = await sut.GetClientsAsync();
+        clients.Count.Should().Be(ClientsFixtureBootstrap.TotalClientsCount);
+        uint id = clients[0].ClientId;
+        var response = await sut.GetClientByIdAsync(id);
+        response!.ClientId.Should().Be(id);
     }
 }

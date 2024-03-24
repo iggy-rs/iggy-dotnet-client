@@ -224,7 +224,7 @@ internal static class BinaryMapper
         return new ClientResponse
         {
             Adress = response.Adress,
-            Id = response.Id,
+            ClientId = response.ClientId,
             UserId = response.UserId,
             Transport = response.Transport,
             ConsumerGroupsCount = response.ConsumerGroupsCount,
@@ -271,7 +271,7 @@ internal static class BinaryMapper
 
         return (new ClientResponse
         {
-            Id = id,
+            ClientId = id,
             UserId = userId,
             Transport = transport,
             Adress = address,
