@@ -103,7 +103,7 @@ public sealed class FetchMessagesE2E : IClassFixture<IggyFetchMessagesFixture>
             {
                 responseMessage.Headers.Should().NotBeNull();
                 responseMessage.State.Should().Be(MessageState.Available);
-                responseMessage.Headers!.Count.Should().Be(6);
+                responseMessage.Headers!.Count.Should().Be(3);
             }
         })).ToArray();
         await Task.WhenAll(tasks);
@@ -122,7 +122,7 @@ public sealed class FetchMessagesE2E : IClassFixture<IggyFetchMessagesFixture>
             {
                 responseMessage.Headers.Should().NotBeNull();
                 responseMessage.State.Should().Be(MessageState.Available);
-                responseMessage.Headers!.Count.Should().Be(6);
+                responseMessage.Headers!.Count.Should().Be(3);
             }
         })).ToArray();
         await Task.WhenAll(tasks);

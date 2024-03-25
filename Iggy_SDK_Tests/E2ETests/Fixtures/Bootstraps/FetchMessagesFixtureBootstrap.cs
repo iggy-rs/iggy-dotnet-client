@@ -34,7 +34,7 @@ public class FetchMessagesFixtureBootstrap : IIggyBootstrap
             MessageFactory.GenerateMessages(20));
         var requestWithHeaders = MessageFactory.CreateMessageSendRequest(
             (int)StreamRequest.StreamId, (int)HeadersTopicRequest.TopicId!, PartitionId,
-            MessageFactory.GenerateMessages(20, MessageFactory.GenerateMessageHeaders(6)));
+            MessageFactory.GenerateMessages(20, MessageFactory.GenerateMessageHeaders(3)));
         await tcpClient.SendMessagesAsync(request);
         await tcpClient.SendMessagesAsync(requestWithHeaders);
         await Task.Delay(1000);
