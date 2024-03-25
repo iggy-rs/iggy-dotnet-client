@@ -22,7 +22,7 @@ public sealed class PersonalAccessTokenResponseConverter : JsonConverter<Persona
         };
         return new PersonalAccessTokenResponse
         {
-            Name = name,
+            Name = name!,
             Expiry = expiry
         };
     }

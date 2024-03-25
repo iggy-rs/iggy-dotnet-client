@@ -381,7 +381,8 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         {
             StoreOffset.Never => false,
             StoreOffset.WhenMessagesAreReceived => true,
-            StoreOffset.AfterProcessingEachMessage => false
+            StoreOffset.AfterProcessingEachMessage => false,
+            _ => throw new ArgumentOutOfRangeException()
         };
         var fetchRequest = new MessageFetchRequest
         {

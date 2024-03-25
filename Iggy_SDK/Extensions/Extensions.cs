@@ -36,6 +36,7 @@ internal static class Extensions
     internal static UInt128 ToUInt128(this Guid g)
     {
         Span<byte> array = stackalloc byte[16];
+        #pragma warning disable CS9191 // The 'ref' modifier for an argument corresponding to 'in' parameter is equivalent to 'in'. Consider using 'in' instead.
         MemoryMarshal.TryWrite(array, ref g);
         var hi = BinaryPrimitives.ReadUInt64LittleEndian(array[..8]);
         var lo = BinaryPrimitives.ReadUInt64LittleEndian(array[8..16]);
@@ -56,6 +57,7 @@ internal static class Extensions
     internal static byte[] GetBytesFromGuid(this Guid value)
     {
         Span<byte> bytes = stackalloc byte[16];
+        #pragma warning disable CS9191 // The 'ref' modifier for an argument corresponding to 'in' parameter is equivalent to 'in'. Consider using 'in' instead.
         MemoryMarshal.TryWrite(bytes, ref value);
         return bytes.ToArray();
     }

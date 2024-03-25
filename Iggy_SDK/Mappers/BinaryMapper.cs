@@ -224,7 +224,7 @@ internal static class BinaryMapper
         return new ClientResponse
         {
             Adress = response.Adress,
-            Id = response.Id,
+            ClientId = response.ClientId,
             UserId = response.UserId,
             Transport = response.Transport,
             ConsumerGroupsCount = response.ConsumerGroupsCount,
@@ -271,7 +271,7 @@ internal static class BinaryMapper
 
         return (new ClientResponse
         {
-            Id = id,
+            ClientId = id,
             UserId = userId,
             Transport = transport,
             Adress = address,
@@ -620,7 +620,7 @@ internal static class BinaryMapper
             CreatedAt = topic.CreatedAt,
             MessageExpiry = topic.MessageExpiry,
             MessagesCount = topic.MessagesCount,
-            SizeBytes = topic.SizeBytes,
+            Size = topic.Size,
             ReplicationFactor = topic.ReplicationFactor,
             MaxTopicSize = topic.MaxTopicSize,
             Partitions = partitions
@@ -648,7 +648,7 @@ internal static class BinaryMapper
                 PartitionsCount = partitionsCount,
                 Name = name,
                 MessagesCount = messagesCount,
-                SizeBytes = sizeBytes,
+                Size = sizeBytes,
                 CreatedAt = DateTimeOffsetUtils.FromUnixTimeMicroSeconds(createdAt).LocalDateTime,
                 MessageExpiry = messageExpiry,
                 ReplicationFactor = replicationFactor,

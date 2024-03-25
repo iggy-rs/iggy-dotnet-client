@@ -20,13 +20,39 @@ internal sealed class TopicResponseConverter : JsonConverter<TopicResponse>
         using var doc = JsonDocument.ParseValue(ref reader);
         var root = doc.RootElement;
         var id = root.GetProperty(nameof(TopicResponse.Id).ToSnakeCase()).GetInt32();
-        var name = root.GetProperty(nameof(TopicResponse.Name).ToSnakeCase()).GetString();
         var createdAt = root.GetProperty(nameof(TopicResponse.CreatedAt).ToSnakeCase()).GetUInt64();
-        var sizeBytes = root.GetProperty(nameof(TopicResponse.SizeBytes).ToSnakeCase()).GetUInt64();
+        var name = root.GetProperty(nameof(TopicResponse.Name).ToSnakeCase()).GetString();
+        var sizeBytesString = root.GetProperty(nameof(TopicResponse.Size).ToSnakeCase()).GetString();
+        var sizeBytesStringSplit = sizeBytesString.Split(' ');
+        var (sizeBytesVal, Unit) = (ulong.Parse(sizeBytesStringSplit[0]), sizeBytesStringSplit[1]);
+        var sizeBytes = Unit switch
+        {
+            "B" => sizeBytesVal,
+            "KB" => sizeBytesVal * (ulong)1e03,
+            "MB" => sizeBytesVal * (ulong)1e06,
+            "GB" => sizeBytesVal * (ulong)1e09,
+            "TB" => sizeBytesVal * (ulong)1e12,
+            _ => throw new InvalidEnumArgumentException("Error Wrong Unit when deserializing SizeBytes")
+        };
         var replicationFactor = root.GetProperty(nameof(TopicResponse.ReplicationFactor).ToSnakeCase()).GetUInt16();
-        var maxTopicSize = root.GetProperty(nameof(TopicResponse.MaxTopicSize).ToSnakeCase()).GetUInt64();
-        var messageExpiryProperty = root.GetProperty(nameof(TopicResponse.MessageExpiry).ToSnakeCase());
+        var maxTopicSizeString = root.GetProperty(nameof(TopicResponse.MaxTopicSize).ToSnakeCase()).GetString();
+        ulong maxTopicSize = 0;
+        if (maxTopicSizeString is not null)
+        {
+            var maxTopicSizeStringSplit = maxTopicSizeString.Split(' ');
+            (ulong maxTopicSizeVal, string maxTopicUnit) = (ulong.Parse(maxTopicSizeStringSplit[0]), maxTopicSizeStringSplit[1]);
+            maxTopicSize = Unit switch
+            {
+                "B" => maxTopicSizeVal,
+                "KB" => maxTopicSizeVal * (ulong)1e03,
+                "MB" => maxTopicSizeVal * (ulong)1e06,
+                "GB" => maxTopicSizeVal * (ulong)1e09,
+                "TB" => maxTopicSizeVal * (ulong)1e12,
+                _ => throw new InvalidEnumArgumentException("Error Wrong Unit when deserializing SizeBytes")
+            };
+        }
 
+        var messageExpiryProperty = root.GetProperty(nameof(TopicResponse.MessageExpiry).ToSnakeCase());
         var messageExpiry = messageExpiryProperty.ValueKind switch
         {
             JsonValueKind.Null => 0,
@@ -47,7 +73,7 @@ internal sealed class TopicResponseConverter : JsonConverter<TopicResponse>
         {
             Id = id,
             Name = name!,
-            SizeBytes = sizeBytes,
+            Size = sizeBytes,
             MessageExpiry = messageExpiry,
             CreatedAt = DateTimeOffsetUtils.FromUnixTimeMicroSeconds(createdAt).LocalDateTime,
             MessagesCount = messagesCount,
@@ -70,8 +96,18 @@ internal sealed class TopicResponseConverter : JsonConverter<TopicResponse>
                 .GetInt32();
             var currentOffset = partition.GetProperty(nameof(PartitionContract.CurrentOffset).ToSnakeCase())
                 .GetUInt64();
-            var sizeBytes = partition.GetProperty(nameof(PartitionContract.SizeBytes).ToSnakeCase())
-                .GetUInt64();
+            var sizeBytesString = partition.GetProperty(nameof(PartitionContract.SizeBytes).ToSnakeCase()).GetString();
+            var sizeBytesStringSplit = sizeBytesString.Split(' ');
+            var (sizeBytesVal, Unit) = (ulong.Parse(sizeBytesStringSplit[0]), sizeBytesStringSplit[1]);
+            ulong sizeBytes = Unit switch
+            {
+                "B" => sizeBytesVal,
+                "KB" => sizeBytesVal * (ulong)1e03,
+                "MB" => sizeBytesVal * (ulong)1e06,
+                "GB" => sizeBytesVal * (ulong)1e09,
+                "TB" => sizeBytesVal * (ulong)1e12,
+                _ => throw new InvalidEnumArgumentException("Error Wrong Unit when deserializing SizeBytes")
+            };
             var messagesCount = partition.GetProperty(nameof(PartitionContract.MessagesCount).ToSnakeCase())
                 .GetUInt64();
             partitions.Add(new PartitionContract
@@ -93,7 +129,7 @@ internal sealed class TopicResponseConverter : JsonConverter<TopicResponse>
 
         writer.WriteNumber(nameof(TopicResponse.Id).ToSnakeCase(), value.Id);
         writer.WriteString(nameof(TopicResponse.Name).ToSnakeCase(), value.Name);
-        writer.WriteNumber(nameof(TopicResponse.SizeBytes).ToSnakeCase(), value.SizeBytes);
+        writer.WriteNumber(nameof(TopicResponse.Size).ToSnakeCase(), value.Size);
         writer.WriteNumber(nameof(TopicResponse.MessageExpiry).ToSnakeCase(), value.MessageExpiry);
         writer.WriteNumber(nameof(TopicResponse.MessagesCount).ToSnakeCase(), value.MessagesCount);
         writer.WriteNumber(nameof(TopicResponse.PartitionsCount).ToSnakeCase(), value.PartitionsCount);

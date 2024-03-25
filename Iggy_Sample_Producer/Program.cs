@@ -39,6 +39,7 @@ try
         Password = "iggy",
         Username = "iggy",
     });
+    var strm = await bus.GetStreamByIdAsync(Identifier.Numeric(1));
 }
 catch
 {
@@ -127,7 +128,7 @@ catch
         Name = "producer-topic",
         PartitionsCount = 3,
         TopicId = topicIdVal,
-        ReplicationFactor = 3
+        ReplicationFactor = 3,
     });
 }
 

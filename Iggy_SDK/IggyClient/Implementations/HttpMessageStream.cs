@@ -96,7 +96,7 @@ public class HttpMessageStream : IIggyClient
     }
     public async Task CreateTopicAsync(Identifier streamId, TopicRequest topic, CancellationToken token = default)
     {
-        var json = JsonSerializer.Serialize(topic, JsonConverterFactory.SnakeCaseOptions);
+        var json = JsonSerializer.Serialize(topic, JsonConverterFactory.CreateTopicOptions);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
 
         var response = await _httpClient.PostAsync($"/streams/{streamId}/topics", data, token);
@@ -162,16 +162,7 @@ public class HttpMessageStream : IIggyClient
         
         if (_messageInvoker is not null)
         {
-            try
-            {
-                await _messageInvoker.SendMessagesAsync(request, token);
-            }
-            catch
-            {
-                var partId = BinaryPrimitives.ReadInt32LittleEndian(request.Partitioning.Value);
-                _logger.LogError("Error encountered while sending messages - Stream ID:{streamId}, Topic ID:{topicId}, Partition ID: {partitionId}",
-                    request.StreamId, request.TopicId, partId);
-            }
+            await _messageInvoker.SendMessagesAsync(request, token);
             return;
         }
         await _channel!.Writer.WriteAsync(request, token);
@@ -256,7 +247,8 @@ public class HttpMessageStream : IIggyClient
         {
             StoreOffset.Never => false,
             StoreOffset.WhenMessagesAreReceived => true,
-            StoreOffset.AfterProcessingEachMessage => false
+            StoreOffset.AfterProcessingEachMessage => false,
+            _ => throw new ArgumentOutOfRangeException()
         };
         var fetchRequest = new MessageFetchRequest
         {
@@ -401,7 +393,7 @@ public class HttpMessageStream : IIggyClient
         var response = await _httpClient.GetAsync($"/stats", token);
         if (response.IsSuccessStatusCode)
         {
-            var result = await response.Content.ReadFromJsonAsync<StatsResponse>(JsonConverterFactory.SnakeCaseOptions, cancellationToken: token);
+            var result = await response.Content.ReadFromJsonAsync<StatsResponse>(JsonConverterFactory.StatsResponseOptions, cancellationToken: token);
             return result?.ToStats();
         }
         await HandleResponseAsync(response);

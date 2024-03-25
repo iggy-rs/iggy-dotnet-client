@@ -157,7 +157,7 @@ public readonly struct HeaderValue
             HeaderKind.Float => BinaryPrimitives.ReadSingleLittleEndian(Value).ToString(),
             HeaderKind.Double => BinaryPrimitives.ReadDoubleLittleEndian(Value).ToString(),
             _ => throw new InvalidOperationException("Can't convert header")
-        };
+        } ?? throw new InvalidOperationException();
     }
     public bool ToBool()
     {

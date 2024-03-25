@@ -137,6 +137,7 @@ internal static class MessageFactory
             var text = Encoding.UTF8.GetString(bytes.AsSpan()[8..(8 + textLength)]);
             return new DummyMessage { Id = id, Text = text };
         };
+    
     internal static IList<Message> GenerateMessages(int count, Dictionary<HeaderKey, HeaderValue>? Headers = null)
     {
         return Enumerable.Range(1, count).Select(i => new Message
@@ -146,6 +147,7 @@ internal static class MessageFactory
             Payload = SerializeDummyMessage(new DummyMessage { Id = Random.Shared.Next(1, 69), Text = Utility.RandomString(Random.Shared.Next(20, 69)) })
         }).ToList();
     }
+    
     internal static IList<Message> GenerateDummyMessages(int count, int payloadLen, Dictionary<HeaderKey, HeaderValue>? Headers = null)
     {
         return Enumerable.Range(1, count).Select(i => new Message
@@ -155,6 +157,7 @@ internal static class MessageFactory
             Payload = Enumerable.Range(1, payloadLen).Select(x => (byte)x).ToArray()
         }).ToList();
     }
+    
     internal static MessageFetchRequest CreateMessageFetchRequestConsumer()
     {
         return new MessageFetchRequest
@@ -168,6 +171,7 @@ internal static class MessageFactory
             TopicId = Identifier.Numeric(Random.Shared.Next(1, 10)),
         };
     }
+    
     internal static MessageFetchRequest CreateMessageFetchRequestConsumer(int count, int streamId, int topicId, int partitionId, int consumerId = 1)
     {
         return new MessageFetchRequest
@@ -181,6 +185,7 @@ internal static class MessageFactory
             TopicId = Identifier.Numeric(topicId),
         };
     }
+    
     internal static MessageFetchRequest CreateMessageFetchRequestConsumerGroup(int count, int streamId, int topicId, int partitionId, int consumerGroupId)
     {
         return new MessageFetchRequest
@@ -194,6 +199,7 @@ internal static class MessageFactory
             TopicId = Identifier.Numeric(topicId),
         };
     }
+    
     internal static Dictionary<HeaderKey, HeaderValue> GenerateMessageHeaders(int count)
     {
         var headers = new Dictionary<HeaderKey, HeaderValue>();
@@ -220,6 +226,7 @@ internal static class MessageFactory
         }
         return headers;
     }
+    
     internal static MessageResponseHttp CreateMessageResponse()
     {
         return new MessageResponseHttp
