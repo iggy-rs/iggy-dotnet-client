@@ -14,7 +14,7 @@ jobs:
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x' 
+          dotnet-version: '8.0.x'
       - name: Restore dependencies
         run: dotnet restore
       - name: Build
@@ -22,9 +22,9 @@ jobs:
       - name: Test
         run: dotnet test --no-build --verbosity normal
 
-  nuget:  # Runs only on successful push to master with .NET 8 build-and-test
+  nuget:  # Runs only on successful merge (pull request closed) or push to master
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.base_branch == 'master' && success()  # Additional conditions for push to master and successful build-and-test
+    if: (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) || (github.event_name == 'push' && github.base_branch == 'master')  # Merge condition
     steps:
       - uses: actions/checkout@v3
       - name: Setup .NET 8
