@@ -1,13 +1,13 @@
 name: .NET
 
 on:
-  pull_request:  # Trigger on pull request events
+  pull_request: 
     branches: [ "master" ]
-  push:          # Additionally trigger on push events
+  push:          
     branches: [ "master" ]
 
 jobs:
-  build-and-test:  # Runs on pull request and push to master
+  build-and-test:  
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -22,9 +22,9 @@ jobs:
       - name: Test
         run: dotnet test --no-build --verbosity normal
 
-  nuget:  # Runs only on successful merge (pull request closed) or push to master
+  nuget:  
     runs-on: ubuntu-latest
-    if: (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) || (github.event_name == 'push' && github.base_branch == 'master')  # Merge condition
+    if: (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) || (github.event_name == 'push' && github.base_branch == 'master')  
     steps:
       - uses: actions/checkout@v3
       - name: Setup .NET 8
