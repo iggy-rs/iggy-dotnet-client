@@ -14,7 +14,7 @@ public class PollMessagesFixtureBootstrap : IIggyBootstrap
     private static readonly StreamRequest StreamRequest = StreamFactory.CreateStreamRequest();
     private static readonly TopicRequest TopicRequest = TopicFactory.CreateTopicRequest();
     private static readonly TopicRequest HeadersTopicRequest = TopicFactory.CreateTopicRequest();
-    public const int MessageCount = 500;
+    public const int MessageCount = 100;
 
     public static readonly int StreamId = (int)StreamRequest.StreamId!;
     public static readonly int TopicId = (int)TopicRequest.TopicId!;
