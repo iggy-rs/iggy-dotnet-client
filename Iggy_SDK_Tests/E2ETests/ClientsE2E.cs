@@ -1,17 +1,17 @@
 using FluentAssertions;
+using Iggy_SDK_Tests.E2ETests.Fixtures;
 using Iggy_SDK_Tests.E2ETests.Fixtures.Bootstraps;
-using Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
 using Iggy_SDK_Tests.Utils;
 
-namespace Iggy_SDK_Tests.E2ETests.Clients;
+namespace Iggy_SDK_Tests.E2ETests;
 
 //TODO(numinex): The clients query doesn't work for http in this test case, but works in general, figure that shit out.
 [TestCaseOrderer("Iggy_SDK_Tests.Utils.PriorityOrderer", "Iggy_SDK_Tests")]
-public sealed class ClientsE2ETcp : IClassFixture<IggyTcpClientsFixture>
+public sealed class ClientsE2E : IClassFixture<IggyClientsFixture>
 {
-    private readonly IggyTcpClientsFixture _fixture;
+    private readonly IggyClientsFixture _fixture;
 
-    public ClientsE2ETcp(IggyTcpClientsFixture fixture)
+    public ClientsE2E(IggyClientsFixture fixture)
     {
         _fixture = fixture;
     }

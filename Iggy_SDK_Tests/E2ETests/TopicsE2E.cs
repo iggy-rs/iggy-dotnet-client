@@ -1,17 +1,17 @@
 using FluentAssertions;
 using Iggy_SDK;
+using Iggy_SDK_Tests.E2ETests.Fixtures;
 using Iggy_SDK_Tests.E2ETests.Fixtures.Bootstraps;
-using Iggy_SDK.Exceptions;
-using Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
 using Iggy_SDK_Tests.Utils;
+using Iggy_SDK.Exceptions;
 
-namespace Iggy_SDK_Tests.E2ETests.Topics;
+namespace Iggy_SDK_Tests.E2ETests;
 
 [TestCaseOrderer("Iggy_SDK_Tests.Utils.PriorityOrderer", "Iggy_SDK_Tests")]
-public sealed class TopicsE2ETcp : IClassFixture<IggyTcpTopicFixture>
+public sealed class TopicsE2E : IClassFixture<IggyTopicFixture>
 {
-    private readonly IggyTcpTopicFixture _fixture;
-    public TopicsE2ETcp(IggyTcpTopicFixture fixture)
+    private readonly IggyTopicFixture _fixture;
+    public TopicsE2E(IggyTopicFixture fixture)
     {
         _fixture = fixture;
     }

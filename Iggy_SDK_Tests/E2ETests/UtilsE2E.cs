@@ -1,15 +1,15 @@
 using FluentAssertions;
-using Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
+using Iggy_SDK_Tests.E2ETests.Fixtures;
 using Iggy_SDK_Tests.Utils;
 
-namespace Iggy_SDK_Tests.E2ETests.Utils;
+namespace Iggy_SDK_Tests.E2ETests;
 
 [TestCaseOrderer("Iggy_SDK_Tests.Utils.PriorityOrderer", "Iggy_SDK_Tests")]
-public sealed class UtilsE2ETcp : IClassFixture<IggyTcpGeneralFixture>
+public sealed class UtilsE2E : IClassFixture<IggyGeneralFixture>
 {
-    private readonly IggyTcpGeneralFixture _fixture;
+    private readonly IggyGeneralFixture _fixture;
 
-    public UtilsE2ETcp(IggyTcpGeneralFixture fixture)
+    public UtilsE2E(IggyGeneralFixture fixture)
     {
         _fixture = fixture;
     }

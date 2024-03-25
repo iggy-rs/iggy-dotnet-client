@@ -1,21 +1,21 @@
 using FluentAssertions;
 using Iggy_SDK;
+using Iggy_SDK_Tests.E2ETests.Fixtures;
 using Iggy_SDK_Tests.E2ETests.Fixtures.Bootstraps;
-using Iggy_SDK.Contracts.Http;
-using Iggy_SDK.Exceptions;
-using Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
 using Iggy_SDK_Tests.Utils;
 using Iggy_SDK_Tests.Utils.Partitions;
+using Iggy_SDK.Contracts.Http;
+using Iggy_SDK.Exceptions;
 
-namespace Iggy_SDK_Tests.E2ETests.Partitions;
+namespace Iggy_SDK_Tests.E2ETests;
 
 [TestCaseOrderer("Iggy_SDK_Tests.Utils.PriorityOrderer", "Iggy_SDK_Tests")]
-public sealed class PartitionsE2ETcp : IClassFixture<IggyTcpPartitionFixture>
+public sealed class PartitionsE2E : IClassFixture<IggyPartitionFixture>
 {
-    private readonly IggyTcpPartitionFixture _fixture;
+    private readonly IggyPartitionFixture _fixture;
     private readonly CreatePartitionsRequest _partitionsRequest;
     private readonly DeletePartitionsRequest _deletePartitionsRequest;
-    public PartitionsE2ETcp(IggyTcpPartitionFixture fixture)
+    public PartitionsE2E(IggyPartitionFixture fixture)
     {
         _fixture = fixture;
         _partitionsRequest =

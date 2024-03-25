@@ -1,7 +1,7 @@
 using Iggy_SDK.Configuration;
 using Iggy_SDK.Enums;
 
-namespace Iggy_SDK_Tests.E2ETests.Fixtures;
+namespace Iggy_SDK_Tests.E2ETests.Fixtures.Configs;
 
 public static class IggyFixtureClientMessagingSettings
 {

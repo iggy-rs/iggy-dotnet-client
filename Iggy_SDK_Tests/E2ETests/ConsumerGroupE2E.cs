@@ -1,18 +1,18 @@
 using FluentAssertions;
 using Iggy_SDK;
+using Iggy_SDK_Tests.E2ETests.Fixtures;
 using Iggy_SDK_Tests.E2ETests.Fixtures.Bootstraps;
-using Iggy_SDK.Contracts.Http;
-using Iggy_SDK.Exceptions;
-using Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
 using Iggy_SDK_Tests.Utils;
 using Iggy_SDK_Tests.Utils.Groups;
+using Iggy_SDK.Contracts.Http;
+using Iggy_SDK.Exceptions;
 
-namespace Iggy_SDK_Tests.E2ETests.ConsumerGroup;
+namespace Iggy_SDK_Tests.E2ETests;
 
 [TestCaseOrderer("Iggy_SDK_Tests.Utils.PriorityOrderer", "Iggy_SDK_Tests")]
-public sealed class ConsumerGroupE2ETcp : IClassFixture<IggyTcpConsumerGroupFixture>
+public sealed class ConsumerGroupE2E : IClassFixture<IggyConsumerGroupFixture>
 {
-    private readonly IggyTcpConsumerGroupFixture _fixture;
+    private readonly IggyConsumerGroupFixture _fixture;
 
     private static readonly CreateConsumerGroupRequest _createConsumerGroupRequest = ConsumerGroupFactory.CreateRequest((int)ConsumerGroupFixtureBootstrap.StreamRequest.StreamId!,
         (int)ConsumerGroupFixtureBootstrap.TopicRequest.TopicId!, GROUP_ID);
@@ -28,7 +28,7 @@ public sealed class ConsumerGroupE2ETcp : IClassFixture<IggyTcpConsumerGroupFixt
     private const int GROUP_ID = 1;
     private Identifier ConsumerGroupId = Identifier.Numeric(GROUP_ID);
 
-    public ConsumerGroupE2ETcp(IggyTcpConsumerGroupFixture fixture)
+    public ConsumerGroupE2E(IggyConsumerGroupFixture fixture)
     {
         _fixture = fixture;
     }

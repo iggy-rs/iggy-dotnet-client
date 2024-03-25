@@ -6,13 +6,14 @@ using Iggy_SDK_Tests.Utils;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Exceptions;
-namespace Iggy_SDK_Tests.E2ETests.Users;
+
+namespace Iggy_SDK_Tests.E2ETests;
 
 [TestCaseOrderer("Iggy_SDK_Tests.Utils.PriorityOrderer", "Iggy_SDK_Tests")]
-public sealed class UsersE2ETcp : IClassFixture<IggyTcpUsersFixture>
+public sealed class UsersE2E : IClassFixture<IggyTcpUsersFixture>
 {
     private readonly IggyTcpUsersFixture _fixture;
-    public UsersE2ETcp(IggyTcpUsersFixture fixture)
+    public UsersE2E(IggyTcpUsersFixture fixture)
     {
         _fixture = fixture;
     }

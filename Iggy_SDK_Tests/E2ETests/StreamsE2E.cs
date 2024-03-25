@@ -1,18 +1,18 @@
 using FluentAssertions;
 using Iggy_SDK;
+using Iggy_SDK_Tests.E2ETests.Fixtures;
 using Iggy_SDK_Tests.E2ETests.Fixtures.Bootstraps;
-using Iggy_SDK.Exceptions;
-using Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
 using Iggy_SDK_Tests.Utils;
+using Iggy_SDK.Exceptions;
 
-namespace Iggy_SDK_Tests.E2ETests.Streams;
+namespace Iggy_SDK_Tests.E2ETests;
 
 [TestCaseOrderer("Iggy_SDK_Tests.Utils.PriorityOrderer", "Iggy_SDK_Tests")]
-public sealed class StreamsE2ETcp : IClassFixture<IggyTcpStreamFixture>
+public sealed class StreamsE2E : IClassFixture<IggyStreamFixture>
 {
-    private readonly IggyTcpStreamFixture _fixture;
+    private readonly IggyStreamFixture _fixture;
 
-    public StreamsE2ETcp(IggyTcpStreamFixture fixture)
+    public StreamsE2E(IggyStreamFixture fixture)
     {
         _fixture = fixture;
     }

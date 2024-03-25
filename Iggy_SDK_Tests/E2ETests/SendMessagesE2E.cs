@@ -1,24 +1,24 @@
 using FluentAssertions;
+using Iggy_SDK_Tests.E2ETests.Fixtures;
 using Iggy_SDK_Tests.E2ETests.Fixtures.Bootstraps;
-using Iggy_SDK.Contracts.Http;
-using Iggy_SDK.Exceptions;
-using Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
 using Iggy_SDK_Tests.Utils;
 using Iggy_SDK_Tests.Utils.Messages;
+using Iggy_SDK.Contracts.Http;
+using Iggy_SDK.Exceptions;
 
-namespace Iggy_SDK_Tests.E2ETests.Messaging;
+namespace Iggy_SDK_Tests.E2ETests;
 
 [TestCaseOrderer("Iggy_SDK_Tests.Utils.PriorityOrderer", "Iggy_SDK_Tests")]
-public sealed class SendMessagesE2ETcp : IClassFixture<IggyTcpSendMessagesFixture>
+public sealed class SendMessagesE2E : IClassFixture<IggySendMessagesFixture>
 {
-    private readonly IggyTcpSendMessagesFixture _fixture;
+    private readonly IggySendMessagesFixture _fixture;
 
     private readonly MessageSendRequest _messageNoHeadersSendRequest;
     private readonly MessageSendRequest _messageWithHeadersSendRequest;
     private readonly MessageSendRequest _invalidMessageNoHeadersSendRequest;
     private readonly MessageSendRequest _invalidMessageWithHeadersSendRequest;
 
-    public SendMessagesE2ETcp(IggyTcpSendMessagesFixture fixture)
+    public SendMessagesE2E(IggySendMessagesFixture fixture)
     {
         _fixture = fixture;
 

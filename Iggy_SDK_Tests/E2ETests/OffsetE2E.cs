@@ -1,16 +1,16 @@
 using FluentAssertions;
+using Iggy_SDK_Tests.E2ETests.Fixtures;
 using Iggy_SDK_Tests.E2ETests.Fixtures.Bootstraps;
-using Iggy_SDK.Contracts.Http;
-using Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
 using Iggy_SDK_Tests.Utils;
 using Iggy_SDK_Tests.Utils.Offset;
+using Iggy_SDK.Contracts.Http;
 
-namespace Iggy_SDK_Tests.E2ETests.Offset;
+namespace Iggy_SDK_Tests.E2ETests;
 
 [TestCaseOrderer("Iggy_SDK_Tests.Utils.PriorityOrderer", "Iggy_SDK_Tests")]
-public sealed class OffsetE2ETcp : IClassFixture<IggyTcpOffsetFixture>
+public sealed class OffsetE2E : IClassFixture<IggyOffsetFixture>
 {
-    private readonly IggyTcpOffsetFixture _fixture;
+    private readonly IggyOffsetFixture _fixture;
     private readonly StoreOffsetRequest _storeOffsetIndividualConsumer;
     private readonly OffsetRequest _offsetIndividualConsumer;
 
@@ -18,7 +18,7 @@ public sealed class OffsetE2ETcp : IClassFixture<IggyTcpOffsetFixture>
     private const int GET_PARTITION_ID = 1;
     private const ulong GET_OFFSET = 0;
 
-    public OffsetE2ETcp(IggyTcpOffsetFixture fixture)
+    public OffsetE2E(IggyOffsetFixture fixture)
     {
         _fixture = fixture;
         _storeOffsetIndividualConsumer = OffsetFactory.CreateOffsetContract(

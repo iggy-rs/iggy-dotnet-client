@@ -1,18 +1,19 @@
 using FluentAssertions;
 using FluentAssertions.Common;
+using Iggy_SDK_Tests.E2ETests.Fixtures;
 using Iggy_SDK_Tests.E2ETests.Fixtures.Bootstraps;
-using Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
 using Iggy_SDK_Tests.Utils;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Exceptions;
-namespace Iggy_SDK_Tests.E2ETests.PAT;
+
+namespace Iggy_SDK_Tests.E2ETests;
 
 
 [TestCaseOrderer("Iggy_SDK_Tests.Utils.PriorityOrderer", "Iggy_SDK_Tests")]
-public sealed class PATE2ETcp : IClassFixture<IggyTcpPATFixture>
+public sealed class PATE2E : IClassFixture<IggyPATFixture>
 {
-    private readonly IggyTcpPATFixture _fixture;
-    public PATE2ETcp(IggyTcpPATFixture fixture)
+    private readonly IggyPATFixture _fixture;
+    public PATE2E(IggyPATFixture fixture)
     {
         _fixture = fixture;
     }

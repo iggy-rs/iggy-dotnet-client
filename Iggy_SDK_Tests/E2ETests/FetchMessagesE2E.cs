@@ -1,18 +1,18 @@
 using FluentAssertions;
+using Iggy_SDK_Tests.E2ETests.Fixtures;
 using Iggy_SDK_Tests.E2ETests.Fixtures.Bootstraps;
+using Iggy_SDK_Tests.Utils;
+using Iggy_SDK_Tests.Utils.Messages;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Exceptions;
-using Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
-using Iggy_SDK_Tests.Utils;
-using Iggy_SDK_Tests.Utils.Messages;
 
-namespace Iggy_SDK_Tests.E2ETests.Messaging;
+namespace Iggy_SDK_Tests.E2ETests;
 
 [TestCaseOrderer("Iggy_SDK_Tests.Utils.PriorityOrderer", "Iggy_SDK_Tests")]
-public sealed class FetchMessagesE2ETcp : IClassFixture<IggyTcpFetchMessagesFixture>
+public sealed class FetchMessagesE2E : IClassFixture<IggyFetchMessagesFixture>
 {
-    private readonly IggyTcpFetchMessagesFixture _fixture;
+    private readonly IggyFetchMessagesFixture _fixture;
 
     private static readonly MessageFetchRequest _messageFetchRequest =
         MessageFactory.CreateMessageFetchRequestConsumer(10, FetchMessagesFixtureBootstrap.StreamId,
@@ -25,7 +25,7 @@ public sealed class FetchMessagesE2ETcp : IClassFixture<IggyTcpFetchMessagesFixt
     private static readonly MessageFetchRequest _invalidFetchRequest =
         MessageFactory.CreateMessageFetchRequestConsumer(10, FetchMessagesFixtureBootstrap.InvalidStreamId,
             FetchMessagesFixtureBootstrap.InvalidTopicId, FetchMessagesFixtureBootstrap.PartitionId);
-    public FetchMessagesE2ETcp(IggyTcpFetchMessagesFixture fixture)
+    public FetchMessagesE2E(IggyFetchMessagesFixture fixture)
     {
         _fixture = fixture;
     }

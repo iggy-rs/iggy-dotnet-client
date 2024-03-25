@@ -1,19 +1,20 @@
 using FluentAssertions;
 using Iggy_SDK;
+using Iggy_SDK_Tests.E2ETests.Fixtures;
 using Iggy_SDK_Tests.E2ETests.Fixtures.Bootstraps;
-using Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
 using Iggy_SDK_Tests.Utils;
 using Iggy_SDK_Tests.Utils.Messages;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Kinds;
-namespace Iggy_SDK_Tests.E2ETests.Messaging;
+
+namespace Iggy_SDK_Tests.E2ETests;
 
 [TestCaseOrderer("Iggy_SDK_Tests.Utils.PriorityOrderer", "Iggy_SDK_Tests")]
-public sealed class PollMessagesE2ETcp : IClassFixture<IggyTcpPollMessagesFixture>
+public sealed class PollMessagesE2E : IClassFixture<IggyPollMessagesFixture>
 {
-    private readonly IggyTcpPollMessagesFixture _fixture;
-    public PollMessagesE2ETcp(IggyTcpPollMessagesFixture fixture)
+    private readonly IggyPollMessagesFixture _fixture;
+    public PollMessagesE2E(IggyPollMessagesFixture fixture)
     {
         _fixture = fixture;
     }
