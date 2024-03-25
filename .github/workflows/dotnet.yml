@@ -1,6 +1,3 @@
-# This workflow will build, test, and publish a .NET 8 project on pull request 
-# and push to master
-
 name: .NET
 
 on:
@@ -25,13 +22,12 @@ jobs:
       - name: Test
         run: dotnet test --no-build --verbosity normal
 
-  nuget:  # Runs only on successful build-and-test (on push to master)
-    needs: build-and-test  # This job depends on the success of build-and-test
+  nuget:  # Runs only on successful push to master with .NET 8 build-and-test
     runs-on: ubuntu-latest
-    if: ${{ needs.build-and-test.result == 'success' }} && github.event_name == 'push'  # Only run on success and push event
+    if: github.event_name == 'push' && github.base_branch == 'master' && success()  # Additional conditions for push to master and successful build-and-test
     steps:
       - uses: actions/checkout@v3
-      - name: Setup .NET 8  # Use .NET 8 for nuget job as well
+      - name: Setup .NET 8
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
