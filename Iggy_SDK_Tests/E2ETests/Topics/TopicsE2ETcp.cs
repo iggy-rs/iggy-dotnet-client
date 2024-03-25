@@ -96,6 +96,7 @@ public sealed class TopicsE2ETcp : IClassFixture<IggyTcpTopicFixture>
                 .Should()
                 .NotThrowAsync();
         })).ToArray();
+        await Task.WhenAll(tasks);
     }
 
     [Fact, TestPriority(6)]

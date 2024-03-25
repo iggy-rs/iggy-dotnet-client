@@ -17,11 +17,15 @@ public sealed class UtilsE2ETcp : IClassFixture<IggyTcpGeneralFixture>
     [Fact, TestPriority(1)]
     public async Task GetStats_Should_ReturnValidResponse()
     {
-        var response = await _fixture.sut.GetStatsAsync();
-        response.Should().NotBeNull();
-        response!.MessagesCount.Should().Be(0);
-        response.PartitionsCount.Should().Be(0);
-        response.StreamsCount.Should().Be(0);
-        response.TopicsCount.Should().Be(0);
+        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        {
+            var response = await sut.GetStatsAsync();
+            response.Should().NotBeNull();
+            response!.MessagesCount.Should().Be(0);
+            response.PartitionsCount.Should().Be(0);
+            response.StreamsCount.Should().Be(0);
+            response.TopicsCount.Should().Be(0);
+        })).ToArray();
+        await Task.WhenAll(tasks);
     }
 }

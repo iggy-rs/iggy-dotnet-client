@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Iggy_SDK;
+using Iggy_SDK_Tests.E2ETests.Fixtures.Bootstraps;
 using Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
 using Iggy_SDK_Tests.Utils;
 using Iggy_SDK.Contracts.Http;
@@ -19,71 +20,102 @@ public sealed class UsersE2ETcp : IClassFixture<IggyTcpUsersFixture>
     [Fact, TestPriority(1)]
     public async Task CreateUser_Should_CreateUser_Successfully()
     {
-        await _fixture.sut.Invoking(async x =>
-            await x.CreateUser(_fixture.UserRequest)
-        ).Should().NotThrowAsync();
+        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        {
+            await sut.Invoking(async x =>
+                await x.CreateUser(UsersFixtureBootstrap.UserRequest)
+            ).Should().NotThrowAsync();
+        })).ToArray();
+        await Task.WhenAll(tasks);
     }
 
     [Fact, TestPriority(2)]
     public async Task CreateUser_Duplicate_Should_Throw_InvalidResponse()
     {
-        await _fixture.sut.Invoking(async x =>
-            await x.CreateUser(_fixture.UserRequest)
-        ).Should().ThrowExactlyAsync<InvalidResponseException>();
+        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        {
+            await sut.Invoking(async x =>
+                await x.CreateUser(UsersFixtureBootstrap.UserRequest)
+            ).Should().ThrowExactlyAsync<InvalidResponseException>();
+        })).ToArray();
+        await Task.WhenAll(tasks);
     }
     [Fact, TestPriority(3)]
     public async Task GetUser_Should_ReturnValidResponse()
     {
-        var response = await _fixture.sut.GetUser(Identifier.Numeric(2));
-        
-        response.Should().NotBeNull();
-        response!.Id.Should().Be(2);
-        response.Username.Should().Be(_fixture.UserRequest.Username);
-        response.Status.Should().Be(_fixture.UserRequest.Status);
-        response.Permissions!.Global.Should().NotBeNull();
-        response.Permissions.Global.Should().BeEquivalentTo(_fixture.UserRequest.Permissions!.Global);
+        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        {
+            var response = await sut.GetUser(Identifier.Numeric(2));
+            response.Should().NotBeNull();
+            response!.Id.Should().Be(2);
+            response.Username.Should().Be(UsersFixtureBootstrap.UserRequest.Username);
+            response.Status.Should().Be(UsersFixtureBootstrap.UserRequest.Status);
+            response.Permissions!.Global.Should().NotBeNull();
+            response.Permissions.Global.Should().BeEquivalentTo(UsersFixtureBootstrap.UserRequest.Permissions!.Global);
+        })).ToArray();
+        await Task.WhenAll(tasks);
     }
     [Fact, TestPriority(4)]
     public async Task GetUsers_Should_ReturnValidResponse()
     {
-        var response = await _fixture.sut.GetUsers();
-        response.Should().NotBeEmpty();
-        response.Should().HaveCount(2);
+        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        {
+            var response = await sut.GetUsers();
+            response.Should().NotBeEmpty();
+            response.Should().HaveCount(2);
+        })).ToArray();
+        await Task.WhenAll(tasks);
     }
     [Fact, TestPriority(5)]
     public async Task UpdateUser_Should_UpdateUser_Successfully()
     {
-        await _fixture.sut.Invoking(async x =>
-            await x.UpdateUser(new UpdateUserRequest
-            {
-                UserId = Identifier.Numeric(2), Username = _fixture.NewUsername, UserStatus = UserStatus.Active
-            })).Should().NotThrowAsync();
-        var user = await _fixture.sut.GetUser(Identifier.Numeric(2));
-        user!.Username.Should().Be(_fixture.NewUsername);
+        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        {
+            await sut.Invoking(async x =>
+                await x.UpdateUser(new UpdateUserRequest
+                {
+                    UserId = Identifier.Numeric(2), Username = UsersFixtureBootstrap.NewUsername, UserStatus = UserStatus.Active
+                })).Should().NotThrowAsync();
+            var user = await sut.GetUser(Identifier.Numeric(2));
+            user!.Username.Should().Be(UsersFixtureBootstrap.NewUsername);
+        })).ToArray();
+        await Task.WhenAll(tasks);
     }
     [Fact, TestPriority(6)]
     public async Task ChangePermissions_Should_ChangePermissions_Successfully()
     {
-        await _fixture.sut.Invoking(async x =>
-            await x.UpdatePermissions(new UpdateUserPermissionsRequest
-            {
-                UserId = Identifier.Numeric(2), Permissions = _fixture.UpdatePermissionsRequest
-            })).Should().NotThrowAsync();
-        var user = await _fixture.sut.GetUser(Identifier.Numeric(2));
-        user!.Permissions!.Global.Should().NotBeNull();
-        user.Permissions.Should().BeEquivalentTo(_fixture.UpdatePermissionsRequest);
+        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        {
+            await sut.Invoking(async x =>
+                await x.UpdatePermissions(new UpdateUserPermissionsRequest
+                {
+                    UserId = Identifier.Numeric(2), Permissions = UsersFixtureBootstrap.UpdatePermissionsRequest
+                })).Should().NotThrowAsync();
+            var user = await sut.GetUser(Identifier.Numeric(2));
+            user!.Permissions!.Global.Should().NotBeNull();
+            user.Permissions.Should().BeEquivalentTo(UsersFixtureBootstrap.UpdatePermissionsRequest);
+        })).ToArray();
+        await Task.WhenAll(tasks);
     }
     [Fact, TestPriority(7)]
     public async Task DeleteUser_Should_DeleteUser_Successfully()
     {
-        await _fixture.sut.Invoking(async x =>
-            await x.DeleteUser(Identifier.Numeric(2))).Should().NotThrowAsync();
+        var task = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        {
+            await sut.Invoking(async x =>
+                await x.DeleteUser(Identifier.Numeric(2))).Should().NotThrowAsync();
+        })).ToArray();
+        await Task.WhenAll(task);
     }
     [Fact, TestPriority(8)]
     public async Task LogoutUser_Should_LogoutUser_Successfully()
     {
-        await _fixture.sut.Invoking(async x =>
-            await x.LogoutUser()).Should().NotThrowAsync();
+        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        {
+            await sut.Invoking(async x =>
+                await x.LogoutUser()).Should().NotThrowAsync();
+        })).ToArray();
+        await Task.WhenAll(tasks);
     }
 }
 

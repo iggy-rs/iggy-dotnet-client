@@ -13,25 +13,24 @@ namespace Iggy_SDK_Tests.E2ETests.ConsumerGroup;
 public sealed class ConsumerGroupE2ETcp : IClassFixture<IggyTcpConsumerGroupFixture>
 {
     private readonly IggyTcpConsumerGroupFixture _fixture;
-    private readonly CreateConsumerGroupRequest _createConsumerGroupRequest;
-    private readonly JoinConsumerGroupRequest _joinConsumerGroupRequest;
-    private readonly LeaveConsumerGroupRequest _leaveConsumerGroupRequest;
-    private readonly DeleteConsumerGroupRequest _deleteConsumerGroupRequest;
 
+    private static readonly CreateConsumerGroupRequest _createConsumerGroupRequest = ConsumerGroupFactory.CreateRequest((int)ConsumerGroupFixtureBootstrap.StreamRequest.StreamId!,
+        (int)ConsumerGroupFixtureBootstrap.TopicRequest.TopicId!, GROUP_ID);
+
+    private static readonly JoinConsumerGroupRequest _joinConsumerGroupRequest = ConsumerGroupFactory.CreateJoinGroupRequest((int)ConsumerGroupFixtureBootstrap.StreamRequest.StreamId,
+        (int)ConsumerGroupFixtureBootstrap.TopicRequest.TopicId, GROUP_ID);
+
+    private static readonly LeaveConsumerGroupRequest _leaveConsumerGroupRequest = ConsumerGroupFactory.CreateLeaveGroupRequest((int)ConsumerGroupFixtureBootstrap.StreamRequest.StreamId,
+        (int)ConsumerGroupFixtureBootstrap.TopicRequest.TopicId, GROUP_ID);
+
+    private static readonly DeleteConsumerGroupRequest _deleteConsumerGroupRequest = ConsumerGroupFactory.CreateDeleteGroupRequest((int)ConsumerGroupFixtureBootstrap.StreamRequest.StreamId,
+        (int)ConsumerGroupFixtureBootstrap.TopicRequest.TopicId, GROUP_ID);
     private const int GROUP_ID = 1;
     private Identifier ConsumerGroupId = Identifier.Numeric(GROUP_ID);
 
     public ConsumerGroupE2ETcp(IggyTcpConsumerGroupFixture fixture)
     {
         _fixture = fixture;
-        _createConsumerGroupRequest = ConsumerGroupFactory.CreateRequest((int)ConsumerGroupFixtureBootstrap.StreamRequest.StreamId! ,
-            (int)ConsumerGroupFixtureBootstrap.TopicRequest.TopicId!, GROUP_ID);
-        _joinConsumerGroupRequest = ConsumerGroupFactory.CreateJoinGroupRequest((int)ConsumerGroupFixtureBootstrap.StreamRequest.StreamId,
-            (int)ConsumerGroupFixtureBootstrap.TopicRequest.TopicId, GROUP_ID);
-        _leaveConsumerGroupRequest = ConsumerGroupFactory.CreateLeaveGroupRequest((int)ConsumerGroupFixtureBootstrap.StreamRequest.StreamId,
-            (int)ConsumerGroupFixtureBootstrap.TopicRequest.TopicId, GROUP_ID);
-        _deleteConsumerGroupRequest = ConsumerGroupFactory.CreateDeleteGroupRequest((int)ConsumerGroupFixtureBootstrap.StreamRequest.StreamId,
-            (int)ConsumerGroupFixtureBootstrap.TopicRequest.TopicId, GROUP_ID);
     }
 
     [Fact, TestPriority(1)]

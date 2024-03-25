@@ -1,4 +1,3 @@
-using Iggy_SDK.Contracts.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
@@ -66,6 +65,14 @@ public static class JsonConverterFactory
             Converters =
             {
                 new TopicResponseConverter()
+            }
+        };
+    public static JsonSerializerOptions StatsResponseOptions
+        => new()
+        {
+            Converters =
+            {
+                new StatsResponseConverter()
             }
         };
     public static JsonSerializerOptions CreateTopicOptions

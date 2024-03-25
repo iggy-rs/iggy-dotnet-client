@@ -393,7 +393,7 @@ public class HttpMessageStream : IIggyClient
         var response = await _httpClient.GetAsync($"/stats", token);
         if (response.IsSuccessStatusCode)
         {
-            var result = await response.Content.ReadFromJsonAsync<StatsResponse>(JsonConverterFactory.SnakeCaseOptions, cancellationToken: token);
+            var result = await response.Content.ReadFromJsonAsync<StatsResponse>(JsonConverterFactory.StatsResponseOptions, cancellationToken: token);
             return result?.ToStats();
         }
         await HandleResponseAsync(response);

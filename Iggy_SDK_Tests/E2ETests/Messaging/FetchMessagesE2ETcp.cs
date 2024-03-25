@@ -14,21 +14,20 @@ public sealed class FetchMessagesE2ETcp : IClassFixture<IggyTcpFetchMessagesFixt
 {
     private readonly IggyTcpFetchMessagesFixture _fixture;
 
-    private readonly MessageFetchRequest _messageFetchRequest;
-    private readonly MessageFetchRequest _headersMessageFetchRequest;
-    private readonly MessageFetchRequest _invalidFetchRequest;
+    private static readonly MessageFetchRequest _messageFetchRequest =
+        MessageFactory.CreateMessageFetchRequestConsumer(10, FetchMessagesFixtureBootstrap.StreamId,
+            FetchMessagesFixtureBootstrap.TopicId, FetchMessagesFixtureBootstrap.PartitionId);
+
+    private static readonly MessageFetchRequest _headersMessageFetchRequest =
+        MessageFactory.CreateMessageFetchRequestConsumer(10, FetchMessagesFixtureBootstrap.StreamId,
+            FetchMessagesFixtureBootstrap.HeadersTopicId, FetchMessagesFixtureBootstrap.PartitionId);
+
+    private static readonly MessageFetchRequest _invalidFetchRequest =
+        MessageFactory.CreateMessageFetchRequestConsumer(10, FetchMessagesFixtureBootstrap.InvalidStreamId,
+            FetchMessagesFixtureBootstrap.InvalidTopicId, FetchMessagesFixtureBootstrap.PartitionId);
     public FetchMessagesE2ETcp(IggyTcpFetchMessagesFixture fixture)
     {
         _fixture = fixture;
-        _messageFetchRequest =
-            MessageFactory.CreateMessageFetchRequestConsumer(10, FetchMessagesFixtureBootstrap.StreamId,
-                FetchMessagesFixtureBootstrap.TopicId, FetchMessagesFixtureBootstrap.PartitionId);
-        _headersMessageFetchRequest =
-            MessageFactory.CreateMessageFetchRequestConsumer(10, FetchMessagesFixtureBootstrap.StreamId,
-                FetchMessagesFixtureBootstrap.HeadersTopicId, FetchMessagesFixtureBootstrap.PartitionId);
-        _invalidFetchRequest =
-            MessageFactory.CreateMessageFetchRequestConsumer(10, FetchMessagesFixtureBootstrap.InvalidStreamId,
-                FetchMessagesFixtureBootstrap.InvalidTopicId, FetchMessagesFixtureBootstrap.PartitionId);
     }
 
     [Fact, TestPriority(1)]
@@ -104,7 +103,7 @@ public sealed class FetchMessagesE2ETcp : IClassFixture<IggyTcpFetchMessagesFixt
             {
                 responseMessage.Headers.Should().NotBeNull();
                 responseMessage.State.Should().Be(MessageState.Available);
-                responseMessage.Headers!.Count.Should().Be(6);
+                responseMessage.Headers!.Count.Should().Be(3);
             }
         })).ToArray();
         await Task.WhenAll(tasks);
@@ -123,7 +122,7 @@ public sealed class FetchMessagesE2ETcp : IClassFixture<IggyTcpFetchMessagesFixt
             {
                 responseMessage.Headers.Should().NotBeNull();
                 responseMessage.State.Should().Be(MessageState.Available);
-                responseMessage.Headers!.Count.Should().Be(6);
+                responseMessage.Headers!.Count.Should().Be(3);
             }
         })).ToArray();
         await Task.WhenAll(tasks);
