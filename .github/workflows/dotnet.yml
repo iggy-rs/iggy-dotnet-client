@@ -1,21 +1,23 @@
-# This workflow will build a .NET project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+# This workflow will build, test, and publish a .NET 8 project on pull request 
+# and push to master
 
 name: .NET
 
 on:
-  pull_request:
+  pull_request:  # Trigger on pull request events
+    branches: [ "master" ]
+  push:          # Additionally trigger on push events
     branches: [ "master" ]
 
 jobs:
-  build-and-test:
+  build-and-test:  # Runs on pull request and push to master
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Setup .NET
+      - name: Setup .NET 8
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 7.0.x
+          dotnet-version: '8.0.x' 
       - name: Restore dependencies
         run: dotnet restore
       - name: Build
@@ -23,16 +25,16 @@ jobs:
       - name: Test
         run: dotnet test --no-build --verbosity normal
 
-  nuget:
-    needs: build-and-test
+  nuget:  # Runs only on successful build-and-test (on push to master)
+    needs: build-and-test  # This job depends on the success of build-and-test
     runs-on: ubuntu-latest
-    if: ${{ needs.build-and-test.result == 'success' }}
+    if: ${{ needs.build-and-test.result == 'success' }} && github.event_name == 'push'  # Only run on success and push event
     steps:
       - uses: actions/checkout@v3
-      - name: Setup .NET
+      - name: Setup .NET 8  # Use .NET 8 for nuget job as well
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 7.0.x
+          dotnet-version: '8.0.x'
       - name: Restore dependencies
         run: dotnet restore
       - name: Publish
@@ -40,4 +42,3 @@ jobs:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: chmod +x scripts/pack.sh && scripts/pack.sh
         shell: bash
-
