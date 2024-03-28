@@ -79,7 +79,7 @@ public sealed class TopicsE2E : IClassFixture<IggyTopicFixture>
             var result = await sut.GetTopicByIdAsync(Identifier.Numeric((int)TopicsFixtureBootstrap.StreamRequest.StreamId!),
                 Identifier.Numeric((int)TopicsFixtureBootstrap.TopicRequest.TopicId!));
             result.Should().NotBeNull();
-            result.Name.Should().Be(TopicsFixtureBootstrap.UpdateTopicRequest.Name);
+            result!.Name.Should().Be(TopicsFixtureBootstrap.UpdateTopicRequest.Name);
             result.MessageExpiry.Should().Be(TopicsFixtureBootstrap.UpdateTopicRequest.MessageExpiry);
         })).ToArray();
         await Task.WhenAll(tasks);
