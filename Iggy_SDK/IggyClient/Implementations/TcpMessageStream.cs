@@ -1,4 +1,5 @@
 using Iggy_SDK.Configuration;
+using Iggy_SDK.ConnectionStream;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.Contracts.Tcp;
 using Iggy_SDK.Enums;
@@ -12,7 +13,6 @@ using Iggy_SDK.Utils;
 using Microsoft.Extensions.Logging;
 using System.Buffers;
 using System.Buffers.Binary;
-using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Channels;
@@ -20,17 +20,17 @@ namespace Iggy_SDK.IggyClient.Implementations;
 
 public sealed class TcpMessageStream : IIggyClient, IDisposable
 {
-    private readonly Socket _socket;
+    private readonly IConnectionStream _stream;
     private readonly Channel<MessageSendRequest>? _channel;
     private readonly MessagePollingSettings _messagePollingSettings;
     private readonly ILogger<TcpMessageStream> _logger;
     private readonly IMessageInvoker? _messageInvoker;
 
-    internal TcpMessageStream(Socket socket, Channel<MessageSendRequest>? channel,
+    internal TcpMessageStream(IConnectionStream stream, Channel<MessageSendRequest>? channel,
         MessagePollingSettings messagePollingSettings, ILoggerFactory loggerFactory,
         IMessageInvoker? messageInvoker = null)
     {
-        _socket = socket;
+        _stream = stream;
         _channel = channel;
         _messagePollingSettings = messagePollingSettings;
         _messageInvoker = messageInvoker;
@@ -42,16 +42,17 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.CREATE_STREAM_CODE);
 
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         if (response.Status != 0)
         {
             var errorBuffer = new byte[response.Length];
-            await _socket.ReceiveAsync(errorBuffer, token);
+            await _stream.ReadAsync(errorBuffer, token);
             throw new InvalidResponseException(Encoding.UTF8.GetString(errorBuffer));
         }
     }
@@ -62,14 +63,15 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.GET_STREAM_CODE);
 
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         var responseBuffer = new byte[response.Length];
-        await _socket.ReceiveAsync(responseBuffer, token);
+        await _stream.ReadAsync(responseBuffer, token);
 
         if (response.Status != 0)
         {
@@ -90,16 +92,17 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.UPDATE_STREAM_CODE);
 
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         if (response.Status != 0)
         {
             var errorBuffer = new byte[response.Length];
-            await _socket.ReceiveAsync(errorBuffer, token);
+            await _stream.ReadAsync(errorBuffer, token);
             throw new InvalidResponseException(Encoding.UTF8.GetString(errorBuffer));
         }
     }
@@ -110,10 +113,11 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.GET_STREAMS_CODE);
 
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         var responseBuffer = new byte[response.Length];
@@ -128,7 +132,7 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
             return Array.Empty<StreamResponse>();
         }
 
-        await _socket.ReceiveAsync(responseBuffer, token);
+        await _stream.ReadAsync(responseBuffer, token);
         return BinaryMapper.MapStreams(responseBuffer);
     }
 
@@ -138,16 +142,17 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.DELETE_STREAM_CODE);
 
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         if (response.Status != 0)
         {
             var errorBuffer = new byte[response.Length];
-            await _socket.ReceiveAsync(errorBuffer, token);
+            await _stream.ReadAsync(errorBuffer, token);
             throw new InvalidResponseException(Encoding.UTF8.GetString(errorBuffer));
         }
     }
@@ -158,10 +163,11 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.GET_TOPICS_CODE);
 
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         if (response.Status != 0)
@@ -175,7 +181,7 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         }
 
         var responseBuffer = new byte[response.Length];
-        await _socket.ReceiveAsync(responseBuffer, token);
+        await _stream.ReadAsync(responseBuffer, token);
         return BinaryMapper.MapTopics(responseBuffer);
     }
 
@@ -185,14 +191,15 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.GET_TOPIC_CODE);
 
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         var responseBuffer = new byte[response.Length];
-        await _socket.ReceiveAsync(responseBuffer, token);
+        await _stream.ReadAsync(responseBuffer, token);
         
         if (response.Status != 0)
         {
@@ -214,16 +221,17 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.CREATE_TOPIC_CODE);
 
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         if (response.Status != 0)
         {
             var errorBuffer = new byte[response.Length];
-            await _socket.ReceiveAsync(errorBuffer, token);
+            await _stream.ReadAsync(errorBuffer, token);
             throw new InvalidResponseException(Encoding.UTF8.GetString(errorBuffer));
         }
     }
@@ -234,16 +242,17 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.UPDATE_TOPIC_CODE);
 
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         if (response.Status != 0)
         {
             var errorBuffer = new byte[response.Length];
-            await _socket.ReceiveAsync(errorBuffer, token);
+            await _stream.ReadAsync(errorBuffer, token);
             throw new InvalidResponseException(Encoding.UTF8.GetString(errorBuffer));
         }
     }
@@ -254,16 +263,17 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.DELETE_TOPIC_CODE);
 
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         if (response.Status != 0)
         {
             var errorBuffer = new byte[response.Length];
-            await _socket.ReceiveAsync(errorBuffer, token);
+            await _stream.ReadAsync(errorBuffer, token);
             throw new InvalidResponseException(Encoding.UTF8.GetString(errorBuffer));
         }
     }
@@ -339,12 +349,12 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var buffer = MemoryPool<byte>.Shared.Rent(BufferSizes.ExpectedResponseSize);
         try
         {
-            await _socket.ReceiveAsync(buffer.Memory[..BufferSizes.ExpectedResponseSize], token);
+            await _stream.ReadAsync(buffer.Memory[..BufferSizes.ExpectedResponseSize], token);
             var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer.Memory.Span);
             if (response.Status != 0)
             {
                 var errorBuffer = new byte[response.Length];
-                await _socket.ReceiveAsync(errorBuffer, token);
+                await _stream.ReadAsync(errorBuffer, token);
                 throw new InvalidResponseException(Encoding.UTF8.GetString(errorBuffer));
             }
 
@@ -357,7 +367,7 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
 
             try
             {
-                await _socket.ReceiveAsync(responseBuffer.Memory[..response.Length], token);
+                await _stream.ReadAsync(responseBuffer.Memory[..response.Length], token);
                 var result = BinaryMapper.MapMessages(
                     responseBuffer.Memory.Span[..response.Length], serializer, decryptor);
                 return result;
@@ -467,13 +477,13 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var buffer = ArrayPool<byte>.Shared.Rent(BufferSizes.ExpectedResponseSize);
         try
         {
-            await _socket.ReceiveAsync(buffer.AsMemory()[..BufferSizes.ExpectedResponseSize], token);
+            await _stream.ReadAsync(buffer.AsMemory()[..BufferSizes.ExpectedResponseSize], token);
 
             var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
             if (response.Status != 0)
             {
                 var errorBuffer = new byte[response.Length];
-                await _socket.ReceiveAsync(errorBuffer, token);
+                await _stream.ReadAsync(errorBuffer, token);
                 throw new InvalidResponseException(Encoding.UTF8.GetString(errorBuffer));
             }
 
@@ -486,7 +496,7 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
 
             try
             {
-                await _socket.ReceiveAsync(responseBuffer.AsMemory()[..response.Length], token);
+                await _stream.ReadAsync(responseBuffer.AsMemory()[..response.Length], token);
                 var result = BinaryMapper.MapMessages(
                     responseBuffer.AsSpan()[..response.Length], decryptor);
                 return result;
@@ -513,7 +523,7 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
             TcpContracts.GetMessages(message.AsSpan()[..messageBufferSize], request);
             TcpMessageStreamHelpers.CreatePayload(payload, message.AsSpan()[..messageBufferSize], CommandCodes.POLL_MESSAGES_CODE);
 
-            await _socket.SendAsync(payload.AsMemory()[..payloadBufferSize], token);
+            await _stream.SendAsync(payload.AsMemory()[..payloadBufferSize], token);
         }
         finally
         {
@@ -532,16 +542,17 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.STORE_CONSUMER_OFFSET_CODE);
 
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         if (response.Status != 0)
         {
             var errorBuffer = new byte[response.Length];
-            await _socket.ReceiveAsync(errorBuffer, token);
+            await _stream.ReadAsync(errorBuffer, token);
             throw new InvalidResponseException(Encoding.UTF8.GetString(errorBuffer));
         }
     }
@@ -552,14 +563,15 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.GET_CONSUMER_OFFSET_CODE);
 
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         var responseBuffer = new byte[response.Length];
-        await _socket.ReceiveAsync(responseBuffer, token);
+        await _stream.ReadAsync(responseBuffer, token);
 
         if (response.Status != 0)
         {
@@ -581,14 +593,15 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.GET_CONSUMER_GROUP_CODE);
 
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         var responseBuffer = new byte[response.Length];
-        await _socket.ReceiveAsync(responseBuffer, token);
+        await _stream.ReadAsync(responseBuffer, token);
 
         if (response.Status != 0)
         {
@@ -610,14 +623,15 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.GET_CONSUMER_GROUP_CODE);
 
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         var responseBuffer = new byte[response.Length];
-        await _socket.ReceiveAsync(responseBuffer, token);
+        await _stream.ReadAsync(responseBuffer, token);
 
         if (response.Status != 0)
         {
@@ -638,16 +652,17 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.CREATE_CONSUMER_GROUP_CODE);
 
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         if (response.Status != 0)
         {
             var errorBuffer = new byte[response.Length];
-            await _socket.ReceiveAsync(errorBuffer, token);
+            await _stream.ReadAsync(errorBuffer, token);
             throw new InvalidResponseException(Encoding.UTF8.GetString(errorBuffer));
         }
     }
@@ -659,16 +674,17 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.DELETE_CONSUMER_GROUP_CODE);
 
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         if (response.Status != 0)
         {
             var errorBuffer = new byte[response.Length];
-            await _socket.ReceiveAsync(errorBuffer, token);
+            await _stream.ReadAsync(errorBuffer, token);
             throw new InvalidResponseException(Encoding.UTF8.GetString(errorBuffer));
         }
     }
@@ -679,16 +695,17 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.JOIN_CONSUMER_GROUP_CODE);
 
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         if (response.Status != 0)
         {
             var errorBuffer = new byte[response.Length];
-            await _socket.ReceiveAsync(errorBuffer, token);
+            await _stream.ReadAsync(errorBuffer, token);
             throw new InvalidResponseException(Encoding.UTF8.GetString(errorBuffer));
         }
     }
@@ -699,16 +716,17 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.LEAVE_CONSUMER_GROUP_CODE);
 
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         if (response.Status != 0)
         {
             var errorBuffer = new byte[response.Length];
-            await _socket.ReceiveAsync(errorBuffer, token);
+            await _stream.ReadAsync(errorBuffer, token);
             throw new InvalidResponseException(Encoding.UTF8.GetString(errorBuffer));
         }
     }
@@ -719,16 +737,17 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.DELETE_PARTITIONS_CODE);
 
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         if (response.Status != 0)
         {
             var errorBuffer = new byte[response.Length];
-            await _socket.ReceiveAsync(errorBuffer, token);
+            await _stream.ReadAsync(errorBuffer, token);
             throw new InvalidResponseException(Encoding.UTF8.GetString(errorBuffer));
         }
     }
@@ -740,16 +759,17 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.CREATE_PARTITIONS_CODE);
 
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         if (response.Status != 0)
         {
             var errorBuffer = new byte[response.Length];
-            await _socket.ReceiveAsync(errorBuffer, token);
+            await _stream.ReadAsync(errorBuffer, token);
             throw new InvalidResponseException(Encoding.UTF8.GetString(errorBuffer));
         }
     }
@@ -759,14 +779,15 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.GET_STATS_CODE);
 
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         var responseBuffer = new byte[response.Length];
-        await _socket.ReceiveAsync(responseBuffer, token);
+        await _stream.ReadAsync(responseBuffer, token);
         
         if (response.Status != 0)
         {
@@ -787,14 +808,15 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.GET_CLIENTS_CODE);
         
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         var responseBuffer = new byte[response.Length];
-        await _socket.ReceiveAsync(responseBuffer, token);
+        await _stream.ReadAsync(responseBuffer, token);
         
         if (response.Status != 0)
         {
@@ -814,14 +836,15 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.GET_CLIENT_CODE);
         
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         var responseBuffer = new byte[response.Length];
-        await _socket.ReceiveAsync(responseBuffer, token);
+        await _stream.ReadAsync(responseBuffer, token);
         
         if (response.Status != 0)
         {
@@ -839,8 +862,8 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
 
     public void Dispose()
     {
-        _socket.Close();
-        _socket.Dispose();
+        _stream.Close();
+        _stream.Dispose();
     }
     public async Task<UserResponse?> GetUser(Identifier userId, CancellationToken token = default)
     {
@@ -848,14 +871,15 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.GET_USER_CODE);
         
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         var responseBuffer = new byte[response.Length];
-        await _socket.ReceiveAsync(responseBuffer, token);
+        await _stream.ReadAsync(responseBuffer, token);
         
         if (response.Status != 0)
         {
@@ -876,14 +900,15 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.GET_USERS_CODE);
         
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         var responseBuffer = new byte[response.Length];
-        await _socket.ReceiveAsync(responseBuffer, token);
+        await _stream.ReadAsync(responseBuffer, token);
 
         if (response.Status != 0)
         {
@@ -897,16 +922,17 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.CREATE_USER_CODE);
         
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         
         if (response.Status != 0)
         {
             var errorBuffer = new byte[response.Length];
-            await _socket.ReceiveAsync(errorBuffer, token);
+            await _stream.ReadAsync(errorBuffer, token);
             throw new InvalidResponseException(Encoding.UTF8.GetString(errorBuffer));
         }
     }
@@ -916,16 +942,17 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.DELETE_USER_CODE);
         
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         
         if (response.Status != 0)
         {
             var errorBuffer = new byte[response.Length];
-            await _socket.ReceiveAsync(errorBuffer, token);
+            await _stream.ReadAsync(errorBuffer, token);
             throw new InvalidResponseException(Encoding.UTF8.GetString(errorBuffer));
         }
     }
@@ -935,16 +962,17 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.UPDATE_USER_CODE);
         
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         
         if (response.Status != 0)
         {
             var errorBuffer = new byte[response.Length];
-            await _socket.ReceiveAsync(errorBuffer, token);
+            await _stream.ReadAsync(errorBuffer, token);
             throw new InvalidResponseException(Encoding.UTF8.GetString(errorBuffer));
         }
     }
@@ -954,17 +982,18 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.UPDATE_PERMISSIONS_CODE);
         
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         
         if (response.Status != 0)
         {
             var errorBuffer = new byte[response.Length];
-            await _socket.ReceiveAsync(errorBuffer, token);
+            await _stream.ReadAsync(errorBuffer, token);
             throw new InvalidResponseException(Encoding.UTF8.GetString(errorBuffer));
         }
     }
@@ -974,16 +1003,17 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.CHANGE_PASSWORD_CODE);
         
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         
         if (response.Status != 0)
         {
             var errorBuffer = new byte[response.Length];
-            await _socket.ReceiveAsync(errorBuffer, token);
+            await _stream.ReadAsync(errorBuffer, token);
             throw new InvalidResponseException(Encoding.UTF8.GetString(errorBuffer));
         }
     }
@@ -992,18 +1022,20 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var message = TcpContracts.LoginUser(request);
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.LOGIN_USER_CODE);
-        
-        await _socket.SendAsync(payload, token);
+
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         // TODO: maybe refactor later, for now static 12
         var buffer = new byte[12];
-        await _socket.ReceiveAsync(buffer, token);
+        //await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         if (response.Status != 0)
         {
             var errorBuffer = new byte[response.Length];
-            await _socket.ReceiveAsync(errorBuffer, token);
+            await _stream.ReadAsync(errorBuffer, token);
             throw new InvalidResponseException(Encoding.UTF8.GetString(errorBuffer));
         }
         
@@ -1024,17 +1056,18 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.LOGOUT_USER_CODE);
         
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
 
         if (response.Status != 0)
         {
             var errorBuffer = new byte[response.Length];
-            await _socket.ReceiveAsync(errorBuffer, token);
+            await _stream.ReadAsync(errorBuffer, token);
             throw new InvalidResponseException(Encoding.UTF8.GetString(errorBuffer));
         }
     }
@@ -1044,14 +1077,15 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.GET_PERSONAL_ACCESS_TOKENS_CODE);
         
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         var responseBuffer = new byte[response.Length];
-        await _socket.ReceiveAsync(responseBuffer, token);
+        await _stream.ReadAsync(responseBuffer, token);
 
         if (response.Status != 0)
         {
@@ -1065,14 +1099,15 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.CREATE_PERSONAL_ACCESS_TOKEN_CODE);
         
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         var responseBuffer = new byte[response.Length];
-        await _socket.ReceiveAsync(responseBuffer, token);
+        await _stream.ReadAsync(responseBuffer, token);
 
         if (response.Status != 0)
         {
@@ -1090,16 +1125,17 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.DELETE_PERSONAL_ACCESS_TOKEN_CODE);
         
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[BufferSizes.ExpectedResponseSize];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         if (response.Status != 0)
         {
             var errorBuffer = new byte[response.Length];
-            await _socket.ReceiveAsync(errorBuffer, token);
+            await _stream.ReadAsync(errorBuffer, token);
             throw new InvalidResponseException(Encoding.UTF8.GetString(errorBuffer));
         }
     }
@@ -1109,14 +1145,15 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         var payload = new byte[4 + BufferSizes.InitialBytesLength + message.Length];
         TcpMessageStreamHelpers.CreatePayload(payload, message, CommandCodes.LOGIN_WITH_PERSONAL_ACCESS_TOKEN_CODE);
         
-        await _socket.SendAsync(payload, token);
+        await _stream.SendAsync(payload, token);
+        await _stream.FlushAsync(token);
 
         var buffer = new byte[8];
-        await _socket.ReceiveAsync(buffer, token);
+        await _stream.ReadAsync(buffer, token);
 
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         var responseBuffer = new byte[response.Length];
-        await _socket.ReceiveAsync(responseBuffer, token);
+        await _stream.ReadAsync(responseBuffer, token);
 
         if (response.Status != 0)
         {

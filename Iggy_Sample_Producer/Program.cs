@@ -30,6 +30,12 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
         x.MaxMessagesPerBatch = 1000;
         x.MaxRequests = 4096;
     };
+    options.TlsSettings = x =>
+    {
+        x.Enabled = false;
+        x.Hostname = "iggy";
+        x.Authenticate = false;
+    };
 }, loggerFactory);
 
 try
@@ -39,7 +45,6 @@ try
         Password = "iggy",
         Username = "iggy",
     });
-    var strm = await bus.GetStreamByIdAsync(Identifier.Numeric(1));
 }
 catch
 {

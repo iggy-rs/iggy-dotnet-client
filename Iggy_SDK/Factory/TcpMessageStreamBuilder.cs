@@ -1,4 +1,5 @@
 using Iggy_SDK.Configuration;
+using Iggy_SDK.ConnectionStream;
 using Iggy_SDK.Contracts.Http;
 using Iggy_SDK.IggyClient.Implementations;
 using Iggy_SDK.MessagesDispatcher;
@@ -9,7 +10,7 @@ namespace Iggy_SDK.Factory;
 
 internal class TcpMessageStreamBuilder
 {
-    private readonly Socket _socket;
+    private readonly IConnectionStream _stream;
     private readonly MessageBatchingSettings _messageBatchingOptions;
     private readonly MessagePollingSettings _messagePollingSettings;
     private Channel<MessageSendRequest>? _channel;
@@ -17,7 +18,7 @@ internal class TcpMessageStreamBuilder
     private readonly ILoggerFactory _loggerFactory;
     private TcpMessageInvoker? _messageInvoker;
 
-    internal TcpMessageStreamBuilder(Socket socket, IMessageStreamConfigurator options, ILoggerFactory loggerFactory)
+    internal TcpMessageStreamBuilder(IConnectionStream stream, IMessageStreamConfigurator options, ILoggerFactory loggerFactory)
     {
         var sendMessagesOptions = new MessageBatchingSettings();
         var messagePollingOptions = new MessagePollingSettings();
@@ -25,7 +26,7 @@ internal class TcpMessageStreamBuilder
         options.MessageBatchingSettings.Invoke(sendMessagesOptions);
         _messageBatchingOptions = sendMessagesOptions;
         _messagePollingSettings = messagePollingOptions;
-        _socket = socket;
+        _stream = stream;
         _loggerFactory = loggerFactory;
     }
     //TODO - this channel will probably need to be refactored, to accept a lambda instead of MessageSendRequest
@@ -34,13 +35,13 @@ internal class TcpMessageStreamBuilder
         if (_messageBatchingOptions.Enabled)
         {
             _channel = Channel.CreateBounded<MessageSendRequest>(_messageBatchingOptions.MaxRequests);
-            _messageInvoker = new TcpMessageInvoker(_socket);
+            _messageInvoker = new TcpMessageInvoker(_stream);
             _messageSenderDispatcher =
                 new MessageSenderDispatcher(_messageBatchingOptions, _channel, _messageInvoker, _loggerFactory);
         }
         else
         {
-            _messageInvoker = new TcpMessageInvoker(_socket);
+            _messageInvoker = new TcpMessageInvoker(_stream);
         }
         return this;
     }
@@ -49,8 +50,8 @@ internal class TcpMessageStreamBuilder
         _messageSenderDispatcher?.Start();
         return _messageBatchingOptions.Enabled switch
         {
-            true => new TcpMessageStream(_socket, _channel, _messagePollingSettings, _loggerFactory),
-            false => new TcpMessageStream(_socket, _channel, _messagePollingSettings, _loggerFactory, _messageInvoker)
+            true => new TcpMessageStream(_stream, _channel, _messagePollingSettings, _loggerFactory),
+            false => new TcpMessageStream(_stream, _channel, _messagePollingSettings, _loggerFactory, _messageInvoker)
         };
     }
     

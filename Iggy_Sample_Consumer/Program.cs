@@ -37,6 +37,12 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
         x.Interval = TimeSpan.FromMilliseconds(100);
         x.StoreOffsetStrategy = StoreOffset.AfterProcessingEachMessage;
     };
+    options.TlsSettings = x =>
+    {
+        x.Enabled = false;
+        x.Hostname = "iggy";
+        x.Authenticate = false;
+    };
 }, loggerFactory);
 
 var response = await bus.LoginUser(new LoginUserRequest

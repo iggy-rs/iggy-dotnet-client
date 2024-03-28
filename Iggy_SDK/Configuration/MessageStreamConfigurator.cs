@@ -11,6 +11,14 @@ public sealed class MessageStreamConfigurator : IMessageStreamConfigurator
         options.Interval = TimeSpan.FromMilliseconds(100);
         options.StoreOffsetStrategy = StoreOffset.WhenMessagesAreReceived;
     };
+
+    public Action<TlsSettings> TlsSettings { get; set; } = options =>
+    {
+        options.Enabled = false;
+        options.Hostname = default!;
+        options.Authenticate = false;
+    };
+
     public Action<MessageBatchingSettings> MessageBatchingSettings { get; set; } = options =>
     {
         options.Interval = TimeSpan.FromMilliseconds(100);
