@@ -25,6 +25,12 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
 {
     options.BaseAdress = "127.0.0.1:8090";
     options.Protocol = Protocol.Tcp;
+    options.TlsSettings = x =>
+    {
+        x.Enabled = false;
+        x.Hostname = "iggy";
+        x.Authenticate = false;
+    };
 }, loggerFactory);
 ```
 Iggy necessitates the use of `ILoggerFactory` to generate logs from locations that are inaccessible to the user.
@@ -36,6 +42,13 @@ var bus = MessageStreamFactory.CreateMessageStream(options =>
 {
     options.BaseAdress = "127.0.0.1:8090";
     options.Protocol = protocol;
+    options.TlsSettings = x =>
+    {
+        x.Enabled = false;
+        x.Hostname = "iggy";
+        x.Authenticate = false;
+    };
+
     options.IntervalBatchingConfig = x =>
     {
         x.Enabled = true;
