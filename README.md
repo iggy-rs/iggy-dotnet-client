@@ -5,7 +5,9 @@
 
 </div>
 
+## THE DEVELOPMENT OF SDK IS CURRENTLY ON HALT, DUE TO BIG WORKLOAD IN MAIN REPOSITORY 
 # C# SDK for [Iggy](https://github.com/spetz/iggy)
+
 
 ### Getting Started
 
