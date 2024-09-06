@@ -16,16 +16,11 @@ public sealed class AuthResponseConverter : JsonConverter<AuthResponse>
         var accessToken = root.GetProperty(nameof(AuthResponse.AccessToken).ToSnakeCase());
         var token = accessToken.GetProperty(nameof(TokenInfo.Token).ToSnakeCase()).GetString();
         var accessTokenExpiry = accessToken.GetProperty(nameof(TokenInfo.Expiry).ToSnakeCase()).GetInt64();
-        
-        return new AuthResponse
-        {
-            UserId = userId,
-            AccessToken = new TokenInfo
-            {
-                Token = token!,
-                Expiry = DateTimeOffset.FromUnixTimeSeconds(accessTokenExpiry).LocalDateTime,
-            },
-        };
+
+        return new AuthResponse(
+            userId,
+            new TokenInfo(token, DateTimeOffset.FromUnixTimeSeconds(accessTokenExpiry).LocalDateTime)
+        );
     }
     public override void Write(Utf8JsonWriter writer, AuthResponse value, JsonSerializerOptions options)
     {

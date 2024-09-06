@@ -1,7 +1,7 @@
 namespace Iggy_SDK.Contracts.Http;
 
-public sealed class AuthResponse
+public record AuthResponse(int UserId, TokenInfo AccessToken)
 {
-    public required int UserId { get; init; }
-    public required TokenInfo? AccessToken { get; init; }
+    // public required int UserId { get; init; }
+    // public TokenInfo AccessToken { get; init; }
 }

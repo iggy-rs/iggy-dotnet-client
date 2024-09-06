@@ -1045,11 +1045,9 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         }
         
         var userId = BinaryPrimitives.ReadInt32LittleEndian(buffer.AsSpan()[8..(8 + response.Length)]);
-        return new AuthResponse
-        {
-            UserId = userId,
-            AccessToken = default //TODO: Figure out how to solve this workaround
-        };
+        
+        //TODO: Figure out how to solve this workaround about default of TokenInfo
+        return new AuthResponse(userId, default);
     }
     public async Task LogoutUser(CancellationToken token = default)
     {
@@ -1165,10 +1163,8 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
             return null;
         }
         var userId = BinaryPrimitives.ReadInt32LittleEndian(responseBuffer.AsSpan()[..4]);
-        return new AuthResponse
-        {
-            UserId = userId,
-            AccessToken = default //TODO: Figure out how to solve this workaround
-        };
+        
+        //TODO: Figure out how to solve this workaround about default of TokenInfo
+        return new AuthResponse(userId, default);
     }
 }
