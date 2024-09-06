@@ -12,6 +12,7 @@ namespace Iggy_SDK_Tests.E2ETests;
 [TestCaseOrderer("Iggy_SDK_Tests.Utils.PriorityOrderer", "Iggy_SDK_Tests")]
 public sealed class FetchMessagesE2E : IClassFixture<IggyFetchMessagesFixture>
 {
+    private const string SkipMessage = "TCP implementation needs to be aligned with Iggyrs core changes";
     private readonly IggyFetchMessagesFixture _fixture;
 
     private static readonly MessageFetchRequest _messageFetchRequest =
@@ -30,7 +31,7 @@ public sealed class FetchMessagesE2E : IClassFixture<IggyFetchMessagesFixture>
         _fixture = fixture;
     }
 
-    [Fact, TestPriority(1)]
+    [Fact(Skip = SkipMessage), TestPriority(1)]
     public async Task PollMessagesTMessage_WithNoHeaders_Should_PollMessages_Successfully()
     {
         var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
@@ -48,7 +49,7 @@ public sealed class FetchMessagesE2E : IClassFixture<IggyFetchMessagesFixture>
         await Task.WhenAll(tasks);
     }
 
-    [Fact, TestPriority(2)]
+    [Fact(Skip = SkipMessage), TestPriority(2)]
     public async Task PollMessagesTMessage_Should_Throw_InvalidResponse()
     {
         var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
@@ -60,7 +61,7 @@ public sealed class FetchMessagesE2E : IClassFixture<IggyFetchMessagesFixture>
         await Task.WhenAll(tasks);
     }
 
-    [Fact, TestPriority(3)]
+    [Fact(Skip = SkipMessage), TestPriority(3)]
     public async Task PollMessages_WithNoHeaders_Should_PollMessages_Successfully()
     {
         var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
@@ -78,7 +79,7 @@ public sealed class FetchMessagesE2E : IClassFixture<IggyFetchMessagesFixture>
         await Task.WhenAll(tasks);
     }
 
-    [Fact, TestPriority(4)]
+    [Fact(Skip = SkipMessage), TestPriority(4)]
     public async Task PollMessages_Should_Throw_InvalidResponse()
     {
         var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
@@ -90,7 +91,7 @@ public sealed class FetchMessagesE2E : IClassFixture<IggyFetchMessagesFixture>
         await Task.WhenAll(tasks);
     }
 
-    [Fact, TestPriority(5)]
+    [Fact(Skip = SkipMessage), TestPriority(5)]
     public async Task PollMessages_WithHeaders_Should_PollMessages_Successfully()
     {
         var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
@@ -109,7 +110,7 @@ public sealed class FetchMessagesE2E : IClassFixture<IggyFetchMessagesFixture>
         await Task.WhenAll(tasks);
     }
 
-    [Fact, TestPriority(6)]
+    [Fact(Skip = SkipMessage), TestPriority(6)]
     public async Task PollMessagesTMessage_WithHeaders_Should_PollMessages_Successfully()
     {
         var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>

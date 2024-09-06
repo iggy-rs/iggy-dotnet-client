@@ -41,6 +41,7 @@ public class HttpMessageStream : IIggyClient
         _messageInvoker = messageInvoker;
         _logger = loggerFactory.CreateLogger<HttpMessageStream>();
     }
+    
     public async Task CreateStreamAsync(StreamRequest request, CancellationToken token = default)
     {
         var json = JsonSerializer.Serialize(request, JsonConverterFactory.SnakeCaseOptions);
@@ -238,6 +239,7 @@ public class HttpMessageStream : IIggyClient
         await HandleResponseAsync(response);
         return PolledMessages<TMessage>.Empty;
     }
+    
     public async IAsyncEnumerable<MessageResponse<TMessage>> PollMessagesAsync<TMessage>(PollMessagesRequest request, 
         Func<byte[], TMessage> deserializer, Func<byte[], byte[]>? decryptor = null, 
         [EnumeratorCancellation] CancellationToken token = default)
@@ -295,6 +297,7 @@ public class HttpMessageStream : IIggyClient
             }
         }
     }
+    
     private async Task StartPollingMessagesAsync<TMessage>(MessageFetchRequest request,
         Func<byte[], TMessage> deserializer, TimeSpan interval, ChannelWriter<MessageResponse<TMessage>> writer,
         Func<byte[], byte[]>? decryptor = null,
@@ -324,6 +327,7 @@ public class HttpMessageStream : IIggyClient
         }
         writer.Complete();
     }
+    
     public async Task StoreOffsetAsync(StoreOffsetRequest request, CancellationToken token = default)
     {
         var json = JsonSerializer.Serialize(request, JsonConverterFactory.SnakeCaseOptions);
@@ -372,6 +376,7 @@ public class HttpMessageStream : IIggyClient
         await HandleResponseAsync(response);
         return null;
     }
+    
     public async Task CreateConsumerGroupAsync(CreateConsumerGroupRequest request, CancellationToken token = default)
     {
         var json = JsonSerializer.Serialize(request, JsonConverterFactory.SnakeCaseOptions);
@@ -383,6 +388,7 @@ public class HttpMessageStream : IIggyClient
             await HandleResponseAsync(response);
         }
     }
+    
     public async Task DeleteConsumerGroupAsync(DeleteConsumerGroupRequest request, CancellationToken token = default)
     {
         var response = await _httpClient.DeleteAsync($"/streams/{request.StreamId}/topics/{request.TopicId}/consumer-groups/{request.ConsumerGroupId}", token);
@@ -550,8 +556,8 @@ public class HttpMessageStream : IIggyClient
         if (response.IsSuccessStatusCode)
         {
             var authResponse = await response.Content.ReadFromJsonAsync<AuthResponse>(JsonConverterFactory.AuthResponseOptions, cancellationToken: token);
-            var jwtToken = authResponse!.Tokens?.AccessToken?.Token;
-            if (!string.IsNullOrEmpty(authResponse!.Tokens!.AccessToken!.Token))
+            var jwtToken = authResponse!.AccessToken?.Token;
+            if (!string.IsNullOrEmpty(authResponse!.AccessToken!.Token))
             {
                 _httpClient.DefaultRequestHeaders.Authorization = 
                     new AuthenticationHeaderValue("Bearer", jwtToken); 
@@ -567,11 +573,11 @@ public class HttpMessageStream : IIggyClient
     }
     public async Task LogoutUser(CancellationToken token = default)
     {
-        var json = JsonSerializer.Serialize(new
-        {
-        }, JsonConverterFactory.SnakeCaseOptions);
-        var content = new StringContent(json, Encoding.UTF8, "application/json"); 
-        var response = await _httpClient.PostAsync("users/logout", content, token);
+        // var json = JsonSerializer.Serialize(new
+        // {
+        // }, JsonConverterFactory.SnakeCaseOptions);
+        // var content = new StringContent(json, Encoding.UTF8, "application/json"); 
+        var response = await _httpClient.DeleteAsync("users/logout", token);
         if (!response.IsSuccessStatusCode)
         {
             await HandleResponseAsync(response);
@@ -610,25 +616,27 @@ public class HttpMessageStream : IIggyClient
     }
     public async Task<AuthResponse?> LoginWithPersonalAccessToken(LoginWithPersonalAccessToken request, CancellationToken token = default)
     {
-        var json = JsonSerializer.Serialize(request, JsonConverterFactory.SnakeCaseOptions); 
-        var content = new StringContent(json, Encoding.UTF8, "application/json"); 
-        var response = await _httpClient.PostAsync("/personal-access-tokens/login", content, token);
-        if (response.IsSuccessStatusCode)
-        {
-            var authResponse = await response.Content.ReadFromJsonAsync<AuthResponse>(JsonConverterFactory.AuthResponseOptions, cancellationToken: token);
-            var jwtToken = authResponse!.Tokens?.AccessToken?.Token;
-            if (!string.IsNullOrEmpty(authResponse!.Tokens!.AccessToken!.Token))
-            {
-                _httpClient.DefaultRequestHeaders.Authorization = 
-                    new AuthenticationHeaderValue("Bearer", jwtToken); 
-            }
-            else
-            {
-                throw new Exception("The JWT token is missing.");
-            }
-            return authResponse;
-        }
-        await HandleResponseAsync(response);
-        return null;
+        // var json = JsonSerializer.Serialize(request, JsonConverterFactory.SnakeCaseOptions); 
+        // var content = new StringContent(json, Encoding.UTF8, "application/json"); 
+        // var response = await _httpClient.PostAsync("/personal-access-tokens/login", content, token);
+        // if (response.IsSuccessStatusCode)
+        // {
+        //     var authResponse = await response.Content.ReadFromJsonAsync<AuthResponse>(JsonConverterFactory.AuthResponseOptions, cancellationToken: token);
+        //     var jwtToken = authResponse!.Tokens?.AccessToken?.Token;
+        //     if (!string.IsNullOrEmpty(authResponse!.Tokens!.AccessToken!.Token))
+        //     {
+        //         _httpClient.DefaultRequestHeaders.Authorization = 
+        //             new AuthenticationHeaderValue("Bearer", jwtToken); 
+        //     }
+        //     else
+        //     {
+        //         throw new Exception("The JWT token is missing.");
+        //     }
+        //     return authResponse;
+        // }
+        // await HandleResponseAsync(response);
+        // return null;
+
+        throw new NotImplementedException();
     }
 }

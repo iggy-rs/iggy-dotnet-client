@@ -11,6 +11,9 @@ namespace Iggy_SDK_Tests.E2ETests.Fixtures;
 
 public abstract class IggyBaseFixture : IAsyncLifetime
 {
+    public IIggyClient TcpSut => SubjectsUnderTest[0];
+    public IIggyClient HttpSut => SubjectsUnderTest[1];
+    
     private readonly IIggyBootstrap _bootstraper;
     private readonly Action<MessagePollingSettings> _pollingSettings;
     private readonly Action<MessageBatchingSettings> _batchingSettings;
@@ -20,6 +23,7 @@ public abstract class IggyBaseFixture : IAsyncLifetime
         .WithOutputConsumer(Consume.RedirectStdoutAndStderrToConsole())
         .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8090))
         .Build();
+    
     private readonly IContainer _httpContainer = new ContainerBuilder().WithImage("iggyrs/iggy:latest")
         .WithPortBinding(3000, true)
         .WithOutputConsumer(Consume.RedirectStdoutAndStderrToConsole())

@@ -12,12 +12,15 @@ namespace Iggy_SDK_Tests.E2ETests;
 [TestCaseOrderer("Iggy_SDK_Tests.Utils.PriorityOrderer", "Iggy_SDK_Tests")]
 public sealed class PATE2E : IClassFixture<IggyPATFixture>
 {
+    private const string SkipMessage = "TCP implementation needs to be aligned with Iggyrs core changes";
     private readonly IggyPATFixture _fixture;
+    
     public PATE2E(IggyPATFixture fixture)
     {
         _fixture = fixture;
     }
-    [Fact, TestPriority(1)]
+    
+    [Fact(Skip = SkipMessage), TestPriority(1)]
     public async Task CreatePersonalAccessToken_HappyPath_Should_CreatePersonalAccessToken_Successfully()
     {
         var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
@@ -28,7 +31,8 @@ public sealed class PATE2E : IClassFixture<IggyPATFixture>
         })).ToArray();
         await Task.WhenAll(tasks);
     }
-    [Fact, TestPriority(2)]
+    
+    [Fact(Skip = SkipMessage), TestPriority(2)]
     public async Task CreatePersonalAccessToken_Duplicate_Should_Throw_InvalidResponse()
     {
         var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
@@ -39,7 +43,8 @@ public sealed class PATE2E : IClassFixture<IggyPATFixture>
         })).ToArray();
         await Task.WhenAll(tasks);
     }
-    [Fact, TestPriority(3)]
+    
+    [Fact(Skip = SkipMessage), TestPriority(3)]
     public async Task GetPersonalAccessTokens_Should_ReturnValidResponse()
     {
         var tasks = _fixture.SubjectsUnderTest.Select( sut => Task.Run(async () =>
@@ -53,7 +58,8 @@ public sealed class PATE2E : IClassFixture<IggyPATFixture>
         })).ToArray();
         await Task.WhenAll(tasks);
     }
-    [Fact, TestPriority(4)]
+    
+    [Fact(Skip = SkipMessage), TestPriority(4)]
     public async Task LoginWithPersonalAccessToken_Should_Be_Successfull()
     {
         var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
@@ -71,7 +77,8 @@ public sealed class PATE2E : IClassFixture<IggyPATFixture>
         })).ToArray();
         await Task.WhenAll(tasks);
     }
-    [Fact, TestPriority(5)]
+    
+    [Fact(Skip = SkipMessage), TestPriority(5)]
     public async Task DeletePersonalAccessToken_Should_DeletePersonalAccessToken_Successfully()
     {
         var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>

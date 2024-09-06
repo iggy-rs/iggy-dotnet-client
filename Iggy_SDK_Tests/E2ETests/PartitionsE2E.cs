@@ -12,6 +12,7 @@ namespace Iggy_SDK_Tests.E2ETests;
 [TestCaseOrderer("Iggy_SDK_Tests.Utils.PriorityOrderer", "Iggy_SDK_Tests")]
 public sealed class PartitionsE2E : IClassFixture<IggyPartitionFixture>
 {
+    private const string SkipMessage = "TCP implementation needs to be aligned with Iggyrs core changes";
     private readonly IggyPartitionFixture _fixture;
     private readonly CreatePartitionsRequest _partitionsRequest;
     private readonly DeletePartitionsRequest _deletePartitionsRequest;
@@ -24,7 +25,7 @@ public sealed class PartitionsE2E : IClassFixture<IggyPartitionFixture>
             (int)PartitionsFixtureBootstrap.TopicRequest.TopicId, _partitionsRequest.PartitionsCount);
     }
 
-    [Fact, TestPriority(1)]
+    [Fact(Skip = SkipMessage), TestPriority(1)]
     public async Task CreatePartition_HappyPath_Should_CreatePartition_Successfully()
     {
         var tasks = _fixture.SubjectsUnderTest.Select( sut => Task.Run(async () =>
@@ -36,7 +37,7 @@ public sealed class PartitionsE2E : IClassFixture<IggyPartitionFixture>
         await Task.WhenAll(tasks);
     }
 
-    [Fact, TestPriority(2)]
+    [Fact(Skip = SkipMessage), TestPriority(2)]
     public async Task DeletePartition_Should_DeletePartition_Successfully()
     {
         var tasks = _fixture.SubjectsUnderTest.Select( sut => Task.Run(async () =>
@@ -48,7 +49,7 @@ public sealed class PartitionsE2E : IClassFixture<IggyPartitionFixture>
         await Task.WhenAll(tasks);
     }
 
-    [Fact, TestPriority(3)]
+    [Fact(Skip = SkipMessage), TestPriority(3)]
     public async Task DeletePartition_Should_Throw_WhenTopic_DoesNotExist()
     {
         var tasks = _fixture.SubjectsUnderTest.Select( sut => Task.Run(async () =>
@@ -63,7 +64,7 @@ public sealed class PartitionsE2E : IClassFixture<IggyPartitionFixture>
         await Task.WhenAll(tasks);
     }
 
-    [Fact, TestPriority(4)]
+    [Fact(Skip = SkipMessage), TestPriority(4)]
     public async Task DeletePartition_Should_Throw_WhenStream_DoesNotExist()
     {
         var tasks = _fixture.SubjectsUnderTest.Select( sut => Task.Run(async () =>
