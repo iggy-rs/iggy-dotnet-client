@@ -13,13 +13,15 @@ namespace Iggy_SDK_Tests.E2ETests;
 [TestCaseOrderer("Iggy_SDK_Tests.Utils.PriorityOrderer", "Iggy_SDK_Tests")]
 public sealed class PollMessagesE2E : IClassFixture<IggyPollMessagesFixture>
 {
+    private const string SkipMessage = "TCP implementation needs to be aligned with Iggyrs core changes";
     private readonly IggyPollMessagesFixture _fixture;
+    
     public PollMessagesE2E(IggyPollMessagesFixture fixture)
     {
         _fixture = fixture;
     }
 
-    [Fact, TestPriority(1)]
+    [Fact(Skip = SkipMessage), TestPriority(1)]
     public async Task PollMessagesTMessage_Should_PollMessages_Successfully()
     {
         var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>

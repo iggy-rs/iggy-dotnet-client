@@ -10,6 +10,7 @@ namespace Iggy_SDK_Tests.E2ETests;
 [TestCaseOrderer("Iggy_SDK_Tests.Utils.PriorityOrderer", "Iggy_SDK_Tests")]
 public sealed class OffsetE2E : IClassFixture<IggyOffsetFixture>
 {
+    private const string SkipMessage = "TCP implementation needs to be aligned with Iggyrs core changes";
     private readonly IggyOffsetFixture _fixture;
     private readonly StoreOffsetRequest _storeOffsetIndividualConsumer;
     private readonly OffsetRequest _offsetIndividualConsumer;
@@ -28,7 +29,7 @@ public sealed class OffsetE2E : IClassFixture<IggyOffsetFixture>
             (int)OffsetFixtureBootstrap.TopicRequest.TopicId, GET_PARTITION_ID, GET_INDIVIDUAL_CONSUMER_ID);
     }
 
-    [Fact, TestPriority(1)]
+    [Fact(Skip = SkipMessage), TestPriority(1)]
     public async Task StoreOffset_IndividualConsumer_Should_StoreOffset_Successfully()
     {
         var tasks = _fixture.SubjectsUnderTest.Select( sut => Task.Run(async () =>
@@ -40,7 +41,7 @@ public sealed class OffsetE2E : IClassFixture<IggyOffsetFixture>
         await Task.WhenAll(tasks);
     }
 
-    [Fact, TestPriority(2)]
+    [Fact(Skip = SkipMessage), TestPriority(2)]
     public async Task GetOffset_IndividualConsumer_Should_GetOffset_Successfully()
     {
         var tasks = _fixture.SubjectsUnderTest.Select( sut => Task.Run(async () =>

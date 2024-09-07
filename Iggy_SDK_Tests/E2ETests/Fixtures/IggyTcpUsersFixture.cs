@@ -14,6 +14,8 @@ namespace Iggy_SDK_Tests.E2ETests.Fixtures.Tcp;
 
 public sealed class IggyTcpUsersFixture : IggyBaseFixture
 {
+    public IIggyClient TcpSubjectUnderTest => SubjectsUnderTest[0]; 
+    
     public IggyTcpUsersFixture() : base(new UsersFixtureBootstrap(),
         IggyFixtureClientMessagingSettings.PollingSettings,
         IggyFixtureClientMessagingSettings.BatchingSettings)

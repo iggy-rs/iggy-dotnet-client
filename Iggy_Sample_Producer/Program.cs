@@ -12,6 +12,7 @@ using System.Buffers.Binary;
 using System.Security.Cryptography;
 using System.Text;
 using Partitioning = Iggy_SDK.Kinds.Partitioning;
+
 var protocol = Protocol.Tcp;
 var loggerFactory = LoggerFactory.Create(builder =>
 {
@@ -106,13 +107,16 @@ catch
         Username = "iggy",
     });
 }
+
 Console.WriteLine("Using protocol : {0}", protocol.ToString());
+
 var streamIdVal = 1;
 var topicIdVal = 1;
 var streamId = Identifier.Numeric(streamIdVal);
 var topicId = Identifier.Numeric(topicIdVal);
 
 Console.WriteLine($"Producer has started, selected protocol {protocol.ToString()}");
+
 try
 {
     var stream = await bus.GetStreamByIdAsync(streamId);

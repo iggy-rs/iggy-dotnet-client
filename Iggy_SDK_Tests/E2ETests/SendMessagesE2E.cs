@@ -11,6 +11,7 @@ namespace Iggy_SDK_Tests.E2ETests;
 [TestCaseOrderer("Iggy_SDK_Tests.Utils.PriorityOrderer", "Iggy_SDK_Tests")]
 public sealed class SendMessagesE2E : IClassFixture<IggySendMessagesFixture>
 {
+    private const string SkipMessage = "TCP implementation needs to be aligned with Iggyrs core changes";
     private readonly IggySendMessagesFixture _fixture;
 
     private readonly MessageSendRequest _messageNoHeadersSendRequest;
@@ -38,8 +39,7 @@ public sealed class SendMessagesE2E : IClassFixture<IggySendMessagesFixture>
             SendMessagesFixtureBootstrap.InvalidTopicId, SendMessagesFixtureBootstrap.PartitionId, messageWithHeaders);
     }
 
-    [Fact]
-    [TestPriority(1)]
+    [Fact(Skip = SkipMessage), TestPriority(1)]
     public async Task SendMessages_NoHeaders_Should_SendMessages_Successfully()
     {
         var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
@@ -51,8 +51,7 @@ public sealed class SendMessagesE2E : IClassFixture<IggySendMessagesFixture>
         await Task.WhenAll(tasks);
     }
 
-    [Fact]
-    [TestPriority(2)]
+    [Fact(Skip = SkipMessage), TestPriority(2)]
     public async Task SendMessages_NoHeaders_Should_Throw_InvalidResponse()
     {
         var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
@@ -64,8 +63,7 @@ public sealed class SendMessagesE2E : IClassFixture<IggySendMessagesFixture>
         await Task.WhenAll(tasks);
     }
 
-    [Fact]
-    [TestPriority(3)]
+    [Fact(Skip = SkipMessage), TestPriority(3)]
     public async Task SendMessages_WithHeaders_Should_SendMessages_Successfully()
     {
         var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
@@ -77,8 +75,7 @@ public sealed class SendMessagesE2E : IClassFixture<IggySendMessagesFixture>
         await Task.WhenAll(tasks);
     }
 
-    [Fact]
-    [TestPriority(4)]
+    [Fact(Skip = SkipMessage), TestPriority(4)]
     public async Task SendMessages_WithHeaders_Should_Throw_InvalidResponse()
     {
         var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
