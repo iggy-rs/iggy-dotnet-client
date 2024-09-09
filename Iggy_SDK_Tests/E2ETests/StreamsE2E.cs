@@ -144,8 +144,7 @@ public sealed class StreamsE2E : IClassFixture<IggyStreamFixture>
         // })).ToArray();
         // await Task.WhenAll(tasks);
     }
-
-    // [Fact(Skip = SkipMessage), TestPriority(7)]
+    
     [Fact, TestPriority(7)]
     public async Task GetStreamById_Should_Throw_InvalidResponse()
     {
