@@ -15,7 +15,7 @@ public sealed class StreamResponseConverter : JsonConverter<StreamResponse>
         var id = root.GetProperty(nameof(StreamResponse.Id).ToSnakeCase()).GetInt32();
         var createdAt = root.GetProperty(nameof(StreamResponse.CreatedAt).ToSnakeCase()).GetUInt64();
         var name = root.GetProperty(nameof(StreamResponse.Name).ToSnakeCase()).GetString();
-        var sizeBytesString = root.GetProperty(nameof(StreamResponse.SizeBytes).ToSnakeCase()).GetString();
+        var sizeBytesString = root.GetProperty(nameof(StreamResponse.Size).ToSnakeCase()).GetString();
         var sizeBytesStringSplit = sizeBytesString.Split(' ');
         var (sizeBytesVal, Unit) = (ulong.Parse(sizeBytesStringSplit[0]), sizeBytesStringSplit[1]);
         var sizeBytes = Unit switch
@@ -42,7 +42,7 @@ public sealed class StreamResponseConverter : JsonConverter<StreamResponse>
         {
             Id = id,
             Name = name!,
-            SizeBytes = sizeBytes,
+            Size = sizeBytes,
             CreatedAt = DateTimeOffsetUtils.FromUnixTimeMicroSeconds(createdAt).LocalDateTime,
             MessagesCount = messagesCount,
             TopicsCount = topicsCount,

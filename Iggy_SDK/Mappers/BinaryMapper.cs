@@ -556,7 +556,7 @@ internal static class BinaryMapper
             Topics = topics,
             CreatedAt = stream.CreatedAt,
             MessagesCount = stream.MessagesCount,
-            SizeBytes = stream.SizeBytes
+            Size = stream.Size
         };
     }
 
@@ -578,7 +578,7 @@ internal static class BinaryMapper
                 Id = id,
                 TopicsCount = topicsCount,
                 Name = name,
-                SizeBytes = sizeBytes,
+                Size = sizeBytes,
                 MessagesCount = messagesCount,
                 CreatedAt = DateTimeOffsetUtils.FromUnixTimeMicroSeconds(createdAt).LocalDateTime
             }, readBytes);
