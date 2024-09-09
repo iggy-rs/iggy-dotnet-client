@@ -33,7 +33,7 @@ internal static class StreamFactory
         return new StreamResponse
         {
             Id = Random.Shared.Next(1, 10),
-            SizeBytes = (ulong)Random.Shared.Next(1, 10),
+            Size = (ulong)Random.Shared.Next(1, 10),
             MessagesCount = (ulong)Random.Shared.Next(1, 10),
             CreatedAt = DateTimeOffset.UtcNow,
             Name = "Test Topic" + Random.Shared.Next(1, 69),

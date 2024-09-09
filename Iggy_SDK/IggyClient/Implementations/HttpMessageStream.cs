@@ -64,11 +64,14 @@ public class HttpMessageStream : IIggyClient
     public async Task<StreamResponse?> GetStreamByIdAsync(Identifier streamId, CancellationToken token = default)
     {
         var response = await _httpClient.GetAsync($"/streams/{streamId}", token);
+        
         if (response.IsSuccessStatusCode)
         {
             return await response.Content.ReadFromJsonAsync<StreamResponse>(JsonConverterFactory.StreamResponseOptions, cancellationToken: token);
         }
+        
         await HandleResponseAsync(response);
+        
         return null;
     }
 
