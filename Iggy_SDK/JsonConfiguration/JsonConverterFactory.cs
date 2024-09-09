@@ -51,6 +51,7 @@ public static class JsonConverterFactory
                 new StreamResponseConverter()
             }
         };
+    
     public static JsonSerializerOptions AuthResponseOptions
         => new() 
         {
@@ -59,6 +60,7 @@ public static class JsonConverterFactory
                 new AuthResponseConverter()
             }
         };
+    
     public static JsonSerializerOptions TopicResponseOptions
         => new()
         {
@@ -67,6 +69,7 @@ public static class JsonConverterFactory
                 new TopicResponseConverter()
             }
         };
+    
     public static JsonSerializerOptions StatsResponseOptions
         => new()
         {
@@ -75,6 +78,7 @@ public static class JsonConverterFactory
                 new StatsResponseConverter()
             }
         };
+    
     public static JsonSerializerOptions CreateTopicOptions
         => new()
         {
@@ -92,6 +96,7 @@ public static class JsonConverterFactory
                 new MessageResponseConverter(decryptor)
             }
         };
+    
     public static JsonSerializerOptions HttpMessageOptions
         => new()
         {
@@ -100,6 +105,7 @@ public static class JsonConverterFactory
                 new MessageConverter()
             }
         };
+    
     public static JsonSerializerOptions MessagesOptions
         => new()
         {
@@ -116,6 +122,7 @@ public static class JsonConverterFactory
                 new PersonalAccessTokenResponseConverter()
             }
         };
+    
     public static JsonSerializerOptions MessageResponseGenericOptions<TMessage>(Func<byte[], TMessage> serializer, Func<byte[], byte[]>? decryptor)
         => new()
         {

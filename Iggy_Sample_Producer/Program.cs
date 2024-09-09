@@ -132,13 +132,14 @@ catch
     });
 
     Console.WriteLine($"Creating topic with id:{topicId}");
-    await bus.CreateTopicAsync(streamId, new TopicRequest
-    {
-        Name = "producer-topic",
-        PartitionsCount = 3,
-        TopicId = topicIdVal,
-        ReplicationFactor = 3,
-    });
+    await bus.CreateTopicAsync(streamId, new TopicRequest(
+        TopicId: topicIdVal,
+        Name: "producer-topic",
+        CompressionAlgorithm: CompressionAlgorithm.None,
+        MessageExpiry: 0,
+        MaxTopicSize: 1_000_000_000,
+        ReplicationFactor: 3,
+        PartitionsCount: 3));
 }
 
 var actualStream = await bus.GetStreamByIdAsync(streamId);

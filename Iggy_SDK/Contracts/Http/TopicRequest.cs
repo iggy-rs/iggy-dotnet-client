@@ -1,11 +1,12 @@
+using Iggy_SDK.Enums;
+
 namespace Iggy_SDK.Contracts.Http;
 
-public sealed class TopicRequest
-{
-    public int? TopicId { get; init; }
-    public required string Name { get; init; }
-    public int? MessageExpiry { get; init; }
-    public required int PartitionsCount { get; init; }
-    public  ulong? MaxTopicSize { get; init; }
-    public required byte ReplicationFactor { get; init; }
-}
+public record TopicRequest(
+    int? TopicId, // If not provided, the Iggy server will generate one automatically
+    string Name,
+    CompressionAlgorithm CompressionAlgorithm,
+    int MessageExpiry,
+    int PartitionsCount,
+    byte ReplicationFactor,
+    ulong MaxTopicSize);

@@ -55,13 +55,15 @@ try
             Name = $"Test bench stream_{i}",
             StreamId = startingStreamId + i
         });
-        await clients[0].CreateTopicAsync(Identifier.Numeric(startingStreamId + i), new TopicRequest
-        {
-            Name = $"Test bench topic_{i}",
-            PartitionsCount = 1,
-            TopicId = topicId,
-            ReplicationFactor = 3
-        });
+        
+        await clients[0].CreateTopicAsync(Identifier.Numeric(startingStreamId + i), new TopicRequest(
+            TopicId: topicId,
+            Name: $"Test bench topic_{i}",
+            CompressionAlgorithm: CompressionAlgorithm.None,
+            MessageExpiry: 0,
+            MaxTopicSize: 1_000_000_000,
+            ReplicationFactor: 3,
+            PartitionsCount: 1));
     }
 }
 catch

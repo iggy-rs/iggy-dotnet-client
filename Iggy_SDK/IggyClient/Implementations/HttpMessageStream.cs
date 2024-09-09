@@ -144,11 +144,14 @@ public class HttpMessageStream : IIggyClient
     public async Task<TopicResponse?> GetTopicByIdAsync(Identifier streamId, Identifier topicId, CancellationToken token = default)
     {
         var response = await _httpClient.GetAsync($"/streams/{streamId}/topics/{topicId}", token);
+        
         if (response.IsSuccessStatusCode)
         {
             return await response.Content.ReadFromJsonAsync<TopicResponse>(JsonConverterFactory.TopicResponseOptions, cancellationToken: token);
         }
+        
         await HandleResponseAsync(response);
+        
         return null;
     }
 

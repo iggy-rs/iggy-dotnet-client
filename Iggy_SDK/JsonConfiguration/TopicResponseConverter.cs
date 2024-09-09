@@ -35,22 +35,23 @@ internal sealed class TopicResponseConverter : JsonConverter<TopicResponse>
             _ => throw new InvalidEnumArgumentException("Error Wrong Unit when deserializing SizeBytes")
         };
         var replicationFactor = root.GetProperty(nameof(TopicResponse.ReplicationFactor).ToSnakeCase()).GetUInt16();
-        var maxTopicSizeString = root.GetProperty(nameof(TopicResponse.MaxTopicSize).ToSnakeCase()).GetString();
-        ulong maxTopicSize = 0;
-        if (maxTopicSizeString is not null)
-        {
-            var maxTopicSizeStringSplit = maxTopicSizeString.Split(' ');
-            (ulong maxTopicSizeVal, string maxTopicUnit) = (ulong.Parse(maxTopicSizeStringSplit[0]), maxTopicSizeStringSplit[1]);
-            maxTopicSize = Unit switch
-            {
-                "B" => maxTopicSizeVal,
-                "KB" => maxTopicSizeVal * (ulong)1e03,
-                "MB" => maxTopicSizeVal * (ulong)1e06,
-                "GB" => maxTopicSizeVal * (ulong)1e09,
-                "TB" => maxTopicSizeVal * (ulong)1e12,
-                _ => throw new InvalidEnumArgumentException("Error Wrong Unit when deserializing SizeBytes")
-            };
-        }
+        var maxTopicSize = root.GetProperty(nameof(TopicResponse.MaxTopicSize).ToSnakeCase()).GetUInt64();
+        // var maxTopicSizeString = root.GetProperty(nameof(TopicResponse.MaxTopicSize).ToSnakeCase()).GetUInt64();
+        // ulong maxTopicSize = 0;
+        // if (maxTopicSizeString is not null)
+        // {
+        //     var maxTopicSizeStringSplit = maxTopicSizeString.Split(' ');
+        //     (ulong maxTopicSizeVal, string maxTopicUnit) = (ulong.Parse(maxTopicSizeStringSplit[0]), maxTopicSizeStringSplit[1]);
+        //     maxTopicSize = Unit switch
+        //     {
+        //         "B" => maxTopicSizeVal,
+        //         "KB" => maxTopicSizeVal * (ulong)1e03,
+        //         "MB" => maxTopicSizeVal * (ulong)1e06,
+        //         "GB" => maxTopicSizeVal * (ulong)1e09,
+        //         "TB" => maxTopicSizeVal * (ulong)1e12,
+        //         _ => throw new InvalidEnumArgumentException("Error Wrong Unit when deserializing SizeBytes")
+        //     };
+        // }
 
         var messageExpiryProperty = root.GetProperty(nameof(TopicResponse.MessageExpiry).ToSnakeCase());
         var messageExpiry = messageExpiryProperty.ValueKind switch
@@ -96,7 +97,7 @@ internal sealed class TopicResponseConverter : JsonConverter<TopicResponse>
                 .GetInt32();
             var currentOffset = partition.GetProperty(nameof(PartitionContract.CurrentOffset).ToSnakeCase())
                 .GetUInt64();
-            var sizeBytesString = partition.GetProperty(nameof(PartitionContract.SizeBytes).ToSnakeCase()).GetString();
+            var sizeBytesString = partition.GetProperty(nameof(PartitionContract.Size).ToSnakeCase()).GetString();
             var sizeBytesStringSplit = sizeBytesString.Split(' ');
             var (sizeBytesVal, Unit) = (ulong.Parse(sizeBytesStringSplit[0]), sizeBytesStringSplit[1]);
             ulong sizeBytes = Unit switch
@@ -117,7 +118,7 @@ internal sealed class TopicResponseConverter : JsonConverter<TopicResponse>
                 CurrentOffset = currentOffset,
                 MessagesCount = messagesCount,
                 SegmentsCount = segmentsCount,
-                SizeBytes = sizeBytes
+                Size = sizeBytes
             });
         }
         return partitions;
