@@ -47,6 +47,7 @@ public sealed class SendMessagesE2E : IClassFixture<IggySendMessagesFixture>
             .Should()
             .NotThrowAsync();
         
+        // TODO: This code block is commmented bacause TCP implementation is not working properly.
         // var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
         // {
         //     await sut.Invoking(x => x.SendMessagesAsync(_messageNoHeadersSendRequest))
@@ -65,6 +66,7 @@ public sealed class SendMessagesE2E : IClassFixture<IggySendMessagesFixture>
             .Should()
             .ThrowAsync<InvalidResponseException>();
         
+        // TODO: This code block is commmented bacause TCP implementation is not working properly.
         // var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
         // {
         //     await sut.Invoking(x => x.SendMessagesAsync(_invalidMessageNoHeadersSendRequest))
@@ -83,6 +85,7 @@ public sealed class SendMessagesE2E : IClassFixture<IggySendMessagesFixture>
             .Should()
             .NotThrowAsync();
         
+        // TODO: This code block is commmented bacause TCP implementation is not working properly.
         // var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
         // {
         //     await sut.Invoking(x => x.SendMessagesAsync(_messageWithHeadersSendRequest))
@@ -101,6 +104,7 @@ public sealed class SendMessagesE2E : IClassFixture<IggySendMessagesFixture>
             .Should()
             .ThrowAsync<InvalidResponseException>();
         
+        // TODO: This code block is commmented bacause TCP implementation is not working properly.
         // var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
         // {
         //     await sut.Invoking(x => x.SendMessagesAsync(_invalidMessageWithHeadersSendRequest))
