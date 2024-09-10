@@ -570,9 +570,9 @@ internal static class TcpContracts
         bytes.WriteBytesFromStreamAndTopicIdentifiers(streamId , topicId);
         var position = 4 + streamId.Length + topicId.Length;
         BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)],
-            request.MessageExpiry ?? 0);
-        BinaryPrimitives.WriteInt64LittleEndian(bytes[(position + 4)..(position + 12)],
-            request.MaxTopicSize ?? 0);
+            request.MessageExpiry);
+        BinaryPrimitives.WriteUInt64LittleEndian(bytes[(position + 4)..(position + 12)],
+            request.MaxTopicSize);
         bytes[position + 12] = request.ReplicationFactor;
         bytes[position + 13] = (byte)request.Name.Length;
         Encoding.UTF8.GetBytes(request.Name, bytes[(position + 14)..]);
@@ -587,8 +587,8 @@ internal static class TcpContracts
         BinaryPrimitives.WriteInt32LittleEndian(bytes[streamIdBytesLength..(streamIdBytesLength + 4)], request.TopicId ?? 0);
         int position = 4 + streamIdBytesLength;
         BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], request.PartitionsCount);
-        BinaryPrimitives.WriteInt32LittleEndian(bytes[(position + 4)..(position + 8)], request.MessageExpiry ?? 0);
-        BinaryPrimitives.WriteUInt64LittleEndian(bytes[(position + 8)..(position + 16)], request.MaxTopicSize ?? 0);
+        BinaryPrimitives.WriteInt32LittleEndian(bytes[(position + 4)..(position + 8)], request.MessageExpiry);
+        BinaryPrimitives.WriteUInt64LittleEndian(bytes[(position + 8)..(position + 16)], request.MaxTopicSize);
         bytes[position + 16] = request.ReplicationFactor;
         bytes[position + 17] = (byte)request.Name.Length;
         Encoding.UTF8.GetBytes(request.Name, bytes[(position + 18)..]);

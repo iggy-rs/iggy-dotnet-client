@@ -673,7 +673,7 @@ internal static class BinaryMapper
                 Id = id,
                 SegmentsCount = segmentsCount,
                 CurrentOffset = currentOffset,
-                SizeBytes = sizeBytes,
+                Size = sizeBytes,
                 CreatedAt = DateTimeOffsetUtils.FromUnixTimeMicroSeconds(createdAt).LocalDateTime,
                 MessagesCount = messagesCount
             }, readBytes);

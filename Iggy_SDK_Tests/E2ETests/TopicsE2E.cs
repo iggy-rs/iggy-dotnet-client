@@ -17,116 +17,209 @@ public sealed class TopicsE2E : IClassFixture<IggyTopicFixture>
     {
         _fixture = fixture;
     }
-
-    [Fact(Skip = SkipMessage), TestPriority(1)]
-    public async Task CreateTopic_HappyPath_Should_CreateTopic_Successfully()
+    
+    [Fact, TestPriority(1)]
+    public async Task Create_NewTopic_Should_Return_Successfully()
     {
-        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
-        {
-        await sut.Invoking(async x =>
-             await x.CreateTopicAsync(Identifier.Numeric((int)TopicsFixtureBootstrap.StreamRequest.StreamId!), TopicsFixtureBootstrap.TopicRequest))
-            .Should()
+        // act & assert
+        await _fixture.HttpSut.Invoking(y => y
+                .CreateTopicAsync(
+                    Identifier.Numeric((int)TopicsFixtureBootstrap.StreamRequest.StreamId!),
+                    TopicsFixtureBootstrap.TopicRequest)
+            ).Should()
             .NotThrowAsync();
-        })).ToArray();
-        await Task.WhenAll(tasks);
-    }
-
-    [Fact(Skip = SkipMessage), TestPriority(2)]
-    public async Task CreateTopic_Duplicate_Should_Throw_InvalidResponse()
-    {
-        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
-        {
-        await sut.Invoking(async x =>
-                await x.CreateTopicAsync(Identifier.Numeric((int)TopicsFixtureBootstrap.StreamRequest.StreamId!), TopicsFixtureBootstrap.TopicRequest))
-            .Should()
-            .ThrowExactlyAsync<InvalidResponseException>();
-        })).ToArray();
-        await Task.WhenAll(tasks);
-    }
-
-    [Fact(Skip = SkipMessage), TestPriority(3)]
-    public async Task GetTopic_Should_ReturnValidResponse()
-    {
-        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
-        {
-            var response = await sut.GetTopicByIdAsync(Identifier.Numeric((int)TopicsFixtureBootstrap.StreamRequest.StreamId!),
-                Identifier.Numeric((int)TopicsFixtureBootstrap.TopicRequest.TopicId!));
-            response.Should().NotBeNull();
-            response!.Id.Should().Be(TopicsFixtureBootstrap.TopicRequest.TopicId);
-            response.Name.Should().Be(TopicsFixtureBootstrap.TopicRequest.Name);
-            response.Partitions.Should().HaveCount(TopicsFixtureBootstrap.TopicRequest.PartitionsCount);
-            response.MessageExpiry.Should().Be(TopicsFixtureBootstrap.TopicRequest.MessageExpiry);
-            response.Size.Should().Be(0);
-            response.MessagesCount.Should().Be(0);
-            response.MaxTopicSize.Should().Be(TopicsFixtureBootstrap.TopicRequest.MaxTopicSize);
-            response.MessageExpiry.Should().Be(TopicsFixtureBootstrap.TopicRequest.MessageExpiry);
-            response.CreatedAt.Year.Should().Be(DateTimeOffset.UtcNow.Year);
-            response.CreatedAt.Month.Should().Be(DateTimeOffset.UtcNow.Month);
-            response.CreatedAt.Day.Should().Be(DateTimeOffset.UtcNow.Day);
-            response.CreatedAt.Minute.Should().Be(DateTimeOffset.UtcNow.Minute);
-        })).ToArray();
-        await Task.WhenAll(tasks);
+        
+        // TODO: This code block is commmented bacause TCP implementation is not working properly.
+        // var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        // {
+        //     await sut.Invoking(async x =>
+        //          await x.CreateTopicAsync(Identifier.Numeric((int)TopicsFixtureBootstrap.StreamRequest.StreamId!), TopicsFixtureBootstrap.TopicRequest))
+        //         .Should()
+        //         .NotThrowAsync();
+        // })).ToArray();
+        // await Task.WhenAll(tasks);
     }
     
-    [Fact(Skip = SkipMessage), TestPriority(4)]
-    public async Task UpdateTopic_Should_UpdateStream_Successfully()
+    [Fact, TestPriority(2)]
+    public async Task Create_DuplicateTopic_Should_Throw_InvalidResponse()
     {
-        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
-        {
-            await sut.Invoking(async x =>
-                    await x.UpdateTopicAsync(Identifier.Numeric((int)TopicsFixtureBootstrap.StreamRequest.StreamId!),
-                        Identifier.Numeric((int)TopicsFixtureBootstrap.TopicRequest.TopicId!), TopicsFixtureBootstrap.UpdateTopicRequest))
-                .Should()
-                .NotThrowAsync();
-
-            var result = await sut.GetTopicByIdAsync(Identifier.Numeric((int)TopicsFixtureBootstrap.StreamRequest.StreamId!),
+        // act & assert
+        await _fixture.HttpSut.Invoking(y => y
+                .CreateTopicAsync(
+                    Identifier.Numeric((int)TopicsFixtureBootstrap.StreamRequest.StreamId!),
+                    TopicsFixtureBootstrap.TopicRequest)
+            ).Should()
+            .ThrowExactlyAsync<InvalidResponseException>();
+        
+        // TODO: This code block is commmented bacause TCP implementation is not working properly.
+        // var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        // {
+        //     await sut.Invoking(async x =>
+        //             await x.CreateTopicAsync(Identifier.Numeric((int)TopicsFixtureBootstrap.StreamRequest.StreamId!), TopicsFixtureBootstrap.TopicRequest))
+        //         .Should()
+        //         .ThrowExactlyAsync<InvalidResponseException>();
+        // })).ToArray();
+        //
+        // await Task.WhenAll(tasks);
+    }
+    
+    [Fact, TestPriority(3)]
+    public async Task Get_ExistingTopic_Should_ReturnValidResponse()
+    {
+        // act
+        var response = await _fixture.HttpSut
+            .GetTopicByIdAsync(
+                Identifier.Numeric((int)TopicsFixtureBootstrap.StreamRequest.StreamId!), 
                 Identifier.Numeric((int)TopicsFixtureBootstrap.TopicRequest.TopicId!));
-            result.Should().NotBeNull();
-            result!.Name.Should().Be(TopicsFixtureBootstrap.UpdateTopicRequest.Name);
-            result.MessageExpiry.Should().Be(TopicsFixtureBootstrap.UpdateTopicRequest.MessageExpiry);
-        })).ToArray();
-        await Task.WhenAll(tasks);
+        
+        // assert
+        response.Should().NotBeNull();
+        response!.Id.Should().Be(TopicsFixtureBootstrap.TopicRequest.TopicId);
+        response.Name.Should().Be(TopicsFixtureBootstrap.TopicRequest.Name);
+        response.Partitions.Should().HaveCount(TopicsFixtureBootstrap.TopicRequest.PartitionsCount);
+        response.MessageExpiry.Should().Be(TopicsFixtureBootstrap.TopicRequest.MessageExpiry);
+        response.Size.Should().Be(0);
+        response.MessagesCount.Should().Be(0);
+        response.MaxTopicSize.Should().Be(TopicsFixtureBootstrap.TopicRequest.MaxTopicSize);
+        response.MessageExpiry.Should().Be(TopicsFixtureBootstrap.TopicRequest.MessageExpiry);
+        response.CreatedAt.Year.Should().Be(DateTimeOffset.UtcNow.Year);
+        response.CreatedAt.Month.Should().Be(DateTimeOffset.UtcNow.Month);
+        response.CreatedAt.Day.Should().Be(DateTimeOffset.UtcNow.Day);
+        response.CreatedAt.Minute.Should().Be(DateTimeOffset.UtcNow.Minute);
+            
+        // TODO: This code block is commmented bacause TCP implementation is not working properly.
+        // var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        // {
+        //     var response = await sut.GetTopicByIdAsync(Identifier.Numeric((int)TopicsFixtureBootstrap.StreamRequest.StreamId!),
+        //         Identifier.Numeric((int)TopicsFixtureBootstrap.TopicRequest.TopicId!));
+        //     response.Should().NotBeNull();
+        //     response!.Id.Should().Be(TopicsFixtureBootstrap.TopicRequest.TopicId);
+        //     response.Name.Should().Be(TopicsFixtureBootstrap.TopicRequest.Name);
+        //     response.Partitions.Should().HaveCount(TopicsFixtureBootstrap.TopicRequest.PartitionsCount);
+        //     response.MessageExpiry.Should().Be(TopicsFixtureBootstrap.TopicRequest.MessageExpiry);
+        //     response.Size.Should().Be(0);
+        //     response.MessagesCount.Should().Be(0);
+        //     response.MaxTopicSize.Should().Be(TopicsFixtureBootstrap.TopicRequest.MaxTopicSize);
+        //     response.MessageExpiry.Should().Be(TopicsFixtureBootstrap.TopicRequest.MessageExpiry);
+        //     response.CreatedAt.Year.Should().Be(DateTimeOffset.UtcNow.Year);
+        //     response.CreatedAt.Month.Should().Be(DateTimeOffset.UtcNow.Month);
+        //     response.CreatedAt.Day.Should().Be(DateTimeOffset.UtcNow.Day);
+        //     response.CreatedAt.Minute.Should().Be(DateTimeOffset.UtcNow.Minute);
+        // })).ToArray();
+        //
+        // await Task.WhenAll(tasks);
     }
-
-    [Fact(Skip = SkipMessage), TestPriority(5)]
-    public async Task DeleteTopic_Should_DeleteTopic_Successfully()
+    
+    [Fact, TestPriority(4)]
+    public async Task Update_ExistingTopic_Should_UpdateTopic_Successfully()
     {
-        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
-        {
-            await sut.Invoking(async x =>
-                    await x.DeleteTopicAsync(Identifier.Numeric((int)TopicsFixtureBootstrap.StreamRequest.StreamId!),
-                        Identifier.Numeric((int)TopicsFixtureBootstrap.TopicRequest.TopicId!)))
-                .Should()
-                .NotThrowAsync();
-        })).ToArray();
-        await Task.WhenAll(tasks);
+        // act
+        await _fixture.HttpSut.Invoking(y => y
+            .UpdateTopicAsync(
+                Identifier.Numeric((int)TopicsFixtureBootstrap.StreamRequest.StreamId!), 
+                Identifier.Numeric((int)TopicsFixtureBootstrap.TopicRequest.TopicId!),
+                TopicsFixtureBootstrap.UpdateTopicRequest)
+            ).Should()
+            .NotThrowAsync();
+        
+        var result = await _fixture.HttpSut.
+            GetTopicByIdAsync(
+                Identifier.Numeric((int)TopicsFixtureBootstrap.StreamRequest.StreamId!),
+                Identifier.Numeric((int)TopicsFixtureBootstrap.TopicRequest.TopicId!));
+        
+        // assert
+        result.Should().NotBeNull();
+        result!.Name.Should().Be(TopicsFixtureBootstrap.UpdateTopicRequest.Name);
+        result.MessageExpiry.Should().Be(TopicsFixtureBootstrap.UpdateTopicRequest.MessageExpiry);
+        
+        // TODO: This code block is commmented bacause TCP implementation is not working properly.
+        // var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        // {
+        //     await sut.Invoking(async x =>
+        //             await x.UpdateTopicAsync(Identifier.Numeric((int)TopicsFixtureBootstrap.StreamRequest.StreamId!),
+        //                 Identifier.Numeric((int)TopicsFixtureBootstrap.TopicRequest.TopicId!), TopicsFixtureBootstrap.UpdateTopicRequest))
+        //         .Should()
+        //         .NotThrowAsync();
+        //
+        //     var result = await sut.GetTopicByIdAsync(Identifier.Numeric((int)TopicsFixtureBootstrap.StreamRequest.StreamId!),
+        //         Identifier.Numeric((int)TopicsFixtureBootstrap.TopicRequest.TopicId!));
+        //     result.Should().NotBeNull();
+        //     result!.Name.Should().Be(TopicsFixtureBootstrap.UpdateTopicRequest.Name);
+        //     result.MessageExpiry.Should().Be(TopicsFixtureBootstrap.UpdateTopicRequest.MessageExpiry);
+        // })).ToArray();
+        //
+        // await Task.WhenAll(tasks);
     }
-
-    [Fact(Skip = SkipMessage), TestPriority(6)]
-    public async Task DeleteTopic_Should_Throw_InvalidResponse()
+    
+    [Fact, TestPriority(5)]
+    public async Task Delete_ExistingTopic_Should_DeleteTopic_Successfully()
     {
-        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
-        {
-            await sut.Invoking(async x =>
-                    await x.DeleteTopicAsync(Identifier.Numeric((int)TopicsFixtureBootstrap.StreamRequest.StreamId!),
-                        Identifier.Numeric((int)TopicsFixtureBootstrap.TopicRequest.TopicId!)))
-                .Should()
-                .ThrowExactlyAsync<InvalidResponseException>();
-        })).ToArray();
-        await Task.WhenAll(tasks);
+        // act & assert
+        await _fixture.HttpSut.Invoking(y => y
+            .DeleteTopicAsync(
+                Identifier.Numeric((int)TopicsFixtureBootstrap.StreamRequest.StreamId!),
+                Identifier.Numeric((int)TopicsFixtureBootstrap.TopicRequest.TopicId!))
+            ).Should()
+            .NotThrowAsync();
+        
+        // TODO: This code block is commmented bacause TCP implementation is not working properly.
+        // var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        // {
+        //     await sut.Invoking(async x =>
+        //             await x.DeleteTopicAsync(Identifier.Numeric((int)TopicsFixtureBootstrap.StreamRequest.StreamId!),
+        //                 Identifier.Numeric((int)TopicsFixtureBootstrap.TopicRequest.TopicId!)))
+        //         .Should()
+        //         .NotThrowAsync();
+        // })).ToArray();
+        //
+        // await Task.WhenAll(tasks);
     }
-
-    [Fact(Skip = SkipMessage), TestPriority(7)]
-    public async Task GetTopic_Should_Throw_InvalidResponse()
+    
+    [Fact, TestPriority(6)]
+    public async Task Delete_NonExistingTopic_Should_Throw_InvalidResponse()
     {
-        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
-        {
-            await sut.Invoking(async x =>
-                    await x.GetTopicByIdAsync(Identifier.Numeric((int)TopicsFixtureBootstrap.StreamRequest.StreamId!),
-                        Identifier.Numeric((int)TopicsFixtureBootstrap.TopicRequest.TopicId!)))
-                .Should()
-                .ThrowExactlyAsync<InvalidResponseException>();
-        })).ToArray();
-        await Task.WhenAll(tasks);
+        // act & assert
+        await _fixture.HttpSut.Invoking(y => y
+            .DeleteTopicAsync(
+                Identifier.Numeric((int)TopicsFixtureBootstrap.StreamRequest.StreamId!),
+                Identifier.Numeric((int)TopicsFixtureBootstrap.TopicRequest.TopicId!))
+            ).Should()
+            .ThrowExactlyAsync<InvalidResponseException>();
+        
+        // TODO: This code block is commmented bacause TCP implementation is not working properly.
+        // var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        // {
+        //     await sut.Invoking(async x =>
+        //             await x.DeleteTopicAsync(Identifier.Numeric((int)TopicsFixtureBootstrap.StreamRequest.StreamId!),
+        //                 Identifier.Numeric((int)TopicsFixtureBootstrap.TopicRequest.TopicId!)))
+        //         .Should()
+        //         .ThrowExactlyAsync<InvalidResponseException>();
+        // })).ToArray();
+        //
+        // await Task.WhenAll(tasks);
+    }
+    
+    [Fact, TestPriority(7)]
+    public async Task Get_NonExistingTopic_Should_Throw_InvalidResponse()
+    {
+        // act & assert
+        await _fixture.HttpSut.Invoking(y => y
+            .GetTopicByIdAsync(
+                Identifier.Numeric((int)TopicsFixtureBootstrap.StreamRequest.StreamId!),
+                Identifier.Numeric((int)TopicsFixtureBootstrap.TopicRequest.TopicId!))
+            ).Should()
+            .ThrowExactlyAsync<InvalidResponseException>();
+        
+        // TODO: This code block is commmented bacause TCP implementation is not working properly.
+        // var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        // {
+        //     await sut.Invoking(async x =>
+        //             await x.GetTopicByIdAsync(Identifier.Numeric((int)TopicsFixtureBootstrap.StreamRequest.StreamId!),
+        //                 Identifier.Numeric((int)TopicsFixtureBootstrap.TopicRequest.TopicId!)))
+        //         .Should()
+        //         .ThrowExactlyAsync<InvalidResponseException>();
+        // })).ToArray();
+        //
+        // await Task.WhenAll(tasks);
     }
 }

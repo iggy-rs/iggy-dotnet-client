@@ -15,17 +15,19 @@ internal sealed class CreateTopicConverter : JsonConverter<TopicRequest>
     public override void Write(Utf8JsonWriter writer, TopicRequest value, JsonSerializerOptions options)
     {
         writer.WriteStartObject();
+        
+        // If not provided, the Iggy server will generate one automatically
         if (value.TopicId is not null)
         {
             writer.WriteNumber(nameof(value.TopicId).ToSnakeCase(), (int)value.TopicId);
         }
+        
         writer.WriteString(nameof(value.Name).ToSnakeCase(), value.Name);
-        if (value.MessageExpiry is not null)
-        {
-            writer.WriteNumber(nameof(value.MessageExpiry).ToSnakeCase(), (int)value.MessageExpiry);
-        }
+        writer.WriteString(nameof(value.CompressionAlgorithm).ToSnakeCase(), value.CompressionAlgorithm.ToString());
+        
+        writer.WriteNumber(nameof(value.MessageExpiry).ToSnakeCase(), (int)value.MessageExpiry);
         writer.WriteNumber(nameof(value.PartitionsCount).ToSnakeCase(), value.PartitionsCount);
-        writer.WriteString(nameof(value.MaxTopicSize).ToSnakeCase(), value.MaxTopicSize.ToString());
+        writer.WriteNumber(nameof(value.MaxTopicSize).ToSnakeCase(), value.MaxTopicSize);
         writer.WriteNumber(nameof(value.ReplicationFactor).ToSnakeCase(), value.ReplicationFactor);
         writer.WriteEndObject();
     }
