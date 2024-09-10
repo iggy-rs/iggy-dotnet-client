@@ -38,52 +38,80 @@ public sealed class SendMessagesE2E : IClassFixture<IggySendMessagesFixture>
         _invalidMessageWithHeadersSendRequest = MessageFactory.CreateMessageSendRequest(SendMessagesFixtureBootstrap.InvalidStreamId,
             SendMessagesFixtureBootstrap.InvalidTopicId, SendMessagesFixtureBootstrap.PartitionId, messageWithHeaders);
     }
-
-    [Fact(Skip = SkipMessage), TestPriority(1)]
+    
+    [Fact, TestPriority(1)]
     public async Task SendMessages_NoHeaders_Should_SendMessages_Successfully()
     {
-        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
-        {
-            await sut.Invoking(x => x.SendMessagesAsync(_messageNoHeadersSendRequest))
-                .Should()
-                .NotThrowAsync();
-        })).ToArray();
-        await Task.WhenAll(tasks);
+        // act & assert
+        await _fixture.HttpSut.Invoking(y => y.SendMessagesAsync(_messageNoHeadersSendRequest))
+            .Should()
+            .NotThrowAsync();
+        
+        // TODO: This code block is commmented bacause TCP implementation is not working properly.
+        // var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        // {
+        //     await sut.Invoking(x => x.SendMessagesAsync(_messageNoHeadersSendRequest))
+        //         .Should()
+        //         .NotThrowAsync();
+        // })).ToArray();
+        //
+        // await Task.WhenAll(tasks);
     }
-
-    [Fact(Skip = SkipMessage), TestPriority(2)]
+    
+    [Fact, TestPriority(2)]
     public async Task SendMessages_NoHeaders_Should_Throw_InvalidResponse()
     {
-        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
-        {
-            await sut.Invoking(x => x.SendMessagesAsync(_invalidMessageNoHeadersSendRequest))
-                .Should()
-                .ThrowAsync<InvalidResponseException>();
-        })).ToArray();
-        await Task.WhenAll(tasks);
+        // act & assert
+        await _fixture.HttpSut.Invoking(y => y.SendMessagesAsync(_invalidMessageNoHeadersSendRequest))
+            .Should()
+            .ThrowAsync<InvalidResponseException>();
+        
+        // TODO: This code block is commmented bacause TCP implementation is not working properly.
+        // var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        // {
+        //     await sut.Invoking(x => x.SendMessagesAsync(_invalidMessageNoHeadersSendRequest))
+        //         .Should()
+        //         .ThrowAsync<InvalidResponseException>();
+        // })).ToArray();
+        //
+        // await Task.WhenAll(tasks);
     }
-
-    [Fact(Skip = SkipMessage), TestPriority(3)]
+    
+    [Fact, TestPriority(3)]
     public async Task SendMessages_WithHeaders_Should_SendMessages_Successfully()
     {
-        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
-        {
-            await sut.Invoking(x => x.SendMessagesAsync(_messageWithHeadersSendRequest))
-                .Should()
-                .NotThrowAsync();
-        })).ToArray();
-        await Task.WhenAll(tasks);
+        // act & assert
+        await _fixture.HttpSut.Invoking(y => y.SendMessagesAsync(_messageWithHeadersSendRequest))
+            .Should()
+            .NotThrowAsync();
+        
+        // TODO: This code block is commmented bacause TCP implementation is not working properly.
+        // var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        // {
+        //     await sut.Invoking(x => x.SendMessagesAsync(_messageWithHeadersSendRequest))
+        //         .Should()
+        //         .NotThrowAsync();
+        // })).ToArray();
+        //
+        // await Task.WhenAll(tasks);
     }
-
-    [Fact(Skip = SkipMessage), TestPriority(4)]
+    
+    [Fact, TestPriority(4)]
     public async Task SendMessages_WithHeaders_Should_Throw_InvalidResponse()
     {
-        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
-        {
-            await sut.Invoking(x => x.SendMessagesAsync(_invalidMessageWithHeadersSendRequest))
-                .Should()
-                .ThrowAsync<InvalidResponseException>();
-        })).ToArray();
-        await Task.WhenAll(tasks);
+        // act & assert
+        await _fixture.HttpSut.Invoking(y => y.SendMessagesAsync(_invalidMessageWithHeadersSendRequest))
+            .Should()
+            .ThrowAsync<InvalidResponseException>();
+        
+        // TODO: This code block is commmented bacause TCP implementation is not working properly.
+        // var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        // {
+        //     await sut.Invoking(x => x.SendMessagesAsync(_invalidMessageWithHeadersSendRequest))
+        //         .Should()
+        //         .ThrowAsync<InvalidResponseException>();
+        // })).ToArray();
+        //
+        // await Task.WhenAll(tasks);
     }
 }
