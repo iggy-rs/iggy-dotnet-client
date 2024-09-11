@@ -30,7 +30,7 @@ public sealed class PollMessagesE2E(IggyPollMessagesFixture fixture) : IClassFix
         };
         
         // act
-        var i = 0;
+        var messagesCount = 0;
         await foreach (var msgResponse in fixture.HttpSut.PollMessagesAsync(
                            pollMessageRequest,
                            MessageFactory.DeserializeDummyMessage)
@@ -45,15 +45,15 @@ public sealed class PollMessagesE2E(IggyPollMessagesFixture fixture) : IClassFix
             
             msgResponse.State.Should().Be(MessageState.Available);
             
-            i++;
+            messagesCount++;
             
-            if (i == PollMessagesFixtureBootstrap.MessageCount)
+            if (messagesCount == PollMessagesFixtureBootstrap.MessageCount)
             {
                 break;
             }
         }
         
-        i.Should().Be(PollMessagesFixtureBootstrap.MessageCount);
+        messagesCount.Should().Be(PollMessagesFixtureBootstrap.MessageCount);
         
         // TODO: This code block is commmented bacause TCP implementation is not working properly.
         // var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
