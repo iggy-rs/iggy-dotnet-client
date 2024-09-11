@@ -29,27 +29,44 @@ public sealed class OffsetE2E : IClassFixture<IggyOffsetFixture>
             (int)OffsetFixtureBootstrap.TopicRequest.TopicId, GET_PARTITION_ID, GET_INDIVIDUAL_CONSUMER_ID);
     }
 
-    [Fact(Skip = SkipMessage), TestPriority(1)]
+    [Fact, TestPriority(1)]
     public async Task StoreOffset_IndividualConsumer_Should_StoreOffset_Successfully()
     {
-        var tasks = _fixture.SubjectsUnderTest.Select( sut => Task.Run(async () =>
-        {
-            await sut.Invoking(x => x.StoreOffsetAsync(_storeOffsetIndividualConsumer))
-                .Should()
-                .NotThrowAsync();
-        })).ToArray();
-        await Task.WhenAll(tasks);
+        // act & assert
+        await _fixture.HttpSut.Invoking(y =>
+                y.StoreOffsetAsync(_storeOffsetIndividualConsumer)
+            ).Should()
+            .NotThrowAsync();
+        
+        // TODO: This code block is commmented bacause TCP implementation is not working properly.
+        // var tasks = _fixture.SubjectsUnderTest.Select( sut => Task.Run(async () =>
+        // {
+        //     await sut.Invoking(x => x.StoreOffsetAsync(_storeOffsetIndividualConsumer))
+        //         .Should()
+        //         .NotThrowAsync();
+        // })).ToArray();
+        //
+        // await Task.WhenAll(tasks);
     }
 
-    [Fact(Skip = SkipMessage), TestPriority(2)]
+    [Fact, TestPriority(2)]
     public async Task GetOffset_IndividualConsumer_Should_GetOffset_Successfully()
     {
-        var tasks = _fixture.SubjectsUnderTest.Select( sut => Task.Run(async () =>
-        {
-            var offset = await sut.GetOffsetAsync(_offsetIndividualConsumer);
-            offset.Should().NotBeNull();
-            offset!.StoredOffset.Should().Be(_storeOffsetIndividualConsumer.Offset);
-        })).ToArray();
-        await Task.WhenAll(tasks);
+        // act
+        var offset = await _fixture.HttpSut.GetOffsetAsync(_offsetIndividualConsumer);
+        
+        // assert
+        offset.Should().NotBeNull();
+        offset!.StoredOffset.Should().Be(_storeOffsetIndividualConsumer.Offset);
+        
+        // TODO: This code block is commmented bacause TCP implementation is not working properly.
+        // var tasks = _fixture.SubjectsUnderTest.Select( sut => Task.Run(async () =>
+        // {
+        //     var offset = await sut.GetOffsetAsync(_offsetIndividualConsumer);
+        //     offset.Should().NotBeNull();
+        //     offset!.StoredOffset.Should().Be(_storeOffsetIndividualConsumer.Offset);
+        // })).ToArray();
+        //
+        // await Task.WhenAll(tasks);
     }
 }
