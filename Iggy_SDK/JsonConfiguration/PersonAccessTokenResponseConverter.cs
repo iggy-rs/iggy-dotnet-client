@@ -12,7 +12,7 @@ public sealed class PersonalAccessTokenResponseConverter : JsonConverter<Persona
         var root = doc.RootElement;
 
         var name = root.GetProperty(nameof(PersonalAccessTokenResponse.Name).ToSnakeCase()).GetString();
-        root.TryGetProperty(nameof(PersonalAccessTokenResponse.Expiry).ToSnakeCase(), out var expiryElement);
+        root.TryGetProperty(nameof(PersonalAccessTokenResponse.ExpiryAt).ToSnakeCase(), out var expiryElement);
         DateTimeOffset? expiry = expiryElement.ValueKind switch
         {
             JsonValueKind.Null => null,
@@ -23,7 +23,7 @@ public sealed class PersonalAccessTokenResponseConverter : JsonConverter<Persona
         return new PersonalAccessTokenResponse
         {
             Name = name!,
-            Expiry = expiry
+            ExpiryAt = expiry
         };
     }
     public override void Write(Utf8JsonWriter writer, PersonalAccessTokenResponse value, JsonSerializerOptions options)

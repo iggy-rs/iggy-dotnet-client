@@ -29,7 +29,7 @@ public sealed class BinaryMapper
         // Assert
         Assert.NotNull(response);
         Assert.Equal(name, response[0].Name);
-        Assert.Equal(assertExpiry, response[0].Expiry);
+        Assert.Equal(assertExpiry, response[0].ExpiryAt);
     }
     [Fact]
     public void MapOffsets_ReturnsValidOffsetResponse()
