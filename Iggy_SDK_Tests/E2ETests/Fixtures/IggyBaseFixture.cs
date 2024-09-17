@@ -28,6 +28,7 @@ public abstract class IggyBaseFixture : IAsyncLifetime
         .WithPortBinding(3000, true)
         .WithOutputConsumer(Consume.RedirectStdoutAndStderrToConsole())
         .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(3000))
+        .WithCleanUp(true)
         .Build();
     
     public IIggyClient[] SubjectsUnderTest { get; } = new IIggyClient[2];

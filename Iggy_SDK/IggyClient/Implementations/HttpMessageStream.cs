@@ -622,27 +622,26 @@ public class HttpMessageStream : IIggyClient
     }
     public async Task<AuthResponse?> LoginWithPersonalAccessToken(LoginWithPersonalAccessToken request, CancellationToken token = default)
     {
-        // var json = JsonSerializer.Serialize(request, JsonConverterFactory.SnakeCaseOptions); 
-        // var content = new StringContent(json, Encoding.UTF8, "application/json"); 
-        // var response = await _httpClient.PostAsync("/personal-access-tokens/login", content, token);
-        // if (response.IsSuccessStatusCode)
-        // {
-        //     var authResponse = await response.Content.ReadFromJsonAsync<AuthResponse>(JsonConverterFactory.AuthResponseOptions, cancellationToken: token);
-        //     var jwtToken = authResponse!.Tokens?.AccessToken?.Token;
-        //     if (!string.IsNullOrEmpty(authResponse!.Tokens!.AccessToken!.Token))
-        //     {
-        //         _httpClient.DefaultRequestHeaders.Authorization = 
-        //             new AuthenticationHeaderValue("Bearer", jwtToken); 
-        //     }
-        //     else
-        //     {
-        //         throw new Exception("The JWT token is missing.");
-        //     }
-        //     return authResponse;
-        // }
-        // await HandleResponseAsync(response);
-        // return null;
-
-        throw new NotImplementedException();
+        var json = JsonSerializer.Serialize(request, JsonConverterFactory.SnakeCaseOptions); 
+        var content = new StringContent(json, Encoding.UTF8, "application/json"); 
+        var response = await _httpClient.PostAsync("/personal-access-tokens/login", content, token);
+        if (response.IsSuccessStatusCode)
+        {
+            var authResponse = await response.Content.ReadFromJsonAsync<AuthResponse>(JsonConverterFactory.AuthResponseOptions, cancellationToken: token);
+            var jwtToken = authResponse!.AccessToken?.Token;
+            if (!string.IsNullOrEmpty(authResponse!.AccessToken!.Token))
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = 
+                    new AuthenticationHeaderValue("Bearer", jwtToken); 
+            }
+            else
+            {
+                throw new Exception("The JWT token is missing.");
+            }
+            return authResponse;
+        }
+        await HandleResponseAsync(response);
+        
+        return null;
     }
 }

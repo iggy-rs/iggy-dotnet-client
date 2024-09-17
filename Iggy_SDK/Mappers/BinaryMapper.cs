@@ -46,7 +46,7 @@ internal static class BinaryMapper
         return (new PersonalAccessTokenResponse
         {
             Name = name,
-            Expiry = expiry == 0 ? null : DateTimeOffsetUtils.FromUnixTimeMicroSeconds(expiry).LocalDateTime
+            ExpiryAt = expiry == 0 ? null : DateTimeOffsetUtils.FromUnixTimeMicroSeconds(expiry).LocalDateTime
         }, readBytes);
     }
     internal static IReadOnlyList<UserResponse> MapUsers(ReadOnlySpan<byte> payload)
