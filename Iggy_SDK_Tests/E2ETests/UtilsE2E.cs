@@ -17,18 +17,30 @@ public sealed class UtilsE2E : IClassFixture<IggyGeneralFixture>
         _fixture = fixture;
     }
 
-    [Fact(Skip = SkipMessage), TestPriority(1)]
+    [Fact, TestPriority(1)]
     public async Task GetStats_Should_ReturnValidResponse()
     {
-        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
-        {
-            var response = await sut.GetStatsAsync();
-            response.Should().NotBeNull();
-            response!.MessagesCount.Should().Be(0);
-            response.PartitionsCount.Should().Be(0);
-            response.StreamsCount.Should().Be(0);
-            response.TopicsCount.Should().Be(0);
-        })).ToArray();
-        await Task.WhenAll(tasks);
+        // act
+        var response = await _fixture.HttpSut.GetStatsAsync();
+        
+        // assert
+        response.Should().NotBeNull();
+        response!.MessagesCount.Should().Be(0);
+        response.PartitionsCount.Should().Be(0);
+        response.StreamsCount.Should().Be(0);
+        response.TopicsCount.Should().Be(0);
+        
+        // TODO: This code block is commented because TCP implementation is not working properly.
+        // var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        // {
+        //     var response = await sut.GetStatsAsync();
+        //     response.Should().NotBeNull();
+        //     response!.MessagesCount.Should().Be(0);
+        //     response.PartitionsCount.Should().Be(0);
+        //     response.StreamsCount.Should().Be(0);
+        //     response.TopicsCount.Should().Be(0);
+        // })).ToArray();
+        //
+        // await Task.WhenAll(tasks);
     }
 }
