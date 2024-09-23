@@ -95,7 +95,7 @@ internal static class TcpContracts
         }
 
         return bytes.ToArray();
-        
+
         // var length = request.Username.Length + request.Password.Length + 2;
         // Span<byte> bytes = stackalloc byte[length];
         //
@@ -108,7 +108,7 @@ internal static class TcpContracts
         // position += 1;
         // Encoding.UTF8.GetBytes(request.Password, bytes[position..(position + request.Password.Length)]);
         // position += request.Password.Length;
-        
+
         // return bytes.ToArray();
         //return JsonSerializer.SerializeToUtf8Bytes(request);
     }
@@ -116,7 +116,7 @@ internal static class TcpContracts
     {
         var length = request.UserId.Length + 2 + request.CurrentPassword.Length + request.NewPassword.Length + 2;
         Span<byte> bytes = stackalloc byte[length];
-        
+
         bytes.WriteBytesFromIdentifier(request.UserId);
         int position = request.UserId.Length + 2;
         bytes[position] = (byte)request.CurrentPassword.Length;
@@ -131,8 +131,8 @@ internal static class TcpContracts
     }
     internal static byte[] UpdatePermissions(UpdateUserPermissionsRequest request)
     {
-        var length = request.UserId.Length + 2 + 
-                     (request.Permissions is not null ? 1 + 4 + CalculatePermissionsSize(request.Permissions) : 0); 
+        var length = request.UserId.Length + 2 +
+                     (request.Permissions is not null ? 1 + 4 + CalculatePermissionsSize(request.Permissions) : 0);
         Span<byte> bytes = stackalloc byte[length];
         bytes.WriteBytesFromIdentifier(request.UserId);
         int position = request.UserId.Length + 2;
@@ -140,7 +140,7 @@ internal static class TcpContracts
         {
             bytes[position++] = 1;
             var permissions = GetBytesFromPermissions(request.Permissions);
-            BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], 
+            BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)],
                 CalculatePermissionsSize(request.Permissions));
             position += 4;
             permissions.CopyTo(bytes[position..(position + permissions.Length)]);
@@ -157,7 +157,7 @@ internal static class TcpContracts
         var length = request.UserId.Length + 2 + (request.Username?.Length ?? 0)
                      + (request.UserStatus is not null ? 2 : 1) + 1 + 1;
         Span<byte> bytes = stackalloc byte[length];
-        
+
         bytes.WriteBytesFromIdentifier(request.UserId);
         int position = request.UserId.Length + 2;
         if (request.Username is not null)
@@ -166,7 +166,7 @@ internal static class TcpContracts
             position += 1;
             bytes[position] = (byte)request.Username.Length;
             position += 1;
-            Encoding.UTF8.GetBytes(request.Username, 
+            Encoding.UTF8.GetBytes(request.Username,
                 bytes[(position)..(position + request.Username.Length)]);
             position += request.Username.Length;
         }
@@ -175,7 +175,7 @@ internal static class TcpContracts
            bytes[request.UserId.Length] = 0;
            position += 1;
         }
-        
+
         if (request.UserStatus is not null)
         {
             bytes[position++] = 1;
@@ -194,8 +194,8 @@ internal static class TcpContracts
     }
     internal static byte[] CreateUser(CreateUserRequest request)
     {
-        int capacity = 4 + request.Username.Length + request.Password.Length 
-            + (request.Permissions is not null ? 1 + 4 + CalculatePermissionsSize(request.Permissions) : 0); 
+        int capacity = 3 + request.Username.Length + request.Password.Length
+            + (request.Permissions is not null ? 1 + 4 + CalculatePermissionsSize(request.Permissions) : 0);
 
         Span<byte> bytes = stackalloc byte[capacity];
         int position = 0;
@@ -211,7 +211,7 @@ internal static class TcpContracts
             UserStatus.Active => (byte)1,
             UserStatus.Inactive => (byte)2,
             _ => throw new ArgumentOutOfRangeException()
-        }; 
+        };
 
         if (request.Permissions is not null)
         {
@@ -276,7 +276,7 @@ internal static class TcpContracts
                     {
                         BinaryPrimitives.WriteInt32LittleEndian(bytes[position..(position + 4)], topicId);
                         position += 4;
-                        
+
                         bytes[position] = topic.ManageTopic ? (byte)1 : (byte)0;
                         bytes[position + 1] = topic.ReadTopic ? (byte)1 : (byte)0;
                         bytes[position + 2] = topic.PollMessages ? (byte)1 : (byte)0;
@@ -317,31 +317,31 @@ internal static class TcpContracts
     }
     private static int CalculatePermissionsSize(Permissions data)
     {
-        int size = 10; 
+        int size = 10;
 
         if (data.Streams is not null)
         {
-            size += 1; 
+            size += 1;
             foreach (var (_, stream) in data.Streams)
             {
-                size += 4; 
+                size += 4;
                 size += 6;
                 size += 1;
 
                 if (stream.Topics is not null)
                 {
                     size += 1;
-                    size += stream.Topics.Count * 9; 
+                    size += stream.Topics.Count * 9;
                 }
                 else
                 {
-                    size += 1; 
+                    size += 1;
                 }
             }
         }
         else
         {
-            size += 1; 
+            size += 1;
         }
 
         return size;
@@ -380,7 +380,7 @@ internal static class TcpContracts
     private static Span<byte> HandleMessagesIList(int position, IList<Message> messages, Span<byte> bytes)
     {
         Span<byte> emptyHeaders = stackalloc byte[4];
-        
+
         foreach (var message in messages)
         {
             var idSlice = bytes[position..(position + 16)];
@@ -496,7 +496,7 @@ internal static class TcpContracts
         }
         return headersBytes.ToArray();
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static byte HeaderKindToByte(HeaderKind kind)
     {
@@ -706,7 +706,7 @@ internal static class TcpContracts
             _ => throw new ArgumentOutOfRangeException()
         };
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static byte GetPartitioningKindByte(Partitioning kind)
     {
@@ -718,7 +718,7 @@ internal static class TcpContracts
             _ => throw new ArgumentOutOfRangeException()
         };
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static byte GetPollingStrategyByte(MessagePolling pollingStrategy)
     {
