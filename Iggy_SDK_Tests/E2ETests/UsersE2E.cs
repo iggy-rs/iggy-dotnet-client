@@ -22,37 +22,41 @@ public sealed class UsersE2E : IClassFixture<IggyTcpUsersFixture>
     public async Task CreateUser_Should_CreateUser_Successfully()
     {
         // act & assert
-        await _fixture.HttpSut.Invoking(y => y.CreateUser(UsersFixtureBootstrap.UserRequest))
+        var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
+        {
+            await sut.Invoking(async x =>
+                await x.CreateUser(UsersFixtureBootstrap.UserRequest)
+            )
             .Should()
             .NotThrowAsync();
+        }));
         
-        // TODO: This code block is commmented bacause TCP implementation is not working properly.
-        // var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
-        // {
-        //     await sut.Invoking(async x =>
-        //         await x.CreateUser(UsersFixtureBootstrap.UserRequest)
-        //     ).Should().NotThrowAsync();
-        // })).ToArray();
-        //
-        // await Task.WhenAll(tasks);
+        await Task.WhenAll(tasks);
     }
 
     [Fact, TestPriority(2)]
     public async Task CreateUser_Duplicate_Should_Throw_InvalidResponse()
     {
         // act & assert
-        await _fixture.HttpSut.Invoking(y => y.CreateUser(UsersFixtureBootstrap.UserRequest))
+        await _fixture.TcpSut.Invoking(y =>
+                y.CreateUser(UsersFixtureBootstrap.UserRequest)
+            )
             .Should()
             .ThrowExactlyAsync<InvalidResponseException>();
         
         
+        // await _fixture.TcpSut.Invoking(y => y.CreateUser(UsersFixtureBootstrap.UserRequest))
+        //         .Should()
+        //         .ThrowExactlyAsync<InvalidResponseException>();
         // TODO: This code block is commmented bacause TCP implementation is not working properly.
         // var tasks = _fixture.SubjectsUnderTest.Select(sut => Task.Run(async () =>
         // {
         //     await sut.Invoking(async x =>
         //         await x.CreateUser(UsersFixtureBootstrap.UserRequest)
-        //     ).Should().ThrowExactlyAsync<InvalidResponseException>();
-        // })).ToArray();
+        //     )
+        //     .Should()
+        //     .ThrowExactlyAsync<InvalidResponseException>();
+        // }));
         //
         // await Task.WhenAll(tasks);
     }

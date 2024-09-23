@@ -1,5 +1,6 @@
 using Iggy_SDK_Tests.Utils.Users;
 using Iggy_SDK.Contracts.Http;
+using Iggy_SDK.Contracts.Http.Auth;
 using Iggy_SDK.IggyClient;
 
 namespace Iggy_SDK_Tests.E2ETests.Fixtures.Bootstraps;

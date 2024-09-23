@@ -1,4 +1,5 @@
 using Iggy_SDK.Contracts.Http;
+using Iggy_SDK.Contracts.Http.Auth;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Extensions;
 using Iggy_SDK.Headers;
@@ -7,6 +8,7 @@ using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Json;
 using Partitioning = Iggy_SDK.Enums.Partitioning;
 
 namespace Iggy_SDK.Contracts.Tcp;
@@ -56,20 +58,59 @@ internal static class TcpContracts
     }
     internal static byte[] LoginUser(LoginUserRequest request)
     {
-        var length = request.Username.Length + request.Password.Length + 2;
-        Span<byte> bytes = stackalloc byte[length];
+        List<byte> bytes = new List<byte>();
 
-        int position = 0;
-        bytes[position] = (byte)request.Username.Length;
-        position += 1;
-        Encoding.UTF8.GetBytes(request.Username, bytes[position..(position + request.Username.Length)]);
-        position += request.Username.Length;
-        bytes[position] = (byte)request.Password.Length;
-        position += 1;
-        Encoding.UTF8.GetBytes(request.Password, bytes[position..(position + request.Password.Length)]);
-        position += request.Password.Length;
-        
+        // Username
+        byte usernameLength = (byte)request.Username.Length;
+        bytes.Add(usernameLength);
+        bytes.AddRange(Encoding.UTF8.GetBytes(request.Username));
+
+        // Password
+        byte passwordLength = (byte)request.Password.Length;
+        bytes.Add(passwordLength);
+        bytes.AddRange(Encoding.UTF8.GetBytes(request.Password));
+
+        // Version (opcional)
+        if (!string.IsNullOrEmpty(request.Version))
+        {
+            byte[] versionBytes = Encoding.UTF8.GetBytes(request.Version);
+            bytes.AddRange(BitConverter.GetBytes(versionBytes.Length)); // tamanho da versão (u32, little-endian)
+            bytes.AddRange(versionBytes);
+        }
+        else
+        {
+            bytes.AddRange(BitConverter.GetBytes(0)); // tamanho 0 para versão ausente
+        }
+
+        // Context (opcional)
+        if (!string.IsNullOrEmpty(request.Context))
+        {
+            byte[] contextBytes = Encoding.UTF8.GetBytes(request.Context);
+            bytes.AddRange(BitConverter.GetBytes(contextBytes.Length)); // tamanho do contexto (u32, little-endian)
+            bytes.AddRange(contextBytes);
+        }
+        else
+        {
+            bytes.AddRange(BitConverter.GetBytes(0)); // tamanho 0 para contexto ausente
+        }
+
         return bytes.ToArray();
+        
+        // var length = request.Username.Length + request.Password.Length + 2;
+        // Span<byte> bytes = stackalloc byte[length];
+        //
+        // int position = 0;
+        // bytes[position] = (byte)request.Username.Length;
+        // position += 1;
+        // Encoding.UTF8.GetBytes(request.Username, bytes[position..(position + request.Username.Length)]);
+        // position += request.Username.Length;
+        // bytes[position] = (byte)request.Password.Length;
+        // position += 1;
+        // Encoding.UTF8.GetBytes(request.Password, bytes[position..(position + request.Password.Length)]);
+        // position += request.Password.Length;
+        
+        // return bytes.ToArray();
+        //return JsonSerializer.SerializeToUtf8Bytes(request);
     }
     internal static byte[] ChangePassword(ChangePasswordRequest request)
     {

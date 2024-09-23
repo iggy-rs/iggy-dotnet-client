@@ -1,5 +1,6 @@
 ﻿using Iggy_SDK.Configuration;
 using Iggy_SDK.Contracts.Http;
+using Iggy_SDK.Contracts.Http.Auth;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Exceptions;
 using Iggy_SDK.Headers;

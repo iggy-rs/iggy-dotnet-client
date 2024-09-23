@@ -1,6 +1,7 @@
 using Iggy_SDK.Configuration;
 using Iggy_SDK.ConnectionStream;
 using Iggy_SDK.Contracts.Http;
+using Iggy_SDK.Contracts.Http.Auth;
 using Iggy_SDK.Contracts.Tcp;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Exceptions;
@@ -925,7 +926,8 @@ public sealed class TcpMessageStream : IIggyClient, IDisposable
         await _stream.SendAsync(payload, token);
         await _stream.FlushAsync(token);
 
-        var buffer = new byte[BufferSizes.ExpectedResponseSize];
+        var buffer = new byte[BufferSizes.ExpectedResponseSize + 1];
+        // var buffer = new byte[100];
         await _stream.ReadAsync(buffer, token);
         var response = TcpMessageStreamHelpers.GetResponseLengthAndStatus(buffer);
         
