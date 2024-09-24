@@ -20,14 +20,16 @@ public abstract class IggyBaseFixture : IAsyncLifetime
     private readonly Action<MessageBatchingSettings> _batchingSettings;
 
     private readonly IContainer _tcpContainer = new ContainerBuilder().WithImage("iggyrs/iggy:latest")
-        .WithName("SutIggyContainerTCP")
+        // Container name is just to be used locally for debbuging effects
+        //.WithName($"SutIggyContainerTCP")
         .WithPortBinding(8090, true)
         .WithOutputConsumer(Consume.RedirectStdoutAndStderrToConsole())
         .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8090))
         .Build();
     
     private readonly IContainer _httpContainer = new ContainerBuilder().WithImage("iggyrs/iggy:latest")
-        .WithName("SutIggyContainerHTTP")
+        // Container name is just to be used locally for debbuging effects
+        //.WithName($"SutIggyContainerHTTP")
         .WithPortBinding(3000, true)
         .WithOutputConsumer(Consume.RedirectStdoutAndStderrToConsole())
         .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(3000))
