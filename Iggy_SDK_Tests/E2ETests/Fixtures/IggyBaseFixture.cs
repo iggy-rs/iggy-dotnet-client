@@ -25,6 +25,7 @@ public abstract class IggyBaseFixture : IAsyncLifetime
         .WithPortBinding(8090, true)
         .WithOutputConsumer(Consume.RedirectStdoutAndStderrToConsole())
         .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8090))
+        .WithCleanUp(true)
         .Build();
     
     private readonly IContainer _httpContainer = new ContainerBuilder().WithImage("iggyrs/iggy:latest")
