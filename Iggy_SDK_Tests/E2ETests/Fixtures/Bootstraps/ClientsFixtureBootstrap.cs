@@ -1,4 +1,5 @@
 using Iggy_SDK.Contracts.Http;
+using Iggy_SDK.Contracts.Http.Auth;
 using Iggy_SDK.Enums;
 using Iggy_SDK.Factory;
 using Iggy_SDK.IggyClient;

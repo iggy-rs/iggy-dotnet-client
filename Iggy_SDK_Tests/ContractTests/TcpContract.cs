@@ -11,6 +11,7 @@ using Iggy_SDK_Tests.Utils.Partitions;
 using Iggy_SDK_Tests.Utils.Streams;
 using Iggy_SDK_Tests.Utils.Topics;
 using Iggy_SDK_Tests.Utils.Users;
+using Iggy_SDK.Contracts.Http.Auth;
 using System.Buffers.Binary;
 using System.Text;
 

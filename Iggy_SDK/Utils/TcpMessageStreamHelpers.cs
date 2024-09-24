@@ -42,6 +42,7 @@ internal static class TcpMessageStreamHelpers
             )
         };
     }
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static byte[] GetBytesFromIdentifier(Identifier identifier)
     {
@@ -60,6 +61,7 @@ internal static class TcpMessageStreamHelpers
 
         return bytes.ToArray();
     }
+    
     private static int CalculateMessageBytesCountArray(Message[] messages)
     {
         ref var start = ref MemoryMarshal.GetArrayDataReference(messages);
