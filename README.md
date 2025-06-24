@@ -1,3 +1,5 @@
+# The source code has been moved to [Apache Iggy](https://github.com/apache/iggy/)
+
 <div align="center">
     
 [![.NET](https://github.com/iggy-rs/iggy-dotnet-client/actions/workflows/dotnet.yml/badge.svg)](https://github.com/iggy-rs/iggy-dotnet-client/actions/workflows/dotnet.yml)
@@ -5,8 +7,7 @@
 
 </div>
 
-## THE DEVELOPMENT OF SDK IS CURRENTLY ON HALT, DUE TO BIG WORKLOAD IN MAIN REPOSITORY 
-# C# SDK for [Iggy](https://github.com/spetz/iggy)
+## C# SDK for [Iggy](https://github.com/spetz/iggy)
 
 
 ### Getting Started
